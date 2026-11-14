@@ -210,7 +210,10 @@ fn a_blow_at_the_unseen_is_at_minus_four_and_a_hit_shows_it_for_the_turn() {
     let player = w.state.player;
     let profile = w.state.player().melee(&w.content);
     let at = w.at_the_unseen(player, stalker, profile.clone());
-    assert_eq!(at.to_hit, profile.to_hit + unseen::UNSEEN_TO_HIT);
+    assert_eq!(
+        at.to_hit,
+        profile.to_hit + w.content().tuning().unseen.to_hit
+    );
     // Its blows are something's; striking back is at something, until one finds it.
     for _ in 0..60 {
         // The player outlasts a quick striker's blows (the variance pass, #1134) however long

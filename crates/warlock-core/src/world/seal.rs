@@ -10,7 +10,7 @@
 //!   a crystal picked (Imbue: of any of its three), sealed once, and one the item could take and
 //!   does not have (Recast: its kept affix is all it keeps), else "There is nothing to seal
 //!   there.". Each costs one crystal more, from the first crystal picked whose colour holds the
-//!   family with one to spare ([`check`]), and `data/enchanting.toml`'s `seal_seconds` more.
+//!   family with one to spare ([`check`]), and `data/rules/enchanting.toml`'s `seal_seconds` more.
 //! - **The heart-crystal** (`[rare] heart`): Quicken on a rare takes one beside its crystal, the
 //!   first carried; **the soul-fetter** (`[rare] fetter`): Recast keeping an affix takes one, the
 //!   first carried. Both spent made, failed, or warped.

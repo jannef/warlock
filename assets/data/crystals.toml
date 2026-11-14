@@ -1,6 +1,6 @@
 # Magic crystals (docs/design/enchanting.md §5, §9, §10; docs/dev/enchanting.md; the loader is
 # content/crystal.rs): six colours, one object each, no grades. A crystal is caught from a magic
-# item's affix when it is salvaged (salvage.toml, enchanting.toml) or left by a creature the
+# item's affix when it is salvaged (rules/salvage.toml, rules/enchanting.toml) or left by a creature the
 # Soulglass spell kills (spells/soulglass.toml, world/crystal.rs), and is what the Enchanting
 # recipes bind (world/enchant.rs). Anyone may consume one for mana ([consume]).
 #

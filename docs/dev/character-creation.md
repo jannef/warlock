@@ -267,7 +267,7 @@ also says what is wading (`wading`: terrain that freezes, or a disease's wading 
 The gifts from the Salamander to the Basilisk (#266) that are more than a read at a hook live in
 `world/gifts.rs`: the actives (`SignActive` in `content/horoscope.rs`, `Ability::Sign` under
 `Source::Sign`, `Action::Gift`, `World::use_gift`: Horn's grace, the Transfixing stare at
-`STARE_RANGE`, creature sight through `World::sees_now` in `ambush.rs`), Relentless's streak
+its effect's `range`, creature sight through `World::sees_now` in `ambush.rs`), Relentless's streak
 (`Streak { target, count, turn }` on `Actor::streak`, saved and hashed and left out of the JSON
 while `None`; a blow continues it at the same target while `turn <= streak.turn + 1`, the player's
 turn counter, so anything else in between starts it over), Barbed hide (`World::barbed`,
@@ -305,7 +305,7 @@ and per element (but the Salamander's and the Sphinx's, cut in #774), each with 
 page (`PerceptionView::talents`) leaves out those of other signs. Their rules are one read each
 at the hooks in `docs/dev/progression.md` ("Sign-limited picks"), and `world/sign_picks.rs` holds
 what is more: the two new sign actives (`SignActive::FireBreath`, aimed at a cell within
-`BREATH_RANGE`, a bolt by `World::cast_bolt` along `read.rs::bolt_line`; `SignActive::HoundsBay`,
+its effect's `range`, a bolt by `World::cast_bolt` along `read.rs::bolt_line`; `SignActive::HoundsBay`,
 `Act::Howl` and `noise::hearers` for who hears it), `World::frightened` (the AI hook before
 `held_back`: a creature with a status that `flees` steps away from its `by`), and Horn of
 plenty's healing. Second rising is the second `Progress::once` flag, `risen_twice`

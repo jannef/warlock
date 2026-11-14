@@ -56,6 +56,7 @@ pub(super) fn text(content: &Content, effect: &SignEffect) -> String {
             sign_cooldown(content, SignActive::HornsGrace, degrees)
         ),
         SignEffect::Stare {
+            range,
             status: id,
             severity,
             cooldown,
@@ -71,7 +72,7 @@ pub(super) fn text(content: &Content, effect: &SignEffect) -> String {
                 "active (the time of a wait, silent): a hostile you see within {} cells that \
                  sees you suffers {} at {severity} degrees (its actions cost {cost} %{eases}); \
                  one that does not see you is not held, and the cooldown waits; then {}",
-                warlock_core::world::STARE_RANGE,
+                range,
                 status(&id),
                 cooldown_for(content, &cooldown, degrees)
             )
@@ -84,6 +85,7 @@ pub(super) fn text(content: &Content, effect: &SignEffect) -> String {
             format!("Blaze bursts out to radius {radius} and does {damage} instead")
         }
         SignEffect::FireBreath {
+            range,
             length,
             damage,
             damage_type,
@@ -98,7 +100,7 @@ pub(super) fn text(content: &Content, effect: &SignEffect) -> String {
                 "active (the time of a cast; not on the overworld), aimed at a cell within {} \
                  cells: a bolt along the line toward it and on, {length} cells long or to the \
                  first wall, {damage} {kind} damage (one roll) to everyone on it; then {}",
-                warlock_core::world::BREATH_RANGE,
+                range,
                 cooldown_for(content, &cooldown, degrees)
             )
         }

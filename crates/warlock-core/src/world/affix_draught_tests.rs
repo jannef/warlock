@@ -4,7 +4,7 @@
 //! `wand_rungs` in [`Actor::spell_mods`] (beside Wand mastery's). The tests bring fixture
 //! affixes with ranges of their own, as `world/affix_spell_tests.rs` does.
 
-use super::potion::{KEPT, MAX_KEPT};
+use super::potion::KEPT;
 use super::*;
 use crate::content::ContentFiles;
 use crate::magic::{Affix, Magic, Rarity};
@@ -149,7 +149,8 @@ fn of_the_alchemist_adds_to_thrifty_drinker_and_never_past_the_cap() {
         "fixture_of_the_alchemist",
         30,
     );
-    assert_eq!(kept(&w), MAX_KEPT, "25 + 40 held to the cap");
+    let most = w.content().tuning().potion_kept.most;
+    assert_eq!(kept(&w), most, "25 + 40 held to the cap");
 }
 
 #[test]

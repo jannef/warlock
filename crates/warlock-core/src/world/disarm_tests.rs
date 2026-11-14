@@ -16,6 +16,14 @@ use crate::stats::Stat;
 use crate::test_support::{run, said as texts};
 use crate::time::Duration;
 
+/// How far short a failed try must fall to set the trap off (`data/traps.toml`).
+fn springs_short_by() -> i32 {
+    Content::builtin()
+        .expect("content")
+        .trap_disarm()
+        .springs_short_by
+}
+
 /// A lit hall on the built-in content, the player at `@` as `character` (`RACE,GENDER,CLASS`):
 /// `a` a known arrow trap, `h` a hidden one, `p` a known pit, `d` a closed door with a known arrow
 /// trap.
@@ -105,7 +113,7 @@ fn a_near_miss_leaves_the_trap_and_a_bad_one_sets_it_off() {
     rig(
         &mut w,
         EAST,
-        |c| matches!(c, Checked::Failed { by } if by < SPRINGS_SHORT_BY),
+        |c| matches!(c, Checked::Failed { by } if by < springs_short_by()),
     );
     let out = run(&mut w, "disarm:E");
     assert!(out[0].took_turn);
@@ -116,7 +124,7 @@ fn a_near_miss_leaves_the_trap_and_a_bad_one_sets_it_off() {
     rig(
         &mut w,
         EAST,
-        |c| matches!(c, Checked::Failed { by } if by >= SPRINGS_SHORT_BY),
+        |c| matches!(c, Checked::Failed { by } if by >= springs_short_by()),
     );
     let player = w.state.player;
     let out = run(&mut w, "disarm:E");
@@ -150,7 +158,7 @@ fn a_bad_try_at_a_pit_costs_the_fall_and_the_climb() {
     rig(
         &mut w,
         EAST,
-        |c| matches!(c, Checked::Failed { by } if by >= SPRINGS_SHORT_BY),
+        |c| matches!(c, Checked::Failed { by } if by >= springs_short_by()),
     );
     let out = run(&mut w, "disarm:E");
     assert!(sprung(&out[0]));
@@ -237,7 +245,7 @@ fn every_try_may_train_disable_device() {
     rig(
         &mut w,
         EAST,
-        |c| matches!(c, Checked::Failed { by } if by < SPRINGS_SHORT_BY),
+        |c| matches!(c, Checked::Failed { by } if by < springs_short_by()),
     );
     run(&mut w, "disarm:E");
     assert_ne!(w.state.training, training, "a mark's chance drawn");

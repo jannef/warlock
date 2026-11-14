@@ -101,3 +101,5 @@ fills again.
 
 You cannot see whether [creatures](creatures.md) are good, neutral, or evil; you learn it from how
 they behave. [Magic](magic.md) ([mana](mana.md#how-much-mana-you-have)) does not care where you stand.
+
+See also: [Races](races.md), [Prayer](prayer.md), and [Profane gifts](profane-gifts.md).

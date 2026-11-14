@@ -198,7 +198,7 @@ fn the_voice_goes_only_to_a_place_the_player_sees_within_reach() {
     assert!(w.state().actors[&RAT].mind.is_calm(), "nothing was heard");
     assert_eq!(Pos::new(2, 1).dist2(Pos::new(8, 1)), 36);
     assert!(
-        36 <= crate::fov::radius2(VOICE_RANGE),
+        36 <= crate::fov::radius2(w.content().tuning().throw_voice.range),
         "six cells away is within reach"
     );
 }

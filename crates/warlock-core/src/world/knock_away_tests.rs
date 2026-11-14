@@ -249,5 +249,5 @@ fn a_two_handed_grip_holds_better_than_one_hand() {
     wield(&mut w, Stack::new(great, 1));
     let two = super::knock_away::hold(content, w.state.player(), great)
         - rank(&w, content.object(great).skill);
-    assert_eq!(two, one - lone + super::knock_away::TWO_HANDED_HOLD);
+    assert_eq!(two, one - lone + w.content().tuning().knock_away.two_handed);
 }

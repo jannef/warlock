@@ -303,7 +303,7 @@ pub(super) fn prayer_rites(content: &Content) -> String {
                     ),
                     TalentEffect::Faith(FaithEffect::Communion) => (
                         super::talents::talent_link(content, &def.id, &def.name),
-                        "a passive: standing in a [cursed](special-rooms.md#room-cursed), [draining](special-rooms.md#room-draining), or [haunted](special-rooms.md#room-haunted) room, or on a level such a curse lies over, your prayers add no strain and the place's [Ebbing](status-effects.md#status-ebbing) never touches you; only while the dark powers answer you".into(),
+                        "a passive: standing in a [cursed](special-rooms.md#room-cursed), [draining](special-rooms.md#room-draining), or [haunted](special-rooms.md#room-haunted) room, or on a level such a curse lies over, your prayers add no strain and the place's [Ebbing](status-list.md#status-ebbing) never touches you; only while the dark powers answer you".into(),
                     ),
                     TalentEffect::Faith(FaithEffect::Sanctuary {
                         mana,

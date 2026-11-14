@@ -12,9 +12,10 @@
 //! its chance, it draws a type of the level's population by the danger, now and then a stray
 //! of the generic creature list or one from deeper ([`crate::content::danger::draw`]: a unique
 //! type once a run), a cell out of the player's view
-//! by the perception rules and at least [`AWAY`] cells from them (walkable, free, no stairs,
-//! door, shop floor, sanctuary, or sealed room; up to [`TRIES`] draws, else nothing comes), and a short route
-//! where one fits, else a post. The newcomer is an ordinary creature from then on.
+//! by the perception rules and at least the `[spawn]` `away` of `data/rules/tuning.toml` from them
+//! (walkable, free, no stairs, door, shop floor, sanctuary, or sealed room; up to [`TRIES`] draws,
+//! else nothing comes), and a short route where one fits, else a post. The newcomer is an ordinary
+//! creature from then on.
 //!
 //! Danger is hidden in the game; dev dumps and the wiki state it.
 
@@ -28,8 +29,6 @@ use crate::time::{Duration, GameTime};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeSet;
 
-/// The fewest cells (Chebyshev) between the player and a creature that comes.
-pub const AWAY: i32 = 8;
 /// How many cells an attempt tries before it gives up.
 const TRIES: u32 = 32;
 
@@ -223,10 +222,11 @@ impl World {
                 && level.hallows_at(p, self.state.time).next().is_none()
         };
         let (w, h) = (level.width(), level.height());
+        let away = content.tuning().spawn.away;
         let mut cell = None;
         for _ in 0..TRIES {
             let p = Pos::new(rng.range(0, w - 1), rng.range(0, h - 1));
-            if p.chebyshev(player) >= AWAY && !seen.sees_actors_at(p) && free(p) {
+            if p.chebyshev(player) >= away && !seen.sees_actors_at(p) && free(p) {
                 cell = Some(p);
                 break;
             }

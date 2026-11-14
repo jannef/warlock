@@ -91,3 +91,6 @@ get half of the wood or the metal back (a single billet or ingot always comes ba
 ## The Woodcraft recipes
 
 {{#include generated/recipes-woodcraft.md}}
+
+See also: [Crafting](crafting.md), [Forging at the anvil](forging.md), and
+[Ammunition](ammunition.md).

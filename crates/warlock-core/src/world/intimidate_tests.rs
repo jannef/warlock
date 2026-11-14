@@ -1,6 +1,6 @@
 //! Intimidate (spec §8 "Skills": Intimidate; #868; `world/intimidate.rs`): the skill's use at one
-//! foe, on War cry's check; its degrees by the ladder of `data/intimidate.toml`; its refusals,
-//! with no time and no draw; a turn and a voice; each threat a mark of Intimidate.
+//! foe, on War cry's check; its degrees by the ladder of `data/rules/intimidate.toml`; its
+//! refusals, with no time and no draw; a turn and a voice; each threat a mark of Intimidate.
 
 use super::class_active_tests::{suffers, world};
 use super::*;

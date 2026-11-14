@@ -196,11 +196,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
   `fg`, `weight` (grams). A level legend's `mimic = true` beside `chest` places the member of the
   chest's level on the entry's walkable terrain (no chest terrain), carrying its `objects`; it
   refuses `locked`, `lock`, `trap`, `creature`, and `carry` beside it.
-- **Searching** (`data/search.toml`, optional; without it the numbers below; §8 "Searching"):
+- **Searching** (`data/rules/search.toml`, optional; without it the numbers below; §8 "Searching"):
   `passive_penalty` (what noticing in passing loses against searching, 0 to 20; 4), `turns` (how
   long searching for a while lasts at most, 1 to 100; 10), and `secret_door` (a secret door's
   difficulty where its level gives none, 1 to 50; 14).
-- **Stealing** (`data/steal.toml`, optional; without it nobody steals; §8 "Stealing"): `caught`,
+- **Stealing** (`data/rules/steal.toml`, optional; without it nobody steals; §8 "Stealing"): `caught`,
   the faction a creature that catches the player stealing joins (an id in `data/factions/`,
   hostile to the player: `outraged`). Who can steal is the skills' business (the `steal`
   benefit, `data/skills/`); a shopkeeper that catches the player is outraged by its shop's

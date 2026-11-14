@@ -186,7 +186,7 @@ Rules from elsewhere in the game carry over:
   points](hit-points.md#hit-points), Dexterity in your
   Defence. The [character screen](character.md) shows your stats with what
   you wear. A [status effect](status-effects.md) that lowers a stat lowers it from there: if you
-  are [poisoned](status-effects.md#status-poisoned) while wearing a ring of Strength, you are still
+  are [poisoned](status-list.md#status-poisoned) while wearing a ring of Strength, you are still
   stronger than you would be without the ring.
 - **Defence**: among Armour, Shield, Parry, Deflection, and natural armour,
   only the best counts. Dodge adds up (see [Combat](combat.md)).

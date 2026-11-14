@@ -51,3 +51,6 @@ until your next turn.
 
 On the overworld sight follows the [time of day](time.md#days), the [moon](sun.md#moonlight), and the [weather](weather.md), not [light](light.md#what-light-is). See
 [The overworld](overworld.md).
+
+See also: [Vision types](vision.md), [Hearing](hearing.md), and
+[How creatures behave](creature-behaviour.md).

@@ -6,7 +6,7 @@ kind = "action"
 # Reading what is bound (#1343, professions §9): trained, each game hour this percent chance of
 # telling one magic thing you carry or wear whose magic you do not know (5 % at the lowest, 25 % at
 # 100, 40 % at 200), beside Appraise's look at anything. Marks: every salvage that made a check
-# on a magic item's affixes (enchanting.toml), and every enchanting recipe worked to its end
+# on a magic item's affixes (rules/enchanting.toml), and every enchanting recipe worked to its end
 # (data/recipes/enchanting/), whatever came of either.
 mark = [{ on = "craft", chance = 100 }, { on = "salvage", chance = 100 }]
 # Its craft (docs/dev/enchanting.md; the enchanter's recipes): added to the Willpower check of an

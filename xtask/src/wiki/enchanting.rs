@@ -2,9 +2,9 @@
 //! `data/recipes/enchanting/` with what it works on, the crystals it takes, its time, the skill it
 //! is listed from, its difficulty, and the odds of a made check at three skill values; and the
 //! enchanter's reach by skill value. From the recipe files, `data/skills/`'s Enchanting, and
-//! `data/enchanting.toml`. And the seals and the rare materials (docs/design/enchanting.md §9;
-//! `world/seal.rs`): a seal's cost and time, and where the rare materials come from, with their
-//! chances, from `data/enchanting.toml` and `data/crystals.toml`.
+//! `data/rules/enchanting.toml`. And the seals and the rare materials (docs/design/enchanting.md
+//! §9; `world/seal.rs`): a seal's cost and time, and where the rare materials come from, with their
+//! chances, from `data/rules/enchanting.toml` and `data/crystals.toml`.
 
 use super::util::capital;
 use std::fmt::Write as _;

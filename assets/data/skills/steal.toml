@@ -4,6 +4,6 @@ name = "Steal"
 description = "Lifting a purse or a trinket without being noticed."
 kind = "action"
 mark = [{ on = "steal", chance = 50 }]
-# Stealing (spec §8 "Stealing"; the abilities menu's Steal, steal.toml): trained at all, you can
+# Stealing (spec §8 "Stealing"; the abilities menu's Steal, rules/steal.toml): trained at all, you can
 # steal; added to your Dexterity against the victim's Willpower, +8 at 100, +12 at 200.
 benefit = [{ effect = "steal", curve = [[0, 0], [100, 8], [200, 12]] }]

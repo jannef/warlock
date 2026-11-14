@@ -230,3 +230,6 @@ colour tells them apart: the red volcano among the mountains, the ford's road co
 swamp's green.
 
 {{#include generated/overworld-map.md}}
+
+See also: [The overworld](overworld.md), [The dungeons one by one](dungeon-guide.md), and
+[People and talk](npcs.md).

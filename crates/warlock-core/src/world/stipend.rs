@@ -3,7 +3,7 @@
 //! A character with the Stipend class ability (`FortuneMods::stipend`, the aristocrat's from
 //! level 1) has their family put something by at every level they reach, a prestige class's
 //! too ([`World::grow_stipend`], one line in `experience.rs::rise_from`): the gold of
-//! `data/stipend.toml` (`each` plus its dice, Landed noble's percent more), and one loot roll
+//! `data/rules/stipend.toml` (`each` plus its dice, Landed noble's percent more), and one loot roll
 //! at the level as item level with the file's luck (Landed noble's magic odds added), kept
 //! when magic or rare or of a `keep` class. Each level draws from its own stream,
 //! `stipend/<level>`, so nothing else moves. It accumulates in [`WorldState::stipend`] (saved

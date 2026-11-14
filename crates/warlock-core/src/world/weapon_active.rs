@@ -39,9 +39,6 @@ use crate::text::capitalized;
 /// of it soaks (and no soak is drawn).
 pub(super) const ALL_PROTECTION: i32 = 1_000;
 
-/// The least an active's time may be cut to by talents, in percent of the action's price.
-const LEAST_PERCENT: i64 = 50;
-
 /// The player's weapon active under way (not saved): what its attack does beyond a plain one
 /// that its profile cannot carry, read where the attack is resolved, cleared after it.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -205,7 +202,8 @@ impl World {
         } else {
             me.talent_mods(&self.content).offence.weapon_energy_percent
         };
-        let percent = (i64::from(percent) * i64::from((100 + cut).max(0)) / 100).max(LEAST_PERCENT);
+        let least = i64::from(self.content.tuning().weapon_active.least_percent);
+        let percent = (i64::from(percent) * i64::from((100 + cut).max(0)) / 100).max(least);
         percent_of(base, u32::try_from(percent).unwrap_or(u32::MAX))
     }
 

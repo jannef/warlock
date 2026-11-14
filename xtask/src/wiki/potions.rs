@@ -117,7 +117,7 @@ pub(super) fn potions(content: &Content) -> String {
             ),
             Draught::Restore => "Every point of [stat damage](diseases.md#stat-damage) mended \
                  and every [drained](stats.md#drained-stats) point back at once, and \
-                 [Stiffening](status-effects.md#status-stiffening) ended: the [scroll of \
+                 [Stiffening](status-list.md#status-stiffening) ended: the [scroll of \
                  restoration](scrolls.md#the-scroll-of-restoration)'s cleanse"
                 .to_string(),
             Draught::Blink => "You are moved at once to a random free cell of the level, as a \

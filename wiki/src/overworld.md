@@ -16,7 +16,7 @@ crossed by a bridge or at a ford.
 {{#include generated/terrain-overworld.md}}
 
 Roads and bridges are the fast way to travel; swamp and dense forest are the slow way. The
-[survival](skills.md#what-skills-give) skill makes every journey quicker, by up to a fifth. The
+[survival](skill-benefits.md) skill makes every journey quicker, by up to a fifth. The
 [status bar](the-screen.md#the-screen) shows the name of the region you are in, here and in its
 [local areas](#local-areas).
 
@@ -142,3 +142,6 @@ slip away with enemies about." and no time passes. Walk off the edge instead, wh
 
 Underground and on the overworld itself, `<` still needs [stairs](terrain.md#stairs). An outdoor
 place that no overworld cell leads into is left by its stairs.
+
+See also: [Encounters on the way](encounters.md), [The Ascmearc](ascmearc.md), and
+[Weather](weather.md).

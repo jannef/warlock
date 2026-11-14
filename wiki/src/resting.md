@@ -90,5 +90,7 @@ until dawn."). Rest to wait out the night, to wait for the [light](light.md#what
 change, or to let your wounds heal. [Hit points](hit-points.md#hit-points) come back with time,
 faster the [tougher](stats.md#stat-toughness) you are, and **twice as fast while you rest** (see
 [Healing](healing.md)). [Bleeding](status-effects.md#bleeding) and
-[poison](status-effects.md#status-poisoned) still cost hit points while you rest, and bleeding
+[poison](status-list.md#status-poisoned) still cost hit points while you rest, and bleeding
 stops your healing until it stops.
+
+See also: [Time and the calendar](time.md) and [Weather](weather.md).

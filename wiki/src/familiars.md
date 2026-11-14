@@ -21,7 +21,7 @@ a fighter. Its blow is a scratch; what the blow carries is the hex.
 ## The touch
 
 When a familiar's melee blow hits a creature and leaves it alive, the creature is
-[hexed](status-effects.md#status-ill-wished) as if the witch had cast
+[hexed](status-list.md#status-ill-wished) as if the witch had cast
 [Evil eye](magic.md#spell-evil-eye) on it. The hex has the degrees she would cast it at now, and
 costs no [mana](mana.md) and none of her turns.
 
@@ -50,7 +50,7 @@ It is refused, for no time:
 - while her familiar lives, wherever it is;
 - with a hostile in her sight;
 - while a [status](status-effects.md) keeps her from casting
-  ([Silenced](status-effects.md#status-silenced), [Raging](status-effects.md#status-raging)).
+  ([Silenced](status-list.md#status-silenced), [Raging](status-list.md#status-raging)).
 
 A creature coming into view, a blow, or any news breaks the sitting off. The time spent is spent,
 and she may begin again. At its end **the familiar she lost comes back**: the same kind of beast
@@ -74,7 +74,7 @@ This is the [shared sight](companions.md#hunters-bond) of Hunter's bond, by the 
 sees every cell it sees, by its own eyes. She also sees the cell of every foe its nose finds,
 through the dark and even a **closed door**, but never a wall. For her, a familiar's nose reaches at
 least as far as the rules below say, even for a kind with no nose of its own; it still hunts by
-eye. No [buff](status-effects.md#buffs-and-cooldowns) is shared, and a companion she keeps lends
+eye. No [buff](buffs.md) is shared, and a companion she keeps lends
 her nothing.
 
 ## Starting familiars
@@ -99,3 +99,5 @@ These beasts can only be familiars. Here they are at her level, by the same
 If a companion and a familiar are both beside you, and one of them has something to treat, the
 [Heal](skills.md#skill-heal) ability first asks **which way**: a direction, or the wait key for
 yourself. With only one beside you it asks nothing.
+
+See also: [Allies](allies.md), [the witch](class-witch.md), and [Companions](companions.md).

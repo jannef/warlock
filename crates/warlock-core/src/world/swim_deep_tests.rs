@@ -147,7 +147,7 @@ fn the_terrain_loads_as_the_issue_has_it_and_a_walkable_one_is_refused() {
     let lake = content.terrain(content.terrain_id("lake").expect("lake"));
     assert!(!lake.swim, "the overworld's lake is unchanged");
     assert_eq!((def.fg, def.bg), (lake.fg, lake.bg));
-    let rules = content.swim().expect("data/swim.toml");
+    let rules = content.swim().expect("data/rules/swim.toml");
     assert_eq!((rules.difficulty, rules.per_burden, rules.cold), (11, 2, 1));
 
     let mut files = files();

@@ -42,7 +42,7 @@ Each of these slows or stops your healing until it ends, and each ends by itself
   The Heal skill eases one but never cures it.
 - **Stunned, frightened, or drowsy**: a [potion of clear head](potions.md#potion-of-clear-head).
 - **Everything else**: the "How it ends" column of the
-  [status tables](status-effects.md#every-status-effect) lists every way to end each one.
+  [status tables](status-list.md) lists every way to end each one.
 
 Those born in the year of the Unicorn have [Horn's grace](abilities.md#ability-horns-grace), which
 ends bleeding and poison and shakes off a disease.
@@ -65,7 +65,7 @@ When several things change the pace at once:
 - An effect that speeds healing up ([Renewal](magic.md#spell-renewal)'s, four times the pace) counts
   only while nothing slows it.
 - A [disease](diseases.md#how-a-disease-goes) that slows healing more than being
-  [Diseased](status-effects.md#status-diseased) does counts too (see [Diseases](diseases.md)).
+  [Diseased](status-list.md#status-diseased) does counts too (see [Diseases](diseases.md)).
 - Resting makes up for some of it. Resting while
   [poisoned](status-effects.md#poisoned) heals at the usual pace.
 - While you [bleed](status-effects.md#bleeding) or starve, nothing heals you, resting or not.
@@ -88,7 +88,7 @@ When several things change the pace at once:
   too. When you see one get a tenth of its hit points back at once, you are told: *The troll's
   wounds close.*
 - **Fire and acid stop all healing** while they last. Nothing heals while
-  [Burning](status-effects.md#status-burning) or [Corroded](status-effects.md#status-corroded): not a
+  [Burning](status-list.md#status-burning) or [Corroded](status-list.md#status-corroded): not a
   troll's regeneration, and not yours.
 
 Your [mana](mana.md) comes back in the same way, paced by your [Willpower](stats.md#stat-willpower).

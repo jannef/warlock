@@ -7,7 +7,7 @@
 //! [`crate::ability::Ability::Feint`]'s test). It sits between Evade and Fight.
 //!
 //! The party's lead type ([`World::lead_of`]) checks its Willpower modifier, two gameplay draws,
-//! against `data/feint.toml`'s `difficulty` + the player's Presence modifier + their talents'
+//! against `data/rules/feint.toml`'s `difficulty` + the player's Presence modifier + their talents'
 //! Presence checks + Bluff's `feint` points: a feint's contest, at the party's lead. The lead
 //! failed, "You talk your way past.": the party lets the player go, as [`Choice::Pass`] does, and
 //! the try took a `chat` action's time. Made, "They are not fooled.": the fight opens as

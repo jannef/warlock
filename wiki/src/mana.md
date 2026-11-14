@@ -77,7 +77,7 @@ and [diseases](diseases.md), [starving](hunger.md#how-hungry-you-are), and
 When several things change the pace at once:
 
 - If several status effects slow it, only the slowest counts.
-- A disease that slows it more than being [Diseased](status-effects.md#status-diseased) does counts
+- A disease that slows it more than being [Diseased](status-list.md#status-diseased) does counts
   too.
 - Resting makes up for some of the slowing, as it does for healing, and so does a
   [sanctuary](special-rooms.md#room-sanctuary).
@@ -128,13 +128,13 @@ spell, and the one you killed must stand **within 3 cells** of you.
 Distance is measured round, as for every radius: 3 cells in a straight line, 3 across and 1 aside,
 or 2 diagonally, but not 3 across and 2 aside.
 
-You get nothing for a creature that dies of [poison](status-effects.md#status-poisoned) or
-[bleeding](status-effects.md#status-bleeding) you caused, one a [trap](traps.md) kills, or one
+You get nothing for a creature that dies of [poison](status-list.md#status-poisoned) or
+[bleeding](status-list.md#status-bleeding) you caused, one a [trap](traps.md) kills, or one
 your summoned creature kills, nor for a kill farther off. Two such items add up, identified or not.
 A creature wearing one refills its own mana the same way when it kills.
 
 A [witch](class-witch.md)'s [Malison](class-witch.md#talent-malison) (from level 18) pays her mana
-for every death under one of her [hexes](status-effects.md#status-ill-wished), however it died,
+for every death under one of her [hexes](status-list.md#status-ill-wished), however it died,
 whoever killed it, and at any distance. She gets half the creature's level (rounded down, at least
 1), never above her maximum. This adds to what an item of Siphoning gives.
 

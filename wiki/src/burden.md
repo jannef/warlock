@@ -106,3 +106,5 @@ step into one if you would be overloaded inside, but you can always step out.
 
 The game never shows you a [creature](creatures.md)'s burden or what it carries. Creatures'
 carrying limits are listed on [Creatures in numbers](creature-numbers.md#pace-senses-and-size).
+
+See also: [Equipment](equipment.md), [Stats](stats.md), and [Turns and movement](turns.md).

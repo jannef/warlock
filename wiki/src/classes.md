@@ -86,3 +86,6 @@ Some classes give spells: the priest, druid, wizard, and witch a few, a bard, a 
 ranger one or two (see [What your class gives](magic.md#what-your-class-gives) and
 [Casting a spell](spellcasting.md#casting-a-spell)). Some fight from a pool of their own, such as
 the berserker's rage or the thief's openings (see [Resources](resources.md)).
+
+See also: [Races](races.md), [Starting kit](starting-kit.md), and
+[Prestige classes](prestige-classes.md).

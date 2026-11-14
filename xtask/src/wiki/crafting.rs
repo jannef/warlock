@@ -1,6 +1,6 @@
 //! Crafting (docs/dev/crafting.md; docs/design/professions.md): which skill works each material
 //! group (`data/stock.toml`), how hard each material is to work (`work` in `materials/`), and the
-//! odds and numbers of a salvage (`data/salvage.toml` and the 2d12 rules).
+//! odds and numbers of a salvage (`data/rules/salvage.toml` and the 2d12 rules).
 
 use super::util::capital;
 use std::fmt::Write as _;

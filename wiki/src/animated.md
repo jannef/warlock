@@ -83,12 +83,12 @@ Whatever magic it had is gone with it. They leave no [corpse](food.md#corpses) a
 ## What they are
 
 They are constructs. Nothing lives in them to sicken, they have no blood or breath for poison, and
-nothing in them bleeds. So they are never **[diseased](status-effects.md#status-diseased)**,
-**[poisoned](status-effects.md#status-poisoned)**, or **[bleeding](status-effects.md#bleeding)**.
-They can still be [frightened](status-effects.md#status-frightened) (rarely, since their will is
-not their own), [held](status-effects.md#status-held),
-[staggered](status-effects.md#status-staggered), or
-[transfixed](status-effects.md#status-transfixed).
+nothing in them bleeds. So they are never **[diseased](status-list.md#status-diseased)**,
+**[poisoned](status-list.md#status-poisoned)**, or **[bleeding](status-effects.md#bleeding)**.
+They can still be [frightened](status-list.md#status-frightened) (rarely, since their will is
+not their own), [held](status-list.md#status-held),
+[staggered](status-list.md#status-staggered), or
+[transfixed](status-list.md#status-transfixed).
 
 What they are made of decides what hurts them most. Wood and cloth
 [burn](damage-types.md#damage-fire), metal takes [lightning](damage-types.md#damage-electricity)
@@ -98,11 +98,11 @@ badly, and glass, stone, and bone shatter under heavy blows. Nothing can be
 A few have a trick of their own:
 
 - The [animated rug](creatures.md#creature-animated-rug), the rug of smothering, now and then
-  closes over what it wraps. You are [engulfed](status-effects.md#status-engulfed) until you
+  closes over what it wraps. You are [engulfed](status-list.md#status-engulfed) until you
   struggle free or it dies, and it costs you 1 [hit point](hit-points.md#hit-points) a tick. (A
   [charnel heap](creatures.md#creature-charnel-heap)'s costs 2.)
 - The [bellows'](creatures.md#creature-animated-bellows) gust may leave you
-  [staggered](status-effects.md#status-staggered).
+  [staggered](status-list.md#status-staggered).
 - The [animated lantern](creatures.md#creature-animated-lantern)'s oil bursts as it dies, burning
   everyone beside it ([death throes](creature-powers.md#bursts)). Step back from a dying one.
 
@@ -243,3 +243,6 @@ half as much as the part, counted in pieces of that material (see [pieces](mater
 one at least.
 
 {{#include generated/animated-parts.md}}
+
+See also: [Creatures](creatures.md), [Animated things and mimics](creature-numbers-animated.md), and
+[Mimics](mimics.md).

@@ -113,8 +113,8 @@ impl World {
         }
     }
 
-    /// A deed of the player's moved them toward evil: the pool `data/smite.toml` names (Zeal),
-    /// if they hold any of it, is emptied, and they are told (spec §8 "Alignment"). It bars
+    /// A deed of the player's moved them toward evil: the pool `data/rules/smite.toml` names
+    /// (Zeal), if they hold any of it, is emptied, and they are told (spec §8 "Alignment"). It bars
     /// nothing: the pool fills again.
     fn sin_empties_zeal(&mut self) {
         let Some(pool) = self.content.smite().and_then(|rules| rules.sin_empties) else {

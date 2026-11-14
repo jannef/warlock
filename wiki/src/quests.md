@@ -207,3 +207,6 @@ first, the level you must have reached for it to be given, and the
 [hidden place](overworld.md#hidden-locations) it shows you.
 
 {{#include generated/quests.md}}
+
+See also: [The Weyfarers' Gilde](guild.md), [People and talk](npcs.md), and
+[Experience and levelling up](experience.md).

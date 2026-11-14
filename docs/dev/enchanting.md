@@ -158,7 +158,7 @@ gnome on Gimmwīc's cutting floor (`npc = "morwenna"`, `campaigns/ascmearc/data/
 gimmwic.toml`; `docs/dev/creatures/deep-gnomes.md`): her lines are hand-written from the
 families, so change them with the colours.
 
-`data/enchanting.toml` (`EnchantingRules`, `Content::enchanting`): `skill = "enchanting"` (the
+`data/rules/enchanting.toml` (`EnchantingRules`, `Content::enchanting`): `skill = "enchanting"` (the
 skill of every enchanting check's `craft` points, the reach, and salvage's affix mark; the loader
 refuses an unknown one), `stat = "willpower"` (every enchanting check's stat; #1493),
 `salvage_difficulty = 12`,
@@ -254,7 +254,7 @@ reach `enchant_level` (`Effect::EnchantLevel`, `[[0, 1], [110, 12], [200, 12]]`,
 - **The check** (`World::enchanted`, after the work driver ran the recipe's `seconds`, Quick hands' share
   of them, `mastery::craft_seconds`, as the plan and the row say; an interruption
   spends nothing but the time): `combat::roll_natural` (two gameplay draws) + `stat`'s modifier
-  (`data/enchanting.toml`, Willpower) + `VigourMods::check(stat)` + `skill_effect_of(recipe's
+  (`data/rules/enchanting.toml`, Willpower) + `VigourMods::check(stat)` + `skill_effect_of(recipe's
   skill, Craft)` against
   `difficulty` + level ÷ `level_step`; `enchant_band`: a natural 2 `Warped`, a natural 24 or a
   margin of 0 or more `Made`, else `Failed`.

@@ -207,3 +207,5 @@ much of what it held with it. See [Chests](chests.md#trapped-chests).
   [rooms](special-rooms.md) hide their own: an offering before an [altar](special-rooms.md#room-altar)
   may not be unguarded.
 - **Cēaptūn** and the [overworld](overworld.md) have no traps.
+
+See also: [Searching](searching.md), [Doors](doors.md), and [Chests](chests.md).

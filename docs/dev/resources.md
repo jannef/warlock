@@ -109,7 +109,7 @@ statuses).
   fourth, `resource_on_kill` (of the Hunt; E1, #632), is read in `World::siphon`
   (`world/siphon.rs`) at the kill point of an attack, beside of Siphoning's mana: each pool held
   that an affix names gains its sum, up to its maximum, when the holder's own blow, shot, or
-  spell kills within `SIPHON_RANGE` (3) cells. `gain_resource(by, Build::Kill)` stays in
+  spell kills within the `[siphon]` range of `data/rules/tuning.toml` (3) cells. `gain_resource(by, Build::Kill)` stays in
   `dies` for the data's `builds` and the talents' (any kill). Tests: `world/siphon_tests.rs`.
 - **Rage** (R1, #249; `world/rage.rs`): the talent effect `rage { resource = "rage" }`
   (`MartialMods::rage: Option<ResourceId>`, `rage_status` its resource's status) makes the Rage

@@ -112,3 +112,6 @@ in its light can be seen, including you if you stand in it.
 
 Eadric's Smithy in Cēaptūn ([Shops](shops.md)) sells slings, bows, [arrows](ammunition.md), and
 bolts.
+
+See also: [Fighting styles](fighting-styles.md), [Combat](combat.md), and
+[Weapon skills](weapon-skills.md).

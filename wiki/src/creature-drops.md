@@ -32,3 +32,6 @@ The chances of each sort as written, before a small creature halves them. "Witho
 is yes for the sorts whose chances apply to a creature that leaves no corpse.
 
 {{#include generated/drops-by-tag.md}}
+
+See also: [Creatures' gear](creature-gear.md), [Materials](materials.md), and
+[Crafting](crafting.md).

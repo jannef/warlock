@@ -20,9 +20,6 @@ use crate::status::Effect;
 use crate::text::capitalized;
 use serde::{Deserialize, Serialize};
 
-/// How far the Transfixing stare reaches, in cells (a disc, as ranges are).
-pub const STARE_RANGE: i32 = 6;
-
 /// A streak of melee blows at one creature (Relentless): who they were at, how many in a row,
 /// and the player's turn of the last ([`super::WorldState::turn`]). A blow continues it while
 /// it is at the same creature in the same turn or the next; anything else starts it over.
@@ -117,8 +114,8 @@ impl World {
         Spent::Turn(self.price_of(player, ActionKind::Wait))
     }
 
-    /// The Transfixing stare at `at`: a hostile there, within [`STARE_RANGE`] (more under a full
-    /// moon), that the player sees and that sees them now suffers the stare's status, and the
+    /// The Transfixing stare at `at`: a hostile there, within its talent's `range` (more under a
+    /// full moon), that the player sees and that sees them now suffers the stare's status, and the
     /// player its cooldown; one that does not see them is not caught, and the cooldown waits.
     /// Silent; the time of a wait. Refused, taking no time, at the player's own cell, out of reach, where they see no
     /// one, and at anyone not hostile.
@@ -136,7 +133,9 @@ impl World {
             .petrifying_gaze
             .unwrap_or((stare.severity, stare.degrees));
         // A full moon lengthens it (spec §8 "Birth sign", the flavour).
-        let range = (ability.reach_at(&content, self.state.time)).unwrap_or(STARE_RANGE);
+        let Some(range) = ability.reach_at(&content, self.state.time) else {
+            return Spent::Nothing;
+        };
         if !self.within_reach(at, range, "stare") {
             return Spent::Nothing;
         }

@@ -1,7 +1,7 @@
 # Enchanting's numbers (docs/design/enchanting.md §7, §9, §10; docs/dev/enchanting.md; the loader
 # is content/crystal.rs). The colours and the crystals are crystals.toml.
 #
-# Salvaging a magic or rare item, identified or not (salvage.toml), first makes one check for each
+# Salvaging a magic or rare item, identified or not (rules/salvage.toml), first makes one check for each
 # of its affixes, in the item's order: 2d12 + `stat`'s modifier + the talents' checks of `stat` +
 # `skill`'s `craft` points (skills/) against `salvage_difficulty` + the affix's tier
 # divided by `salvage_tier_step` (rounded down: a top tier, 12, is +4). A natural 2 always fails,

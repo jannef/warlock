@@ -20,3 +20,5 @@ numbers](creature-numbers.md), and how each creature behaves on
 ## Pace, senses, and size
 
 {{#include generated/creature-senses.md:elementals}}
+
+See also: [How creatures fight](creature-bodies.md) and [Damage types](damage-types.md).

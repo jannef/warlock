@@ -2,6 +2,8 @@
 
 {{#include generated/class-card.md:warrior}}
 
+See also: [Weapon skills](weapon-skills.md) and [Stances and stamina](stances.md).
+
 ## How to play
 
 You fight up close and take the blows. Your sword, shield, jerkin, and helm make you hard

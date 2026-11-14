@@ -170,3 +170,5 @@ warden's side, and so does what comes through them.
 Four results go further: the floor splits and **a stair down into a [Pit](pits.md)** opens beside
 you, with a rift, an abyssal gate, a dire gate, or the lords' gate at its head. Every one is a Pit
 of its own. On the overworld or on a Pit's own floor no stair opens, and only the gate comes.
+
+See also: [Magic](magic.md), [Mana](mana.md), and [Fiends](creature-numbers-fiends.md).

@@ -598,7 +598,7 @@ thaw:X,Y,R`
   inventory stack `c` there (any weapon is thrown whole, badly: `t` in the game sends `fire` for
   a launcher, else `throw` for what the Missile weapon slot holds; docs/dev/ranged-combat.md).
 - `feint:E` feints at the hostile creature east of the player (the Feint ability, Bluff's use,
-  for those trained in it: a turn, the foe's Willpower check against `data/feint.toml`'s
+  for those trained in it: a turn, the foe's Willpower check against `data/rules/feint.toml`'s
   difficulty + their Presence modifier + Bluff; failed, it is Surprised, and the player's next
   blow finds it flat-footed; refused, with no time, without the skill, a foe there, or one with
   no mind (`Content::has_vitals`); `use:false_lead:E` is the Duelist's weapon active, False lead;
@@ -606,7 +606,7 @@ thaw:X,Y,R`
 - `intimidate:X,Y` threatens the hostile creature on level cell (X, Y), one the player sees
   within 6 (the Intimidate ability, for those trained in it: War cry's check at one foe,
   Frightened for more degrees the better their Intimidate; refused, with no time, without the
-  skill or a hostile with vitals there; `data/intimidate.toml`, docs/dev/skills.md).
+  skill or a hostile with vitals there; `data/rules/intimidate.toml`, docs/dev/skills.md).
 
 ### Skills and places
 
@@ -703,17 +703,17 @@ All in docs/dev/crafting.md unless named.
   Temper recipe, Metalcraft's, on its profession screen, which walking into the anvil opens: ten
   minutes, then a Strength check plus Metalcraft, harder for every attempt ever made on the item:
   made, an improvement, up to three, or a damaged item repaired; failed, the item damaged, or a
-  damaged one destroyed; `data/temper.toml`; refused, with no time, untrained in Metalcraft, with
+  damaged one destroyed; `data/rules/temper.toml`; refused, with no time, untrained in Metalcraft, with
   no anvil beside them, a stack not of metal, or one with three improvements).
 - `whittle:c` whittles inventory stack `c`, a weapon of wood (a bow, a staff, a club), with a
   knife carried, anywhere (the Whittle recipe, Woodcraft's, beside the arrows on its profession
-  screen: Temper's rules and `data/temper.toml` for wood, a Dexterity check plus Woodcraft's
+  screen: Temper's rules and `data/rules/temper.toml` for wood, a Dexterity check plus Woodcraft's
   `whittle` points; refused, with no time, untrained in Woodcraft, without a knife, a stack not of
   wood, or one with three improvements; docs/dev/skills.md "Whittling").
 - `salvage:c` takes one of inventory stack `c` apart for its materials, anywhere, with nothing
   (the Salvage ability, every profession's, in the Skills group: ten minutes, then a check per
   material a profession works, by its skill's stat plus that skill's `craft` points against
-  `data/salvage.toml`'s difficulty plus the material's `work`; made, half its weight back as
+  `data/rules/salvage.toml`'s difficulty plus the material's `work`; made, half its weight back as
   stock, a gem whole; failed, lost, a gem a cut or a size less and shattered only on a natural 2;
   the item gone either way; refused, with no time, for a stack worn or wielded, protected,
   unpaid, a spirit weapon, or with nothing a profession works).
