@@ -1,10 +1,9 @@
-//! Enchanting's recipes (docs/design/enchanting.md §7, §8; `world/enchant.rs`): Kindle, Quicken,
+//! Enchanting's recipes (docs/design/enchanting.md §7, §8; `world/crafting/enchant.rs`): Kindle, Quicken,
 //! Recast, Imbue, Ennoble, and Unbind made, failed, and warped; the colour rule and `Magic::check` on every result; the
 //! reach and the item level; a whole stack of arrows at once; the wizard's steps, the plan, and
 //! the rows' lacks; every refusal with no time; the hour and the mark; and a replay.
 
 use super::enchant::{EnchantBand, crystal_object, enchant_band, enchant_out_for_test};
-use super::*;
 use crate::action::parse_actions;
 use crate::content::{AffixKind, ContentFiles, Rarity, RecipeId};
 use crate::magic::{Affix, Magic, Quality, capacity};
@@ -13,6 +12,7 @@ use crate::replay::Replay;
 use crate::skills::{SkillId, Trained};
 use crate::stats::{PerStat, Stats};
 use crate::test_support::{last_text as last, run as apply, said_text as said, texts};
+use crate::world::*;
 use std::sync::LazyLock;
 
 const ROOM: &str = "\
@@ -436,7 +436,7 @@ fn the_steps_plan_and_rows_say_what_the_work_takes() {
         ]
     );
     // No crystal: the works that take one wait for it.
-    super::outcome::remove_stacks(w.player_mut(), &[3]);
+    crate::world::fixtures::outcome::remove_stacks(w.player_mut(), &[3]);
     let lacks: Vec<Option<String>> = rows(&w).into_iter().map(|r| r.2).collect();
     let some = |s: &str| Some(s.to_string());
     assert_eq!(

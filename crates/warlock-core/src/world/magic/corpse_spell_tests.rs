@@ -1,9 +1,8 @@
-//! Spells aimed at a corpse (`world/corpse_spell.rs`; the spell types design §7 entries 2, 29, 30):
+//! Spells aimed at a corpse (`world/magic/corpse_spell.rs`; the spell types design §7 entries 2, 29, 30):
 //! Charnel burst, Grave feast, Rouse the dead and its berserk, on the shipped spells.
 
 use super::caster_tests::{kobold_at, sp};
 use super::spell_type_tests::{HALL_CONTENT, cell, files, start};
-use super::*;
 use crate::ability::{Ability, Aim};
 use crate::action::{Action, ReadTarget};
 use crate::content::Stance;
@@ -11,6 +10,7 @@ use crate::dump::{self, Layer};
 use crate::object::Stack;
 use crate::test_support::run;
 use crate::time::Duration;
+use crate::world::*;
 
 /// The spell types' lit hall, the player at (2, 3) knowing the three spells, with mana.
 fn world(seed: u64) -> World {

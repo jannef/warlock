@@ -1,13 +1,13 @@
-//! Halls of mirrors (spec §7 "Special rooms"; `world/mirrors.rs`): the images of everyone inside,
+//! Halls of mirrors (spec §7 "Special rooms"; `world/fixtures/mirrors.rs`): the images of everyone inside,
 //! where they stand, what the player sees of them, the glass a blow meets, a missile flying on
 //! through one, the creatures' aim from outside, and the `actors` dump.
 
-use super::*;
 use crate::action::Event;
 use crate::content::ContentFiles;
 use crate::dump::{Layer, layer_rows};
 use crate::object::Stack;
 use crate::test_support::{builtin, run, said_text as said};
+use crate::world::*;
 use std::collections::BTreeSet;
 
 /// A hall, 31 wide, fully lit: the east part (x 14 to 24, walls included) a hall of mirrors with

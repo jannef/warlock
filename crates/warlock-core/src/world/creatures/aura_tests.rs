@@ -2,10 +2,10 @@
 //! and its `every`; innate statuses refreshed and kept out of the look line; a cry heard by the
 //! hearing rules, through a door and at Listen's threshold, and drawn on the crier's turn only.
 
-use super::*;
 use crate::content::ContentFiles;
 use crate::noise::{Listening, SoundKind};
 use crate::test_support::texts;
+use crate::world::*;
 
 const TERRAIN: &str = r##"
 [[terrain]]

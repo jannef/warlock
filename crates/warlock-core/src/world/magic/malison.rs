@@ -7,13 +7,13 @@
 //! creature's death, before the creature leaves the world. Malison's other half, the bite, is
 //! `status_damage` (`caster.rs::lore_blow`). No draw, no saved state.
 
-use super::{ActorId, World};
+use crate::world::{ActorId, World};
 
 impl World {
     /// Creature `slain` is dying: if it is under a hex of the player's and the player holds the
     /// tithe, their mana rises by its level / `per_levels` (at least 1, to their maximum), and
     /// "The hex comes home." waits in the news when it rose at all.
-    pub(super) fn hex_tithe(&mut self, slain: ActorId) {
+    pub(in crate::world) fn hex_tithe(&mut self, slain: ActorId) {
         let player = self.state.player;
         if slain == player {
             return;

@@ -9,12 +9,12 @@
 //! dodged attack). A hidden trap, a door's trap (opening the door sets it off, not the step),
 //! and creatures keep the rules of `trap.rs`.
 
-use super::World;
 use crate::action::Event;
 use crate::combat::Category;
 use crate::content::TrapEffect;
 use crate::geom::Pos;
 use crate::skills::Use;
+use crate::world::World;
 
 impl World {
     /// The player's dodge against a known trap: the Dexterity and Dodge categories of their
@@ -27,7 +27,7 @@ impl World {
     /// The player has just stepped onto `at` of their own will: a trap they know of there may be
     /// avoided, else it goes off as any trap does ([`World::step_onto_trap`]). Returns the energy
     /// a pit's climb costs on top of the step.
-    pub(super) fn step_willingly(&mut self, at: Pos, events: &mut Vec<Event>) -> i64 {
+    pub(in crate::world) fn step_willingly(&mut self, at: Pos, events: &mut Vec<Event>) -> i64 {
         if self.sidesteps(at) {
             self.warp_step(at, self.state.player, events);
             return 0;

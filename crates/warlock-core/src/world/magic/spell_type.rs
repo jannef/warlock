@@ -21,8 +21,6 @@
 //! the order `spell_lands` walks them; the rest draw nothing. Saves: a status is data, a fire is
 //! `LevelState::fires`, a broken door is terrain.
 
-use super::level::Fire;
-use super::{ActorId, World};
 use crate::action::Event;
 use crate::combat::{self, Blow, Strike};
 use crate::content::{ActionKind, DamageTypeId, LightId, ZoneKind};
@@ -30,6 +28,8 @@ use crate::geom::{Dir, Pos};
 use crate::ice::Shock;
 use crate::sight::LineOfSight;
 use crate::time::Duration;
+use crate::world::turn::level::Fire;
+use crate::world::{ActorId, World};
 
 /// The ice a spell's blast shatters, in µm per point of its `blast`: thinner than 10 cm at 1000,
 /// what holds a person and a pack, so a blast that breaks brick drops whoever stands on it.
@@ -38,7 +38,7 @@ const SHATTERS_UM: u32 = 100;
 impl World {
     /// `by`'s spell of `kind` harmed `harmed`: its type's rider on each who lives (one draw for
     /// a chance), then what the type ends.
-    pub(super) fn spell_type_lands(
+    pub(in crate::world) fn spell_type_lands(
         &mut self,
         by: ActorId,
         kind: Option<DamageTypeId>,
@@ -122,7 +122,7 @@ impl World {
 
     /// Whether a status or its kind (`rooted.rs`) holds actor `id` where it stands, so nothing
     /// drives it on.
-    pub(super) fn rooted(&self, id: ActorId) -> bool {
+    pub(in crate::world) fn rooted(&self, id: ActorId) -> bool {
         self.is_rooted(id)
             || (self.state.actors.get(&id)).is_some_and(|a| {
                 (a.effects)
@@ -204,7 +204,7 @@ impl World {
 
     /// A ray, a bolt, a touch, or a line of a spell of `kind` ended on `cell`, if it went
     /// anywhere: what its type does to the ice, the water, and the fire there.
-    pub(super) fn spell_type_cell(
+    pub(in crate::world) fn spell_type_cell(
         &mut self,
         kind: Option<DamageTypeId>,
         cell: Option<Pos>,
@@ -222,7 +222,7 @@ impl World {
 
     /// The fires within `radius` of `center`, in its line of sight, go out, and a fire zone
     /// loses those cells (`zone.rs`).
-    pub(super) fn douse(&mut self, center: Pos, radius: i32) {
+    pub(in crate::world) fn douse(&mut self, center: Pos, radius: i32) {
         let cells: Vec<Pos> = self.burst(center, radius).into_iter().collect();
         for &p in &cells {
             if self.state.current().fires.contains_key(&p) {
@@ -235,7 +235,7 @@ impl World {
     /// A fire on `cell` of the current level, if it is walkable, burning `seconds` with light
     /// `light`, or the fire there burning on until then (as a burning missile's, `come_down`).
     /// Light only: no rule reads it, and it never spreads.
-    pub(super) fn lay_fire(&mut self, cell: Pos, light: LightId, seconds: u32) {
+    pub(in crate::world) fn lay_fire(&mut self, cell: Pos, light: LightId, seconds: u32) {
         let until = self.state.time + Duration::seconds(u64::from(seconds));
         let content = self.content.clone();
         let level = self.state.current_mut();
@@ -248,7 +248,7 @@ impl World {
     }
 
     /// Actor `id` is in the water: every status of its that water ends (Burning) ends.
-    pub(super) fn quench(&mut self, id: ActorId, events: &mut Vec<Event>) {
+    pub(in crate::world) fn quench(&mut self, id: ActorId, events: &mut Vec<Event>) {
         let content = self.content.clone();
         let Some(actor) = self.state.actors.get_mut(&id) else {
             return;

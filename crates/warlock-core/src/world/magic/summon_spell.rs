@@ -1,6 +1,6 @@
 //! Player summons (spec §8 "Allies": "Summons"; docs/design/druid-and-summons.md §5 and §14;
 //! `docs/dev/allies.md`): a spell of `kind = "summon"` calls creatures of its pool to the
-//! caster's side, as allies ([`super::Ally`]) that follow and fight for them until their time
+//! caster's side, as allies ([`crate::world::Ally`]) that follow and fight for them until their time
 //! runs out or they are slain.
 //!
 //! **The cast** ([`World::cast_summon`], the summon arm of `cast.rs::perform`, after the cast
@@ -18,7 +18,7 @@
 //! the caster, nearest first, with no gear.
 //!
 //! **Its time**: the spell's minutes (its `degrees` ladder, Lingering's degrees) made `ally_mod`'s
-//! `duration_percent` longer (rounded down, at least 1) set [`super::Ally::until`] on the clock;
+//! `duration_percent` longer (rounded down, at least 1) set [`crate::world::Ally::until`] on the clock;
 //! `ally_mod`'s `lasting` leaves it `None`: the call stays until slain.
 //!
 //! **Its death**: a summoned ally leaves no corpse and drops nothing (`fight.rs::creature_dies`).
@@ -26,13 +26,13 @@
 //! Draws: the count roll, then one draw per creature, on the gameplay stream, only when a call
 //! goes off.
 
-use super::ally::{AllySource, few};
 use super::cast::Cast;
-use super::{ActorId, World};
 use crate::action::Event;
 use crate::content::{CreatureId, LevelKind, SpellId};
 use crate::text::{and_list, capitalized};
 use crate::time::Duration;
+use crate::world::allies::ally::{AllySource, few};
+use crate::world::{ActorId, World};
 
 impl World {
     /// The player's summon spell `cast` (module docs); whether it went off.

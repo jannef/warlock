@@ -4,11 +4,11 @@
 //! terror take creatures up to the rod's own level; no mana, no use; a rod type is unknown until used or identified; the effects dig, teleport,
 //! and put to sleep or to flight; rod labels leave the scrolls' and wands' as they were.
 
-use super::*;
 use crate::content::ContentFiles;
 use crate::stats::{PerStat, Stat, Stats};
 use crate::talent::TalentMods;
 use crate::test_support::{builtin, run};
+use crate::world::*;
 
 /// The pack: a, a rod of digging; b, a rod of sleep; c, a rod of teleport other; d, a rod of
 /// terror; e, a scroll of identify; f, a crossbow.

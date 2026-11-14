@@ -1,13 +1,13 @@
-//! The body gifts (docs/design/profane-gifts.md §6.4, §13 P5; `world/body_slots.rs`): a slot
+//! The body gifts (docs/design/profane-gifts.md §6.4, §13 P5; `world/items/body_slots.rs`): a slot
 //! barred (Horned's helm falls, its equip refused with no time), a slot opened (Many-fingered's
 //! ring, and its fall when the gift goes), claws that make bleeding, kin by tag (Rat-king's court),
 //! another race's eyes (Deep-eyed), and more mana (Fell-minded).
 
-use super::*;
 use crate::action::{AttackKind, parse_actions};
 use crate::character::CharacterSpec;
 use crate::content::{ContentFiles, Stance};
 use crate::object::Stack;
+use crate::world::*;
 use std::sync::LazyLock;
 
 /// A lit corridor: the player at its west end, a rat (vermin) beside them, a kobold farther.

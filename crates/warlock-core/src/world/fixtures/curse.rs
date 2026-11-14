@@ -11,12 +11,12 @@
 //! is not cursed again. Levels the player is not on stay frozen, so what was due while they
 //! were away rises on their first turn back. Old delver: what the player kills never rises.
 
-use super::{World, travel};
 use crate::content::{Content, CreatureId, CreatureSpawn, FactionId};
 use crate::geom::Pos;
 use crate::noise::Act;
 use crate::rng::Rng;
 use crate::time::GameTime;
+use crate::world::{World, levels::travel};
 use serde::{Deserialize, Serialize};
 
 /// One of the dead due to rise (kept in the level's state, saved and hashed).
@@ -111,7 +111,11 @@ impl World {
     /// Creature `dead` has just died (its corpse, if any, left at its cell): if the effects there
     /// raise the dead and it may rise, its rising is kept; returns the line the player is told,
     /// if they saw it. Old delver: never what the player (`by_player`) killed.
-    pub(super) fn curse_corpse(&mut self, dead: &super::Actor, by_player: bool) -> Option<String> {
+    pub(in crate::world) fn curse_corpse(
+        &mut self,
+        dead: &crate::world::Actor,
+        by_player: bool,
+    ) -> Option<String> {
         let content = self.content.clone();
         let rise = self.effects_at(&dead.level, dead.pos).rise()?.clone();
         let faction = content.factions().id(&rise.faction)?;
@@ -150,7 +154,7 @@ impl World {
     }
 
     /// The end of a turn: every rising due on the current level rises, in the order they died.
-    pub(super) fn rise_tick(&mut self) {
+    pub(in crate::world) fn rise_tick(&mut self) {
         let now = self.state.time;
         let level = self.state.current_mut();
         if level.risings.is_empty() {

@@ -2,12 +2,12 @@
 //! unidentified thing they carry or wear for what it is, by a chance its value sets; Negotiation
 //! has the shops' prices it once had.
 
-use super::*;
 use crate::character::CharacterSpec;
 use crate::rng::Rng;
 use crate::skills::Effect;
 use crate::test_support::{CONTENT as BUILTIN, run, said};
 use crate::time::HOUR;
+use crate::world::*;
 
 /// A human of `class` in the showcase.
 fn world(class: &str) -> World {
@@ -90,11 +90,14 @@ fn negotiation_moves_prices_and_appraise_no_longer_does() {
     let mut w = world("warrior");
     let content = BUILTIN.clone();
     let shops = content.shops().expect("shops");
-    let base = shop::favour(&content, shops, w.state.player());
+    let base = crate::world::people::shop::favour(&content, shops, w.state.player());
     w.player_mut().skills.add(skill("appraise"), 100);
-    assert_eq!(shop::favour(&content, shops, w.state.player()), base);
+    assert_eq!(
+        crate::world::people::shop::favour(&content, shops, w.state.player()),
+        base
+    );
     w.player_mut().skills.add(skill("negotiation"), 100);
-    assert!(shop::favour(&content, shops, w.state.player()) > base);
+    assert!(crate::world::people::shop::favour(&content, shops, w.state.player()) > base);
 }
 
 #[test]

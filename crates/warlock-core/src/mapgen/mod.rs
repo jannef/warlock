@@ -234,7 +234,7 @@ pub(crate) struct Canvas<'a> {
     pub up: Option<Pos>,
     pub down: Option<Pos>,
     /// A layer boss's lair's hidden way down, stamped as floor: its cell and the stairs' terrain
-    /// ([`Vault::down`], `world/layer_boss.rs`).
+    /// ([`Vault::down`], `world/levels/layer_boss.rs`).
     pub lair: Option<(Pos, TerrainId)>,
 }
 
@@ -505,9 +505,9 @@ pub fn generate_for(
         (def.room_odds(depth)).ok_or_else(|| GenError::NotAGeneratedLevel(id.to_string()))?;
     let odds = (room_odds, def.shop_odds(depth));
     // A layer boss not yet slain keeps its lair here, with the floor's way down hidden in it
-    // (spec §7 "The endless branch", `world/layer_boss.rs`).
+    // (spec §7 "The endless branch", `world/levels/layer_boss.rs`).
     // A Pit's warden's hall is stamped whether the warden lives or not; slain (its Pit sealed),
-    // the hall is made without it (spec §7 "The Pits", `world/pit.rs`).
+    // the hall is made without it (spec §7 "The Pits", `world/levels/pit.rs`).
     let slain = |b: &&crate::content::LayerBoss| {
         let id = &content.creature(b.creature).id;
         visit.slain.is_some_and(|s| s.contains(id))
@@ -704,7 +704,7 @@ pub fn generate_for(
 }
 
 /// A lair's hidden way down: the level keeps it as a hidden location named for the boss, which
-/// its death reveals (`world/layer_boss.rs`).
+/// its death reveals (`world/levels/layer_boss.rs`).
 fn layer_boss_stairs(
     content: &Content,
     boss: &crate::content::LayerBoss,

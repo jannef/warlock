@@ -2,7 +2,6 @@
 //! balance, survival), that untrained ones give nothing and are never perceived, training marks
 //! on use, saves, and replays.
 
-use super::*;
 use crate::action::parse_actions;
 use crate::content::ContentFiles;
 use crate::noise::{self, Act, Noise, SoundKind};
@@ -10,6 +9,7 @@ use crate::object::Stack;
 use crate::replay::Replay;
 use crate::skills::{MAX_VALUE, SkillId, Trained};
 use crate::test_support::said_text as said;
+use crate::world::*;
 
 /// A lit yard: the player in a corner, a peaceful rat standing in the far one.
 const YARD: &str = r##"

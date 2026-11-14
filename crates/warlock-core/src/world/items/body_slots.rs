@@ -10,11 +10,11 @@
 //! - **Shed** ([`World::shed_unworn`]): as a gift takes or goes, what is worn in a slot now barred
 //!   or no longer the player's comes off and falls to their cell, said once each.
 
-use super::World;
 use crate::action::Positions;
 use crate::content::{Content, SlotId};
 use crate::object;
 use crate::talent::TalentMods;
+use crate::world::World;
 
 /// Whether one of class `class` (`None`: no character) whose talents are `mods` has slot `slot`:
 /// everyone's slots, their class's own, and the ones a talent opens.
@@ -52,7 +52,7 @@ impl World {
     /// off and falls to their cell: "Your iron helm no longer fits, and falls to the floor.", or
     /// for a slot gone, "Your gold ring slips from a finger that is no longer there.". Takes no
     /// time (a gift taking or going, `profane.rs`).
-    pub(super) fn shed_unworn(&mut self) {
+    pub(in crate::world) fn shed_unworn(&mut self) {
         let content = self.content.clone();
         let class = self.state.character.as_ref().map(|c| c.spec.class.clone());
         let me = self.state.player();

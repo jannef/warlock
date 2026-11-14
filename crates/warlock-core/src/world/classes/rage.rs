@@ -6,9 +6,9 @@
 //! kill is a resource build (`World::gain_resource`), Mighty rage's maximum is
 //! `Actor::resource_max`, and Unstoppable is here and in `World::live`'s numb statuses.
 
-use super::{ActorId, Spent, World};
 use crate::action::Event;
 use crate::content::ActionKind;
+use crate::world::{ActorId, Spent, World};
 
 impl World {
     /// Rage: the player is granted the rage's resource (Rage) and suffers its status (Raging),
@@ -26,7 +26,7 @@ impl World {
     /// its last hit point while it rages leaves it that one, for Unstoppable's cost of its rage
     /// (spent to nothing, the rage ends and what follows it begins). Without that much rage it
     /// falls. The caller then does no more harm.
-    pub(super) fn unstoppable(
+    pub(in crate::world) fn unstoppable(
         &mut self,
         id: ActorId,
         damage: i32,

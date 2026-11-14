@@ -7,15 +7,15 @@
 //! costs what putting it on does. A refused attempt takes no time. What is worn and wielded
 //! fights and protects (`fight.rs`); it weighs what it weighs, worn or not.
 
-use super::{Spent, World};
 use crate::content::{ActionKind, SlotId};
 use crate::equipment::{self, verbs};
 use crate::text::capitalized;
+use crate::world::{Spent, World};
 
 impl World {
     /// Puts inventory stack `item` on in slot `slot` (an id), taking off first what is in the
     /// slots it takes, and moving it if it is in another slot.
-    pub(super) fn equip(&mut self, slot: &str, item: usize) -> Spent {
+    pub(in crate::world) fn equip(&mut self, slot: &str, item: usize) -> Spent {
         let spent = self.equip_saying(slot, item, None);
         // A light made ready in the water goes out at once (`swim.rs`).
         self.douse_afloat();
@@ -24,7 +24,7 @@ impl World {
 
     /// [`World::equip`], saying `put_on` in place of "You wield ..." (a spirit weapon called,
     /// `spirit_weapon.rs`). A spirit weapon that leaves the hands by it fades.
-    pub(super) fn equip_saying(
+    pub(in crate::world) fn equip_saying(
         &mut self,
         slot: &str,
         item: usize,
@@ -107,7 +107,7 @@ impl World {
     }
 
     /// Takes off what is in slot `slot` (an id).
-    pub(super) fn remove(&mut self, slot: &str) -> Spent {
+    pub(in crate::world) fn remove(&mut self, slot: &str) -> Spent {
         let content = self.content.clone();
         let Some(slot) = self.own_slot(slot) else {
             self.say(format!("There is no slot `{slot}`."));
@@ -132,7 +132,7 @@ impl World {
 
     /// Takes off whichever of the inventory stacks `items` are worn or wielded, before they are
     /// dropped: says so, and returns the action of each.
-    pub(super) fn take_off_before_dropping(
+    pub(in crate::world) fn take_off_before_dropping(
         &mut self,
         items: impl Iterator<Item = usize>,
     ) -> Vec<ActionKind> {
@@ -160,7 +160,7 @@ impl World {
     }
 
     /// A turn of the player's actions `kinds`, one after the other.
-    pub(super) fn price_for(&self, kinds: &[ActionKind]) -> Spent {
+    pub(in crate::world) fn price_for(&self, kinds: &[ActionKind]) -> Spent {
         let player = self.state.player;
         Spent::Turn(kinds.iter().map(|&k| self.price_of(player, k)).sum())
     }

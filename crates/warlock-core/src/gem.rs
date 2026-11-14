@@ -126,7 +126,7 @@ pub fn loose(content: &Content, rng: &mut Rng, level: u8) -> Option<Stack> {
 }
 
 /// An uncut loose gem at item level `level`, as a miner breaks one out of the rock (spec §8
-/// "Digging"; `world/mine.rs`): its gem by rarity and its size by the level ([`roll`]'s first two
+/// "Digging"; `world/crafting/mine.rs`): its gem by rarity and its size by the level ([`roll`]'s first two
 /// draws), the roughest cut. A stack of one; `None` without gems or a rough cut.
 pub fn uncut(content: &Content, rng: &mut Rng, level: u8) -> Option<Stack> {
     let gems = content.gems()?;

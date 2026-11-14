@@ -25,12 +25,12 @@
 //!
 //! [`Action::Use`]: crate::action::Action::Use
 
-use super::{Actor, ActorId, Spent, World};
 use crate::action::{AttackKind, Event};
 use crate::combat::Blow;
 use crate::content::{ActionKind, ObjectId, TrapId, the};
 use crate::geom::Dir;
 use crate::talent::PalmBlow;
+use crate::world::{Actor, ActorId, Spent, World};
 
 // Patient defence (#849).
 impl World {
@@ -53,7 +53,7 @@ impl World {
 
     /// Whether `actor` is Poised: it suffers the status of its Patient defence. Its riposte is
     /// on ([`World::free_blows_of`]) and answers a blow it dodged as well as one it parried.
-    pub(super) fn poised(&self, actor: &Actor) -> bool {
+    pub(in crate::world) fn poised(&self, actor: &Actor) -> bool {
         !actor.talents.is_empty()
             && (actor.talent_mods(&self.content).martial.patient_defence)
                 .is_some_and(|s| actor.effects.has(s))
@@ -139,7 +139,7 @@ impl World {
     /// `blow`, a shot or throw (`missile`) made `with` an object at actor `target`, as it
     /// stands once Diamond soul's catch has had its say (`resolve`'s one line): a hit caught is
     /// a plain miss.
-    pub(super) fn caught_shot(
+    pub(in crate::world) fn caught_shot(
         &mut self,
         target: ActorId,
         (missile, with): (bool, Option<ObjectId>),
@@ -159,7 +159,7 @@ impl World {
     /// `blow`, trap `trap`'s at actor `target`, a missile if it `flew`, as it stands once
     /// Diamond soul's catch has had its say (`trap_strikes`'s one line): a hit caught is a
     /// plain miss.
-    pub(super) fn caught_trap_shot(
+    pub(in crate::world) fn caught_trap_shot(
         &mut self,
         trap: TrapId,
         target: ActorId,
@@ -183,7 +183,7 @@ impl World {
 impl World {
     /// Stunning strike (`use:stunning_strike:E`): a blow of the player's bare hand at the
     /// hostile in `dir`; a hit that does damage leaves it Stunned (flat-footed, its next action
-    /// slowed; `world/surprise.rs`), "You stun the kobold." Its ki was spent by `use_class`,
+    /// slowed; `world/combat/surprise.rs`), "You stun the kobold." Its ki was spent by `use_class`,
     /// which refused (no time) with a weapon in hand or no hostile there.
     pub(super) fn stunning_strike(&mut self, dir: Dir, events: &mut Vec<Event>) -> Spent {
         let Some(strike) = self
@@ -231,7 +231,12 @@ impl World {
                 self.say(format!("You {verb} {}.", the(&name)));
             }
         }
-        self.after_attack(player, target, super::free_blow::parried(blow), events);
+        self.after_attack(
+            player,
+            target,
+            crate::world::combat::free_blow::parried(blow),
+            events,
+        );
         self.exert(ActionKind::Melee);
         Spent::Turn(price)
     }

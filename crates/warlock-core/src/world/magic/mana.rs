@@ -1,19 +1,19 @@
 //! Mana in the world (spec §8 "Mana"): the second pool beside hit points, built the same way;
 //! the pure rules are [`crate::mana`].
 //!
-//! - **The maximum** ([`super::Actor::max_mana`]): what race and class (a creature type, a
+//! - **The maximum** ([`crate::world::Actor::max_mana`]): what race and class (a creature type, a
 //!   scenario without a character) give, what levels up to `mana_level` added
 //!   ([`World::level_up_mana`]), what magic items add, and the mental stats' modifiers. When it
 //!   falls, mana follows it as hit points follow theirs: down to the lasting maximum when the
 //!   player takes off what raised it ([`World::keep_mana_within_max`]), down to the new maximum
-//!   when a disease damages a mental stat (`world/disease.rs`); a status penalty passes, so the
+//!   when a disease damages a mental stat (`world/health/disease.rs`); a status penalty passes, so the
 //!   mana kept under one stays (none comes back above the maximum meanwhile).
 //! - **Regeneration** ([`World::mana_rate`], the one pace hook, the twin of
 //!   `World::healing_rate`): a point back every [`crate::mana::regen_seconds`] of Willpower at
-//!   the normal pace, as a moment of `World::live`'s loop (`world/status.rs`: [`regain`] and
+//!   the normal pace, as a moment of `World::live`'s loop (`world/health/status.rs`: [`regain`] and
 //!   [`until_regained`]), so it makes no difference how time is cut up. Burden, temperature, and
 //!   combat stances do nothing to it; a trained Concentration makes it faster
-//!   (`world/concentration.rs`).
+//!   (`world/magic/concentration.rs`).
 //! - **Spending** ([`World::spend_mana`]): the one way, refused when the actor has too little.
 //!   What an ability costs passes the actor's talents first ([`Actor::mana_cost`]: Frugal
 //!   caster), and the player's spending is a `cast` use of their stats (it trains Willpower).
@@ -22,7 +22,6 @@
 //! - **Draining**: a status whose ticks have `mana_damage` drains that much a tick (`live`),
 //!   never below 0 and never a death.
 
-use super::{Actor, ActorId, Spent, World};
 use crate::content::Effect as ItemEffect;
 use crate::content::{ActionKind, Content, StatUse};
 use crate::hunger::Hunger;
@@ -30,6 +29,7 @@ use crate::mana;
 use crate::skills::{Effect, Use};
 use crate::stats::Stat;
 use crate::time::GameTime;
+use crate::world::{Actor, ActorId, Spent, World};
 
 impl World {
     /// [`World::mana_rate_at`] now.
@@ -110,7 +110,7 @@ impl World {
 
     /// Keeps actor `id`'s mana within its maximum, which falls when it takes off something that
     /// raised it: its lasting maximum ([`Actor::lasting_max_mana`]), as with hit points.
-    pub(super) fn keep_mana_within_max(&mut self, id: ActorId) {
+    pub(in crate::world) fn keep_mana_within_max(&mut self, id: ActorId) {
         let content = self.content.clone();
         if let Some(actor) = self.state.actors.get_mut(&id) {
             let max = actor.lasting_max_mana(&content);
@@ -123,7 +123,7 @@ impl World {
     /// The player went up from level `before` to `after` (spec §8 "Experience"): each level
     /// gained up to the experience file's `mana_level` adds [`World::level_mana`] to their
     /// maximum mana and to their mana.
-    pub(super) fn level_up_mana(&mut self, before: u8, after: u8) {
+    pub(in crate::world) fn level_up_mana(&mut self, before: u8, after: u8) {
         let content = self.content.clone();
         let rules = content.experience();
         let mana: i32 = (before + 1..=after)
@@ -140,7 +140,7 @@ impl World {
     /// plus the better of the Intelligence and Willpower modifiers, at least 0 (the progression
     /// design, `docs/design/progression.md` §3.7). The stats as what the player wears raises
     /// them, not as a status lowers them: the penalty passes, this mana stays.
-    pub(super) fn level_mana(&self, content: &Content, level: u8) -> i32 {
+    pub(in crate::world) fn level_mana(&self, content: &Content, level: u8) -> i32 {
         let class_mana = match &self.state.character {
             Some(c) => c
                 .class_of(content, level)
@@ -156,7 +156,7 @@ impl World {
     /// The dev action `drain:N` ([`crate::action::Action::Drain`]): the player spends what
     /// costs `amount` mana ([`World::spend_mana`], as an ability would: Frugal caster's cut,
     /// and the `cast` use), for captures. Refused when they have less. Takes no time.
-    pub(super) fn drain_dev(&mut self, amount: u16) -> Spent {
+    pub(in crate::world) fn drain_dev(&mut self, amount: u16) -> Spent {
         let player = self.state.player;
         let cost = (self.state.player()).mana_cost(&self.content, i32::from(amount));
         if !self.spend_mana(player, i32::from(amount)) {
@@ -173,7 +173,7 @@ impl World {
     /// without the talent, when it would cost their last hit point, and while their mana is
     /// full. Nothing is drawn; it is not a blow (no Protection, no pain, no training of
     /// Toughness), and never a death.
-    pub(super) fn blood_magic(&mut self) -> Spent {
+    pub(in crate::world) fn blood_magic(&mut self) -> Spent {
         let content = self.content.clone();
         let player = self.state.player;
         let me = self.state.player();
@@ -214,7 +214,7 @@ impl Actor {
 /// Mana back for `actor` over `seconds` at `rate` percent of the normal pace: its progress
 /// ([`Actor::mana_regen`]) grows by `rate` a second, and every [`mana::regen_seconds`] × 100 of
 /// it is a point. Nothing at its maximum (the progress is dropped) or dead.
-pub(super) fn regain(actor: &mut Actor, content: &Content, seconds: u64, rate: u32) {
+pub(in crate::world) fn regain(actor: &mut Actor, content: &Content, seconds: u64, rate: u32) {
     let Some(need) = need(actor, content) else {
         actor.mana_regen = 0;
         return;
@@ -233,14 +233,14 @@ pub(super) fn regain(actor: &mut Actor, content: &Content, seconds: u64, rate: u
 
 /// Seconds until `actor`'s next point of mana back at `rate` (at least 1): a moment of
 /// `World::live`'s loop. `None` when none is coming: at its maximum, dead, or at no pace.
-pub(super) fn until_regained(actor: &Actor, content: &Content, rate: u32) -> Option<u64> {
+pub(in crate::world) fn until_regained(actor: &Actor, content: &Content, rate: u32) -> Option<u64> {
     let need = need(actor, content)?;
     let bank = u64::from(actor.mana_regen);
     (rate > 0).then(|| need.saturating_sub(bank).div_ceil(u64::from(rate)).max(1))
 }
 
 /// `actor` loses `amount` mana to its statuses' ticks (`mana_damage`): never below 0.
-pub(super) fn drain(actor: &mut Actor, amount: i32) {
+pub(in crate::world) fn drain(actor: &mut Actor, amount: i32) {
     if amount > 0 {
         actor.mana = actor.mana.saturating_sub(amount).max(0);
     }

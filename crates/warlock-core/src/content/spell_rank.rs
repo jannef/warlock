@@ -3,7 +3,7 @@
 //! file as `[spell.ranks]`, one entry a rank with what reaching that rank **adds** (the
 //! `spells/README.toml`). The entries are cumulative: at rank N a cast has everything the
 //! entries for ranks 2 to N add, as one [`SpellMods`] ([`Ranks::at`]). A spell with no table
-//! gains nothing from its ranks. Only an own cast reads them (`world/spell_rank.rs`): a scroll
+//! gains nothing from its ranks. Only an own cast reads them (`world/magic/spell_rank.rs`): a scroll
 //! or a wand casts at rank 1.
 //!
 //! An entry is checked as it loads, like a ladder: only what the spell could read (a roll's

@@ -1,8 +1,8 @@
 //! Statues named from the graveyard (`graveyard.rs`): one name a statue, the most recent first,
 //! never twice on a floor, the same every time, and out of the state hash.
 
-use super::*;
 use crate::content::ContentFiles;
+use crate::world::*;
 
 /// The builtin content with a rooms branch peopled by basilisks among kobolds, every draw dread
 /// (so a basilisk is drawn, and its statues laid), and a scenario starting on its floor.
@@ -13,7 +13,7 @@ fn content() -> Arc<Content> {
          dread_one_in = 1\nspawn = { every = \"1m\", chance = 100 }\n";
     let dungeons = format!(
         "{}{branch}",
-        include_str!("../../../../assets/data/dungeons.toml")
+        include_str!("../../../../../assets/data/dungeons.toml")
     );
     files.insert("data/dungeons.toml", &dungeons);
     files.insert(
@@ -109,7 +109,7 @@ fn a_level_made_later_is_named_and_a_save_keeps_the_names() {
     let player = w.state.player;
     w.state.actors.retain(|&id, _| id == player);
     w.set_graveyard(vec![fallen("Brakka", "dwarf")]);
-    let template = travel::level_template(
+    let template = crate::world::levels::travel::level_template(
         &content,
         ("showcase", seed),
         &current,
@@ -117,7 +117,7 @@ fn a_level_made_later_is_named_and_a_save_keeps_the_names() {
     )
     .expect("the floor")
     .into_owned();
-    travel::instantiate_level(&mut w.state, &content, &template);
+    crate::world::levels::travel::instantiate_level(&mut w.state, &content, &template);
     assert_eq!(names(&w).iter().flatten().count(), 1);
     // A save keeps the list and the names.
     let loaded = crate::save::decode(&crate::save::encode(&w), content.clone()).expect("loads");

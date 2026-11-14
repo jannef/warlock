@@ -5,13 +5,13 @@
 //! close." when they see a regenerating creature (its `regen` above 100) get a tenth of its hit
 //! points back in one passing of time.
 
-use super::{ActorId, World};
 use crate::text::capitalized;
+use crate::world::{ActorId, World};
 
 impl World {
     /// Creature `id`'s hit points before time passes for it, if it regenerates (its type's
     /// `regen` above 100) and is not the player: what [`World::say_wounds_close`] compares.
-    pub(super) fn regenerating_hp(&self, id: ActorId) -> Option<i32> {
+    pub(in crate::world) fn regenerating_hp(&self, id: ActorId) -> Option<i32> {
         let actor = self.state.actors.get(&id)?;
         (id != self.state.player && self.content.creature(actor.creature).regen > 100)
             .then_some(actor.hp)
@@ -19,7 +19,7 @@ impl World {
 
     /// Creature `id`, which had `before` hit points, has lived through some time: told if the
     /// player sees it and it got a tenth of its hit points back or more.
-    pub(super) fn say_wounds_close(&mut self, id: ActorId, before: Option<i32>) {
+    pub(in crate::world) fn say_wounds_close(&mut self, id: ActorId, before: Option<i32>) {
         let Some(before) = before else {
             return;
         };

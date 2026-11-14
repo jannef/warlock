@@ -11,12 +11,12 @@
 //! no number. What depends on the moment (an ambush, a dazzled eye, a class ability's blow) is
 //! not part of an attack's standing profile, so it is not shown either.
 
-use super::Actor;
 use crate::action::AttackKind;
 use crate::combat::Profile;
 use crate::content::Content;
 use crate::damage::{Kinds, Rider};
 use crate::dice::Dice;
+use crate::world::Actor;
 
 /// Where an attack comes from.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -86,7 +86,7 @@ impl OwnAttack {
             source,
             kind,
             name,
-            pierces: super::pierces_all(&profile),
+            pierces: crate::world::pierces_all(&profile),
             to_hit: profile.to_hit,
             damage: profile.damage.plus(profile.bonus),
             extra: profile.extra,

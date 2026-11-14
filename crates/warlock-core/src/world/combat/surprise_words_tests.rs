@@ -3,13 +3,13 @@
 //! by it, already Surprised or Stunned, the blow after the surprise, a shot and a spell; nothing
 //! for an aware target or one the player does not see, and one line an attack.
 
-use super::cast_tests::cast_at;
-use super::caster_tests::{kobold, reach, world_with};
 use super::surprise_tests::{Rules, goblin, lull, surprised_status, world};
-use super::*;
 use crate::action::{AttackKind, Caught};
 use crate::content::ContentFiles;
 use crate::test_support::texts;
+use crate::world::magic::cast_tests::cast_at;
+use crate::world::magic::caster_tests::{kobold, reach, world_with};
+use crate::world::*;
 
 /// What the player is told when they step east into the goblin beside them: their attack's
 /// lines and whatever follows in that turn.

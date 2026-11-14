@@ -6,14 +6,14 @@
 //!
 //! [`Action::UseTalent`]: crate::action::Action::UseTalent
 
-use super::{Spent, World};
 use crate::action::Event;
 use crate::content::ActionKind;
+use crate::world::{Spent, World};
 
 impl World {
     /// The player catches their second wind (module docs). Refused, taking no time, without the
     /// talent and while its cooldown lasts.
-    pub(super) fn second_wind(&mut self, events: &mut Vec<Event>) -> Spent {
+    pub(in crate::world) fn second_wind(&mut self, events: &mut Vec<Event>) -> Spent {
         let content = self.content.clone();
         let player = self.state.player;
         let me = self.state.player();

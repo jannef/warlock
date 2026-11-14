@@ -12,15 +12,15 @@
 //! Only the player's talents are read: a companion is the player's. Nothing is said: the
 //! bonus is a hidden number, as every to-hit is.
 
-use super::World;
 use crate::action::AttackKind;
 use crate::combat::Profile;
 use crate::world::ActorId;
+use crate::world::World;
 
 impl World {
     /// `profile` of an attack of `kind` by `attacker` at `target`, with Pack tactics' gifts
     /// (the module docs); as it was for anyone else. One of `fight.rs::resolve`'s hooks.
-    pub(super) fn pack_blow(
+    pub(in crate::world) fn pack_blow(
         &self,
         attacker: ActorId,
         target: ActorId,

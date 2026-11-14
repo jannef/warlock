@@ -1,6 +1,6 @@
 //! A forgotten altar's great boons and banes (spec §7 "Special rooms"; the design's §7.4, #407):
 //! the hooks of the outcome fields `gift`, `wrath`, `levels`, `talent`, and `flaw`
-//! (`world/outcome.rs` calls them; the relic is `loot` with a `rarity` floor, the horde a
+//! (`world/fixtures/outcome.rs` calls them; the relic is `loot` with a `rarity` floor, the horde a
 //! `summon`).
 //!
 //! - **Gift of the forgotten** ([`World::gift_stat`]): a random stat's score and potential rise
@@ -17,21 +17,21 @@
 //!   checks.
 //! - **Chosen** ([`World::bestow_talent`]): one of the talents the player may take now and does
 //!   not hold (by id and choice, [`talent::offers`]), drawn, given with what it hands
-//!   out, and recorded in [`Actor::boons`](super::Actor): never a level's pick.
+//!   out, and recorded in [`Actor::boons`](crate::world::Actor): never a level's pick.
 //! - **Forsaken** ([`World::bestow_flaw`]): one of the flaw talents (a birth sign's `flaw`) the
 //!   player lacks, drawn, given likewise, and recorded in `Actor::boons`, which a restored run
-//!   puts back beside the race's and the sign's gifts (`world/stars.rs`).
+//!   puts back beside the race's and the sign's gifts (`world/character/stars.rs`).
 //!
 //! Each returns whether it did anything (an outcome's `otherwise` line is said when none did)
 //! and calls `found` first. The draws are from the gameplay stream.
 //!
-//! [`Progress::peak`]: super::Progress
+//! [`Progress::peak`]: crate::world::Progress
 //! [`DRAIN_FLOOR`]: crate::stats::DRAIN_FLOOR
 
-use super::{World, class};
 use crate::dice::Dice;
 use crate::stats::{DRAIN_FLOOR, Stat};
 use crate::talent::{self, Taken};
+use crate::world::{World, classes::class};
 
 impl World {
     /// Gift of the forgotten: a random stat's score and potential rise by `dice`, for good.
@@ -171,8 +171,8 @@ impl World {
     }
 
     /// Talent `id` for `choice` is given to the player, with what it hands out, and
-    /// kept among their boons (a story's talent and flaw too, `world/background.rs`).
-    pub(super) fn bestow(&mut self, id: &str, choice: Option<&str>) {
+    /// kept among their boons (a story's talent and flaw too, `world/character/background.rs`).
+    pub(in crate::world) fn bestow(&mut self, id: &str, choice: Option<&str>) {
         let content = self.content.clone();
         let Some(talent) = content.talents().id(id) else {
             return;
@@ -190,7 +190,12 @@ impl World {
         let character = self.state.character.clone();
         let me = self.player_mut();
         let boons = std::mem::take(&mut me.boons);
-        super::stars::grant(&content, character.as_ref(), &boons, &mut me.talents);
+        crate::world::character::stars::grant(
+            &content,
+            character.as_ref(),
+            &boons,
+            &mut me.talents,
+        );
         me.boons = boons;
         self.take_up_skills(def.effects.iter().cloned());
     }

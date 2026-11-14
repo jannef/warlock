@@ -21,13 +21,13 @@
 //! A level whose player is trained in nothing (a scenario without a character) gives no rolls:
 //! nothing could be rolled on.
 
-use super::{Actor, Spent, World};
 use crate::character::Character;
 use crate::content::Content;
 use crate::dice::Dice;
 use crate::rng::Rng;
 use crate::skills::{SkillId, Trained};
 use crate::stats::Stat;
+use crate::world::{Actor, Spent, World};
 
 /// Where a level's skill rolls come from ([`roll_count`]): what the level-up screen names.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -166,7 +166,7 @@ impl World {
     /// `advance:SKILL` ([`crate::action::Action::Advance`]): one of the level's skill rolls on
     /// trained skill `skill`, if a roll is due; else why not, and nothing changes. Takes no
     /// time.
-    pub(super) fn advance_skill(&mut self, skill: &str) -> Spent {
+    pub(in crate::world) fn advance_skill(&mut self, skill: &str) -> Spent {
         let content = self.content.clone();
         let Some(id) = content.skill_id(skill) else {
             self.say(format!("There is no skill `{skill}`."));
@@ -224,7 +224,7 @@ impl World {
     /// roll a level-up's
     /// would be, and again while its spent marks are still at the threshold. Whatever level-up
     /// is due, its rolls are untouched. Returns whether the skill was trained.
-    pub(super) fn mark_skill(&mut self, id: SkillId, by: u32) -> bool {
+    pub(in crate::world) fn mark_skill(&mut self, id: SkillId, by: u32) -> bool {
         if !self.player_mut().skills.add_marks(id, by) {
             return false;
         }
@@ -243,7 +243,7 @@ impl World {
 
     /// The dev action `levelup:auto`'s part for skill rolls: every roll due on the player's
     /// first trained skill, in skill order.
-    pub(super) fn advance_auto(&mut self) {
+    pub(in crate::world) fn advance_auto(&mut self) {
         let content = self.content.clone();
         while self.state.progress.due.iter().any(|d| d.rolls > 0) {
             let Some((first, _)) = self.state.player().skills.iter().next() else {

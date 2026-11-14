@@ -16,7 +16,7 @@ second, so it takes `cost / 1000 × 1000 / speed × base` (1400 at speed 1000: 8
 about 5.4 s). `TerrainDef::step_price` (asked through `LevelState::step_price`) is the one place
 movement time is decided: `move_cost` percent on local levels, `travel_minutes` on the overworld.
 `player_acts` returns `Spent::Turn(price)` (`World::price_of(actor, kind)`, `World::step_price`),
-`run_turn` (the energy scheduler, `world/schedule.rs`, spec §8 "Speed") charges the player for it
+`run_turn` (the energy scheduler, `world/turn/schedule.rs`, spec §8 "Speed") charges the player for it
 and runs the other actors on the level in time order until the player may act again, advancing
 the clock (whole seconds; leftover energy carries, so a run of actions takes its exact total time,
 up to the second the actor is ready, with no drift) to each action, and `rest` loops waits until
@@ -45,13 +45,13 @@ that disturb a rest within `stop_within`, with the player's line of sight kept w
 `set_terrain`, and their cell are unchanged) finds the same creatures in view; `None` on the
 overworld, with Blood scent, and for light-blind eyes, where only a perception will do
 (`stride_tests::a_rest_sees_whom_a_perception_sees`). While the player rests (`World::resting`),
-creatures away from them take coarse turns (`world/stride.rs`, `docs/dev/creatures.md`), and
+creatures away from them take coarse turns (`world/turn/stride.rs`, `docs/dev/creatures.md`), and
 `out_of_view_for` counts a stride's head start. On the overworld each turn of a rest or a forage rolls for an
 encounter (`World::watch_roll`, `docs/dev/encounters.md` "Camping and foraging"); the line it says
 stops the long action. A turn in which the player moved is
 always perceived (a run's step, below; a push).
 
-**Running** (`world/run.rs`, #1325; `Action::Run(dir)`, `run:DIR`, `KeyCommand::Run`, Alt with a
+**Running** (`world/turn/run.rs`, #1325; `Action::Run(dir)`, `run:DIR`, `KeyCommand::Run`, Alt with a
 movement key by default) is one more long action through `keep_at`: `act` is a plain step
 (`player_moves`, with the per-step training `apply` gives a step), and `more` says whether there is
 a next step and which, a pure function of the perception (what the player sees and remembers,
@@ -68,7 +68,7 @@ heading, orthogonal on a tie) and stops at an intersection, a dead end, or a roo
 its direction until the next cell is not `steppable`. A first step that is not `steppable` is a
 plain `Move` (`start_running`); the client asks the step's dialogs first (`ui/step_dialogs.rs::step_dialog`).
 A creature coming close says "{came}; you stop running."; a run's end trains no Willpower
-(`World::running`). Tests: `world/run_tests.rs`.
+(`World::running`). Tests: `world/turn/run_tests.rs`.
 
 A new action that takes time
 needs an `ActionKind` (with its id and a line in `data/actions.toml`) and must return its price
@@ -88,7 +88,7 @@ plain `kick`). An attack is priced **as it begins**, before it is made: a rank i
 load it lightens (a throw), or a kill changes the next attack's price, never its own
 (`weapon_skill_tests::an_attack_is_priced_as_it_begins...`).
 `creature_turn` is one creature's action and returns its price: the one place creature behavior
-lives (AI decisions, the noise and events an action makes; the AI is `world/ai.rs`, `docs/dev/creatures.md`).
+lives (AI decisions, the noise and events an action makes; the AI is `world/creatures/ai.rs`, `docs/dev/creatures.md`).
 Speed (`speed` in `data/creatures.toml`, default 1000 = the player's; any player speed works;
 `Actor::speed` scales it by the talents' `speed_percent` plus the skills' `speed`, Athletics, the
 skills capped so the sum stays within `MAX_SPEED`, and nowhere else: `World::slowed` does not read it again, #581; the burden, Bloated, and statuses are applied

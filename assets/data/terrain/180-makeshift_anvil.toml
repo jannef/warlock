@@ -1,4 +1,4 @@
-# A makeshift anvil (spec §7 "Special rooms"; the craftsperson's Field forge, `world/field_forge.rs`):
+# A makeshift anvil (spec §7 "Special rooms"; the craftsperson's Field forge, `world/crafting/field_forge.rs`):
 # an ingot set on a heap of stones, which serves as an anvil wherever it was set, for good. A pick
 # clears it to bare floor; nothing is mined out of it.
 [[terrain]]

@@ -21,21 +21,21 @@ A hand-made `outdoor` level an overworld location leads into (stairs down or a h
 `to`, first in the overworld's order) gets the location as its `exit` when content loads
 (`content/overworld.rs::link_edge_exits`, called once after the levels are parsed; no level-file
 field), so it is left by its edge like a local area (Cēaptūn has no stairs). The quick leave
-(#474, spec §7 "Leaving an outdoor area"; `world/quick_leave.rs`): `Action::Ascend` with no
+(#474, spec §7 "Leaving an outdoor area"; `world/levels/quick_leave.rs`): `Action::Ascend` with no
 stairs up underfoot on an `Outdoor` level with an `exit` goes through `leave_by_edge` (priced as
 `Stairs` by the dispatch) unless `enemies_about`: an actor on the level with
 `Stance::Hostile` toward the player that `Perception::sees_actors_at`, or any within
 `[quick_leave] reach` (`data/rules/tuning.toml`; 10, Chebyshev) unseen; ground truth, read as a rule. Refused, it says
 `QUICK_LEAVE_REFUSED` and spends nothing. `take_stairs` calls it in its "no way" branch, so stairs
-underfoot win and dungeons and the overworld are untouched. Tests: `world/quick_leave_tests.rs`.
-The edge rule (#803, `world/edge_leave.rs`): `player_moves` off the grid of a level with an
+underfoot win and dungeons and the overworld are untouched. Tests: `world/levels/quick_leave_tests.rs`.
+The edge rule (#803, `world/levels/edge_leave.rs`): `player_moves` off the grid of a level with an
 `exit` asks `held_at_edge` before `leave_by_edge`: any actor on the level with `Stance::Hostile`
 toward the player within `EncounterRules::edge_reach` (`data/encounters.toml`,
 `content/encounter.rs`; 3, 0 off; without the file the default 3), Chebyshev, seen or
 not (ground truth, like the quick leave's unseen clause, so no sight test). Refused, it says
 `EDGE_LEAVE_REFUSED` and spends nothing. The quick leave is untouched (its wider check refuses
 first). `data/encounters.toml` is the file the encounters design (docs/design/overworld-encounters.md)
-grows. Tests: `world/edge_leave_tests.rs`.
+grows. Tests: `world/levels/edge_leave_tests.rs`.
 Sight on the overworld is line
 of sight within `daylight::overworld_sight` (day 9, twilight 5, night 2 plus one per
 `MOONLIGHT_PER_CELL` of `Sky::moonlight`, at most `SIGHT_MOONLIT` 4), ignoring light. The
@@ -77,9 +77,9 @@ reveals it, instead of "<Giver> marks … on your map.") (`content/level.rs::par
 checked with the stairs' targets in `Content::validate`) goes into `LevelTemplate::hidden` and
 `LevelState::hidden` (by cell; ground truth). It works like a secret door: the terrain grid holds
 the plain terrain, so the view, memory, look mode, local areas (`Content::local_area` reads the
-template), and every perception-built dump show it with no filter; only `world/reveal.rs` and the
+template), and every perception-built dump show it with no filter; only `world/levels/reveal.rs` and the
 dev views (`dump/truth.rs::truth_rows`, the F2 overlay in `ui/dev.rs`) read `hidden`.
-`World::reveal_location(id)` (the one reveal, on whichever level of the campaign holds it, called by `world/quest.rs` at a quest's
+`World::reveal_location(id)` (the one reveal, on whichever level of the campaign holds it, called by `world/people/quest.rs` at a quest's
 `reveals.when` (`given` or `done`; a rolled quest's variant reveals its own, #422), by the dev
 `quest_roll` choosing a variant, by the dev action `reveal:ID`, and by
 `World::reveal_way_out`, the climb-out trigger below) records the id in
@@ -91,11 +91,11 @@ with the location's `name` (`StairsLink::name`, preferred by `PerceptionView::le
 "The way into … is here." and "You enter …" messages); otherwise `instantiate_level` applies
 every revealed id as the overworld is made (`reveal::apply_revealed`). No stream is drawn.
 `PerceptionView::known_locations` (the `locations` dump layer, JSON `known_locations`) lists the
-overworld's ways in that the player sees or remembers. Tests: `world/reveal_tests.rs` (a fixture
+overworld's ways in that the player sees or remembers. Tests: `world/levels/reveal_tests.rs` (a fixture
 hiding a barrow in the Wildlands, revealed by the hermit's `depths` quest; the built-in Wildlands
 hide nothing).
 A hidden location's `to` may be left out: it leads nowhere yet, like stairs without one.
-Climbing out reveals (#1117, spec §7 "Ways up"): `take_stairs` (`world/travel.rs`, one line
+Climbing out reveals (#1117, spec §7 "Ways up"): `take_stairs` (`world/levels/travel.rs`, one line
 before `travel`) asks `World::reveal_way_out(from, to)`: when `to` is the campaign's overworld and
 one of its hidden locations, still hidden, has `to == from` (the level being left), it is revealed
 first, so `travel` lands the player on its fresh `StairsLink` (the one leading back to `from`),
@@ -104,14 +104,14 @@ a way up's first floor climbs out to a hidden location (its `<` is `Content::way
 reads hidden locations' `to` too): a hidden branch's own first floor, entered from the overworld,
 can be left only through its revealed way in, and one started on by a scenario leads nowhere.
 The Ascmearc's Ūtgang (`0`, (103, 17), hills → `cave_mouth`, `to = "utgang:1"`) is revealed only
-so. Tests: `world/way_out_tests.rs` (the `utgang` scenario climbs out, the `locations` layer
+so. Tests: `world/levels/way_out_tests.rs` (the `utgang` scenario climbs out, the `locations` layer
 before and after, back down and up again with no second mark, a replay; out of Fyrdelf and
 Grundlēas nothing is revealed).
 
 Named places (#332): a legend's `name` (and `note`, a sentence for look mode) on any cell of a
 hand-made level goes into `LevelTemplate::places` (`content/level.rs::parse_place`; the author
 keeps it off a `hidden` one, which it would give away). A way in on that cell carries the name as
-`StairsLink::name`, so look mode, "The way into … is here." (`world/travel.rs`), and the
+`StairsLink::name`, so look mode, "The way into … is here." (`world/levels/travel.rs`), and the
 `locations` layer name it even while it leads nowhere yet; `PerceptionView::place` gives the
 place on a cell the player sees or remembers, and `ui/look.rs` names it after the terrain and
 adds the note.
@@ -126,7 +126,7 @@ the only way on); `T` Cēaptūn (`town`) leads into the town's level `ceaptun` (
 one location closer than six cells to another, on purpose) leads to `lytelscraef:1` (#792); `2` Fennmynster and `3` Fyrdelf are hidden, and so is `0` Ūtgang (#1117, above). The rivers are two
 cells wide (watertight to diagonal steps), crossed only at the bridge `b` and the ford `%`.
 Regions are rectangles in first-match order (the forests' hearts first). Its scenario `ascmearc`
-starts on the pass and says its `arrival` line. Tests: `world/ascmearc_tests.rs` (regions, the
+starts on the pass and says its `arrival` line. Tests: `world/campaigns/ascmearc_tests.rs` (regions, the
 closed way back, the town's distance, names and spacing, the rivers, the travel budget, no leak
 of the hidden two, a replay, the legend's `name` and `note` checks). Fyrdelf's hidden entry
 leads to `fyrdelf:1` (#339; `mapgen/fyrdelf_tests.rs` reveals it with the dev `reveal:fyrdelf`,
@@ -140,13 +140,13 @@ is revealed by its own variant of `guild_wanted` (`mapgen/lairs_tests.rs` walks 
 down once `reveal:ID` marks it). `V` Holtwīc (`town`, (18, 17), #1140) is the village at the north
 road's end, leading into `holtwic` (`docs/dev/campaign.md` "Holtwīc"); `E` Ælfhām (25, 13, forest →
 `barrow`, `to = "aelfham:1"`) is the hidden fairy mound seven cells north-east of it, for the
-wise-woman's quest to reveal (#1141; `world/holtwic_tests.rs`). `g` Līctūn (`graveyard`, (19, 32),
+wise-woman's quest to reveal (#1141; `world/campaigns/holtwic_tests.rs`). `g` Līctūn (`graveyard`, (19, 32),
 #1258) is Cēaptūn's churchyard beside the south road, four cells out of town, leading into
 `lictun` (`docs/dev/campaign.md` "Līctūn"): with the starter cave, the one location closer than
 six cells to another (`ascmearc_tests`: four from the town, at least five from every other).
 
 Rumoured ways (spec §8 "Dialogue"; `docs/dev/npcs.md`): a dialogue topic's `route` marks the
-overworld's memory as day sight along it would (`world/rumour.rs`), reading only the terrain
+overworld's memory as day sight along it would (`world/people/rumour.rs`), reading only the terrain
 grid, so hidden locations stay their plain terrain and are never marked or named; a visible
 location (Cealdhlāw) is remembered and then listed by the `locations` layer as when seen.
 

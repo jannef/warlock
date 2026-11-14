@@ -1,14 +1,14 @@
-//! The aristocrat's stipend and servant (#1405; `world/stipend.rs`): the class ability from
+//! The aristocrat's stipend and servant (#1405; `world/classes/stipend.rs`): the class ability from
 //! level 1, the servant in Cēaptūn only in an aristocrat's run (by gender and race), the
 //! stipend's growth with every level, its rate of finds in the owner's band, Landed noble's
 //! larger stipend, the handover (to the pack, or at the feet), a save, and a replay.
 
-use super::*;
 use crate::action::parse_actions;
 use crate::character::CharacterSpec;
 use crate::replay::Replay;
 use crate::talent::TalentMods;
 use crate::test_support::{CONTENT, run as act, texts};
+use crate::world::*;
 
 /// Beside the servant's cell (40, 27) in the Gæsthūs, east of it.
 const BESIDE: Pos = Pos::new(41, 27);
@@ -64,7 +64,7 @@ fn put_player(world: &mut World, at: Pos) {
 
 fn gold(world: &World) -> u32 {
     let coin = world.content().object_id("gold_coin").expect("gold");
-    super::shop::count_of(&world.state().player().inventory, coin)
+    crate::world::people::shop::count_of(&world.state().player().inventory, coin)
 }
 
 #[test]
@@ -167,7 +167,7 @@ fn find_rate(content: &Content, mods: &TalentMods, seeds: u64) -> f64 {
     let (mut found, mut all) = (0u32, 0u32);
     for seed in 0..seeds {
         for level in 2..=60 {
-            let (_, find) = stipend::of_level(content, seed, level, mods).expect("rules");
+            let (_, find) = super::stipend::of_level(content, seed, level, mods).expect("rules");
             found += u32::from(find.is_some());
             all += 1;
         }
@@ -203,8 +203,8 @@ fn a_landed_noble_has_twice_the_gold_and_more_finds() {
     let w = run("human,male,aristocrat", &["landed_noble"]);
     let landed = w.state.player().talent_mods(content).into_owned();
     assert!(landed.fortune.stipend && landed.fortune.stipend_gold_percent == 100);
-    let (a, _) = stipend::of_level(content, 7, 10, &plain).expect("rules");
-    let (b, _) = stipend::of_level(content, 7, 10, &landed).expect("rules");
+    let (a, _) = super::stipend::of_level(content, 7, 10, &plain).expect("rules");
+    let (b, _) = super::stipend::of_level(content, 7, 10, &landed).expect("rules");
     assert_eq!(b, a * 2);
     let (rate, more) = (
         find_rate(content, &plain, 20),

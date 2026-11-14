@@ -1,10 +1,10 @@
-//! Healing harms the undead (`world/heal_harm.rs`, #1278): Cure wounds and Mend aimed at an
+//! Healing harms the undead (`world/health/heal_harm.rs`, #1278): Cure wounds and Mend aimed at an
 //! undead beside the caster, Benison about them, and the creature healers that never heal one.
 
-use super::caster_tests::{kobold_at, sp};
-use super::spell_type_tests::{cell, files, start};
-use super::*;
 use crate::action::Action;
+use crate::world::magic::caster_tests::{kobold_at, sp};
+use crate::world::magic::spell_type_tests::{cell, files, start};
+use crate::world::*;
 
 /// The shipped creature `text` of id `id` as `new`, of the kobolds' side but undead (its `tags`
 /// line replaced): a kobold that died and walks.
@@ -19,8 +19,8 @@ fn undead_kobold(text: &str, (id, new): (&str, &str), tags: &str) -> String {
 /// mana, and an undead kobold and kobold shaman among the creature types.
 fn world(seed: u64) -> World {
     let mut files = files();
-    let kobold = include_str!("../../../../assets/data/creatures/kobold.toml");
-    let shaman = include_str!("../../../../assets/data/creatures/kobold_shaman.toml");
+    let kobold = include_str!("../../../../../assets/data/creatures/kobold.toml");
+    let shaman = include_str!("../../../../../assets/data/creatures/kobold_shaman.toml");
     let wight = undead_kobold(kobold, ("kobold", "kobold_wight"), "tags = [\"kobold\"]");
     let tags = "tags = [\"kobold\", \"caster\"]";
     let wight_shaman = undead_kobold(shaman, ("kobold_shaman", "wight_shaman"), tags);

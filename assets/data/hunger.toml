@@ -73,7 +73,7 @@ vomit = 50
 vomit = 50
 harm = "1d4"
 
-# Telling freshness (`world/freshness.rs`): one trained in a skill that tells it (Appraise,
+# Telling freshness (`world/health/freshness.rs`): one trained in a skill that tells it (Appraise,
 # Survival: skills/ `freshness`) may tell by looking whether food is fresh, old, or rotten. The
 # chance in percent is what those skills give, plus `rotten_ease` for food that has rotted (it
 # shows), at most `most` (0 to 100: a trained eye can still miss).

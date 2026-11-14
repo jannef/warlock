@@ -4,11 +4,11 @@
 //! materials by their shares. Items carry their base item's parts, with their own gems in place
 //! (#191, `gem_tests.rs`), so loot, creature kits, and saves keep them.
 
-use super::*;
 use crate::content::{ContentFiles, ObjectId, Part};
 use crate::magic::describe::lines;
 use crate::magic::{Magic, Rarity};
 use crate::test_support::builtin as content;
+use crate::world::*;
 
 fn object(content: &Content, id: &str) -> ObjectId {
     content

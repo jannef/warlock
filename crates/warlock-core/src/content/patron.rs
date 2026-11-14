@@ -1,6 +1,6 @@
 //! The craftsperson's patron (`assets/data/rules/patron.toml`, spec §8 "Class abilities": Patron;
 //! #1421, the craftsperson design §7.4): what a patron pays for a commission delivered
-//! (`world/patron.rs`).
+//! (`world/crafting/patron.rs`).
 //!
 //! The file is optional: without it no one commissions work.
 

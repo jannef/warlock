@@ -17,9 +17,9 @@
 //! [`Stats::train`]: crate::stats::Stats::train
 //! [`Stats::widen`]: crate::stats::Stats::widen
 
-use super::World;
 use crate::dice::Dice;
 use crate::stats::Stat;
+use crate::world::World;
 
 /// What an elixir of `stat` says: `rose` whether the score rose, `widened` whether the potential
 /// rose by 2 or more besides.

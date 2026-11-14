@@ -1,11 +1,11 @@
 //! The player's attacks as the character screen shows them (`attacks.rs`): the very profiles a
 //! strike rolls, in the style in use, an unknown affix moving nothing, and their text.
 
-use super::*;
 use crate::action::{AttackKind, parse_actions};
 use crate::character::CharacterSpec;
 use crate::magic::{Affix, Magic, Rarity};
 use crate::object::Stack;
+use crate::world::*;
 use std::sync::LazyLock;
 
 // Without background stories: the kit's weapons alone.

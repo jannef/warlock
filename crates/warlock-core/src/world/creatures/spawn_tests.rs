@@ -2,11 +2,11 @@
 //! danger of a level, where and what comes, the cap, uniques, frozen floors, the talents, and
 //! determinism.
 
-use super::*;
 use crate::content::{ContentFiles, LevelTemplate};
 use crate::perception::Perception;
 use crate::test_support::{builtin, run, said};
 use crate::time::{Duration, GameTime};
+use crate::world::*;
 use std::collections::BTreeSet;
 
 /// A dark hall of 70 by 19 floor cells (the player's lantern lights a few around them), where
@@ -105,7 +105,7 @@ fn files_with(haunt: &str) -> ContentFiles {
     files.insert("data/creatures/zz_chief.toml", CHIEF);
     let dungeons = format!(
         "{}{BARROW}",
-        include_str!("../../../../assets/data/dungeons.toml")
+        include_str!("../../../../../assets/data/dungeons.toml")
     );
     files.insert("data/dungeons.toml", &dungeons);
     files.insert(
@@ -377,7 +377,7 @@ fn crowded_run() -> World {
          depth = 1\nsize = [80, 40]\ndanger = 3\npopulation = [\"kobold\", \"rat\"]\n\
          population_count = 25\nspawn = {{ every = \"1m\", chance = 100 }}\n\
          [[dungeon.levels]]\nfrom = 1\nvaults = [\"crowd\"]\n",
-        include_str!("../../../../assets/data/dungeons.toml")
+        include_str!("../../../../../assets/data/dungeons.toml")
     );
     files.insert("data/dungeons.toml", &dungeons);
     files.insert(
@@ -444,7 +444,7 @@ fn without_danger() -> Arc<Content> {
         .collect();
     let dungeons = format!(
         "{}{plain}",
-        include_str!("../../../../assets/data/dungeons.toml")
+        include_str!("../../../../../assets/data/dungeons.toml")
     );
     files.insert("data/dungeons.toml", &dungeons);
     Arc::new(Content::load(&files).expect("content"))
@@ -459,7 +459,7 @@ fn a_generated_floor_is_laid_down_full_and_nothing_else_moves() {
     let content = content();
     let plain = without_danger();
     let mut files = files_with(HAUNT);
-    files.edit_table("creatures", super::gear_tests::without_gear);
+    files.edit_table("creatures", crate::world::items::gear_tests::without_gear);
     let ungeared = Content::load(&files).expect("valid without gear");
     let floor = content.terrain_id("floor").expect("floor");
     let mut compared = 0;
@@ -595,8 +595,13 @@ fn a_spawn_rolls_its_gear_from_its_own_stream() {
         let key = id.0.to_string();
         let mut rng = crate::rng::Rng::gear(w.state.seed, &key);
         let mut pack = crate::gear::roll(&w.content, &mut rng, actor.creature, 1);
-        let mut condition = super::gear_condition::stream(w.state.seed, &key);
-        super::gear_condition::apply(&w.content, &mut condition, (actor.creature, 1), &mut pack);
+        let mut condition = crate::world::items::gear_condition::stream(w.state.seed, &key);
+        crate::world::items::gear_condition::apply(
+            &w.content,
+            &mut condition,
+            (actor.creature, 1),
+            &mut pack,
+        );
         assert_eq!(
             (&actor.inventory, &actor.equipment),
             (&pack.items, &pack.equipment),

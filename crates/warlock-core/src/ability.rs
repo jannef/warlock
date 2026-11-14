@@ -63,7 +63,7 @@ pub enum Ability {
     /// this in its place). Had by whoever is trained in it; usable whenever they have it (the
     /// rules refuse, taking no time, where they know of no trap).
     Disarm,
-    /// Listen at a closed door next to the actor (spec §5 "Hearing"; `world/listen.rs`):
+    /// Listen at a closed door next to the actor (spec §5 "Hearing"; `world/skills/listen.rs`):
     /// [`Action::Listen`], the use of Listen (the skill with the hearing effect, listed as this
     /// in its place). Had by whoever is trained in it; listed only while a closed door is beside
     /// them (the owner, #1327; [`crate::beside`]).
@@ -77,7 +77,7 @@ pub enum Ability {
     /// skill's use. Whoever is trained in a skill with the `steal` benefit has it, in that
     /// skill's place among the skills.
     Steal,
-    /// Wedge shut the closed door next to the actor (spec §8 "Doors"; `world/wedge.rs`):
+    /// Wedge shut the closed door next to the actor (spec §8 "Doors"; `world/skills/wedge.rs`):
     /// [`Action::Wedge`], Woodcraft's second use (the skill with the `wedge` effect). Had by
     /// whoever is trained in it; listed only while a closed door not wedged already is beside
     /// them (the owner, #1327; [`crate::beside`]).
@@ -87,7 +87,7 @@ pub enum Ability {
     /// `data/rules/feint.toml` exists). Had by whoever is trained in it; usable whenever they have
     /// it (the rules refuse, taking no time, where there is no foe with a mind to fool).
     Feint,
-    /// Tame a beast next to you (spec §8 "Allies": Tame; `world/tame.rs`): [`Action::Tame`],
+    /// Tame a beast next to you (spec §8 "Allies": Tame; `world/allies/tame.rs`): [`Action::Tame`],
     /// Handle animal's use (the skill with the `tame` benefit, listed as this in its place while
     /// `data/companions.toml` and `data/allies.toml` exist). Had by whoever is trained in it, at
     /// any level; unavailable ([`Unavailable::HaveCompanion`]) while the player has a companion
@@ -104,7 +104,7 @@ pub enum Ability {
     /// by whoever is trained in the skill (every recipe is its skill's, #1387); never unavailable: it opens the profession's screen
     /// ([`Aim::Recipes`]), which says why each recipe cannot be made now.
     Profession(SkillId),
-    /// Break an item into its materials, anywhere (docs/dev/crafting.md; `world/salvage.rs`):
+    /// Break an item into its materials, anywhere (docs/dev/crafting.md; `world/crafting/salvage.rs`):
     /// [`Action::Salvage`], every profession's at once, listed after the skills' own uses while
     /// `data/rules/salvage.toml` exists. Everyone has it; it asks which item ([`Aim::Item`]).
     Salvage,
@@ -120,7 +120,7 @@ pub enum Ability {
     /// ([`Aim::Ailment`]).
     Heal,
     /// Make out a scroll without reading it (spec §8 "Scrolls", "Skills": Decipher script;
-    /// `world/decipher.rs`): [`Action::Decipher`] on a scroll of a type not yet identified, the
+    /// `world/magic/decipher.rs`): [`Action::Decipher`] on a scroll of a type not yet identified, the
     /// skill's use (the skill with the `decipher` effect, listed as this in its place while
     /// `data/rules/decipher.toml` exists). Had by whoever is trained in it; unavailable
     /// ([`Unavailable::NoUnknownScroll`], the perception knows) while the pack holds none. It
@@ -155,7 +155,7 @@ pub enum Ability {
     /// Drink at a healing spring (spec §7 "Special rooms"): [`Action::Drink`]. A place offers
     /// it, as Pray: listed only while the player stands next to a spring.
     Drink,
-    /// Gather herbs from the glowing fungus (spec §8 "Skills": Herbalism; `world/gather.rs`):
+    /// Gather herbs from the glowing fungus (spec §8 "Skills": Herbalism; `world/skills/gather.rs`):
     /// [`Action::Gather`] in a direction. The fungus offers it to everyone ([`Ability::here`]):
     /// listed only while the player stands next to fungus, while `data/herbs.toml` exists. It
     /// asks for the way only when fungus stands on more than one cell beside the player
@@ -174,7 +174,7 @@ pub enum Ability {
     /// [`Ability::Heel`]; it asks for the cell in the aiming mode.
     SetOn,
     /// Give (spec §8 "Allies"): [`Action::Give`], a stack the player carries for the neck of a
-    /// kept beast of theirs (`world/collar.rs`). Not an order, it takes a `wear`'s time; the Allies
+    /// kept beast of theirs (`world/allies/collar.rs`). Not an order, it takes a `wear`'s time; the Allies
     /// group all the same, listed while the player keeps a beast ([`Ability::orders`]),
     /// unavailable ([`Unavailable::NotBeside`]) with none beside them.
     Give,
@@ -271,7 +271,7 @@ pub enum Aim {
     Direction,
     /// A cell, in the aiming mode, as a shot does ([`Ability::action_at`]).
     Cell,
-    /// A cell in sight with a corpse on it, in the aiming mode (`world/corpse_spell.rs`).
+    /// A cell in sight with a corpse on it, in the aiming mode (`world/magic/corpse_spell.rs`).
     Corpse,
     /// What to treat, of what the player may treat now on themselves and their allies beside
     /// them ([`crate::heal::treatable`]): asked only when there is more than one (the Heal
@@ -321,12 +321,12 @@ pub enum Unavailable {
     /// One the place does not allow: foraging anywhere but in the wild (spec §8 "Foraging").
     NotHere,
     /// One a place offers that asks for a skill the actor is not trained in: Gather without
-    /// Herbalism (#1400, `world/gather.rs`).
+    /// Herbalism (#1400, `world/skills/gather.rs`).
     Untrained(SkillId),
     /// The Heal ability with nothing to treat: no bleeding, poison, or disease that shows.
     NothingToTreat,
     /// Make do and mend with nothing damaged carried that is not worn or wielded
-    /// (`world/make_do.rs`).
+    /// (`world/crafting/make_do.rs`).
     NothingToMend,
     /// A triggered weapon ability: it fires by itself, never chosen.
     FiresByItself,
@@ -337,7 +337,7 @@ pub enum Unavailable {
     NoAllies,
     /// Give with the player's companion not beside them (spec §8 "Allies").
     NotBeside,
-    /// Sic 'em with no companion of the player's on the level (`world/sic.rs`).
+    /// Sic 'em with no companion of the player's on the level (`world/allies/sic.rs`).
     NoCompanion,
     /// Stillness with nothing to end: none of the statuses it ends is suffered.
     Still,

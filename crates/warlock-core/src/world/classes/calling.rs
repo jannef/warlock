@@ -17,10 +17,10 @@
 //! An encounter entry's `when = { calling = "ID" }` holds while it is open.
 //! There is no `from_state`: a restore grants both tables' abilities (`World::grant_class`).
 
-use super::{ActorId, Spent, World};
 use crate::action::Event;
 use crate::content::{ActionKind, CallingDef, DialogueId};
 use crate::text::capitalized;
+use crate::world::{ActorId, Spent, World};
 
 /// Where the player stands with a calling, for the dev `progress` dump.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -95,7 +95,7 @@ impl World {
     /// topic `departs` (said as a message only, so the farewell is heard and no screen opens on
     /// one gone). Takes a chat's time. Not open (the topic is not offered): it knows nothing of
     /// it, and no time passes. `None` for any other topic.
-    pub(super) fn ask_calling(
+    pub(in crate::world) fn ask_calling(
         &mut self,
         id: ActorId,
         speaker: DialogueId,
@@ -130,7 +130,7 @@ impl World {
     /// prestige class `id` now, whatever their level, through the calling of the run's campaign
     /// that opens it. Refused with no prestige class of that id, one held already, or no calling
     /// of this campaign open to their class. Takes no time.
-    pub(super) fn call_dev(&mut self, id: &str) -> Spent {
+    pub(in crate::world) fn call_dev(&mut self, id: &str) -> Spent {
         let content = self.content.clone();
         if content.prestige(id).is_none() {
             self.say(format!("There is no prestige class `{id}` (dev)."));

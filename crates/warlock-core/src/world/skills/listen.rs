@@ -9,16 +9,16 @@
 //! nothing was heard. Every listen marks Listen, whatever is heard. Refused, taking no time,
 //! without the skill or a closed door that way.
 
-use super::{Spent, World};
 use crate::ability::Ability;
 use crate::content::ActionKind;
 use crate::geom::Dir;
 use crate::noise::Listening;
 use crate::skills::{Effect, Use};
+use crate::world::{Spent, World};
 
 impl World {
     /// The player listens at the door in `dir` (module docs).
-    pub(super) fn listen(&mut self, dir: Dir) -> Spent {
+    pub(in crate::world) fn listen(&mut self, dir: Dir) -> Spent {
         let player = self.state.player;
         if !Ability::Listen.had_by(self.state.player(), &self.content) {
             self.say("You do not know how to listen so.");

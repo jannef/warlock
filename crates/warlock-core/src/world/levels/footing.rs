@@ -7,21 +7,21 @@
 //!   `World::status_cost`, as Initiative's is for Surprised), and each action the player takes
 //!   Staggered marks [`Use::Staggered`] (from `World::spend_actions`).
 
-use super::World;
 use crate::content::{LevelKind, TerrainDef, TerrainId};
 use crate::skills::Use;
+use crate::world::World;
 
 impl World {
     /// Whether a step onto `to` on the current level is onto rough ground: off the overworld,
     /// onto terrain that slows and is not wading ([`World::wading_step`]).
-    pub(super) fn rough_step(&self, to: &TerrainDef) -> bool {
+    pub(in crate::world) fn rough_step(&self, to: &TerrainDef) -> bool {
         self.state.current().kind != LevelKind::Overworld
             && to.move_cost > 100
             && !self.wading_step(to)
     }
 
     /// The player stepped onto `onto`: rough ground may mark Balance.
-    pub(super) fn train_rough_step(&mut self, onto: TerrainId) {
+    pub(in crate::world) fn train_rough_step(&mut self, onto: TerrainId) {
         let terrain = self.content.terrain(onto);
         if self.rough_step(terrain) && self.trains(Use::RoughStep) {
             self.train(Use::RoughStep);
@@ -29,7 +29,7 @@ impl World {
     }
 
     /// The player took an action Staggered.
-    pub(super) fn train_staggered(&mut self) {
+    pub(in crate::world) fn train_staggered(&mut self) {
         if self.trains(Use::Staggered) {
             self.train(Use::Staggered);
         }

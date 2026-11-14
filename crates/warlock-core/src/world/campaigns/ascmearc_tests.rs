@@ -4,16 +4,16 @@
 //! perception before a reveal), the rivers crossed only at the bridge and the ford, the travel
 //! budget, and the legend's `name` and `note`.
 
-use super::*;
 use crate::action::parse_actions;
 use crate::content::{CampaignKind, ContentFiles, LevelTemplate};
 use crate::dump::{self, Layer};
 use crate::replay::Replay;
 use crate::test_support::{run as act, texts};
+use crate::world::*;
 use std::collections::BinaryHeap;
 use std::sync::LazyLock;
 
-const LEVEL: &str = include_str!("../../../../assets/campaigns/ascmearc/levels/ascmearc.toml");
+const LEVEL: &str = include_str!("../../../../../assets/campaigns/ascmearc/levels/ascmearc.toml");
 const PASS: Pos = Pos::new(12, 28);
 const TOWN: Pos = Pos::new(18, 28);
 const BARROW: Pos = Pos::new(34, 25);

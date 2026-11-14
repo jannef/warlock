@@ -92,7 +92,7 @@ pub fn known(view: &PerceptionView<'_>, p: Pos) -> Option<String> {
     Some(format!("You know {who} is {}.", and_list(&parts)))
 }
 
-/// What look mode says of a zone on a cell (`world/zone.rs`).
+/// What look mode says of a zone on a cell (`world/magic/zone.rs`).
 fn zone_words(kind: ZoneKind) -> &'static str {
     match kind {
         ZoneKind::Fire => "wreathed in fire",
@@ -321,7 +321,7 @@ fn creature(view: &PerceptionView<'_>, actor: &SeenActor) -> String {
     } else {
         effects
     };
-    // The creature the player's openings are in (`world/mark.rs`).
+    // The creature the player's openings are in (`world/classes/mark.rs`).
     let effects = if actor.marked {
         format!("{effects}, your mark")
     } else {

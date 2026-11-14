@@ -3,12 +3,12 @@
 //! alone, never the slain list; a sealed Pit's fifth floor made without it; the mouth closing on
 //! the next arrival outside; the content's checks of a portal branch's boss row.
 
-use super::stance_between;
-use super::*;
 use crate::action::{Action, parse_actions};
 use crate::content::{Content, ContentFiles, CreatureSpawn, LevelTemplate, StairsDir, Stance};
 use crate::mapgen::Visit;
 use crate::test_support::{CONTENT, said};
+use crate::world::stance_between;
+use crate::world::*;
 use std::collections::BTreeSet;
 
 const WARDEN: &str = "gatewarden";
@@ -22,9 +22,14 @@ fn made(seed: u64, s: u32, depth: u32, slain: &BTreeSet<String>) -> LevelTemplat
     };
     let w = World::new(CONTENT.clone(), "showcase", Some(seed)).expect("world");
     let seed = w.state.level_seed(&CONTENT, &id);
-    travel::level_template(&CONTENT, ("showcase", seed), &id, (Some("hub"), &visit))
-        .expect("made")
-        .into_owned()
+    crate::world::levels::travel::level_template(
+        &CONTENT,
+        ("showcase", seed),
+        &id,
+        (Some("hub"), &visit),
+    )
+    .expect("made")
+    .into_owned()
 }
 
 fn wardens(t: &LevelTemplate) -> usize {
@@ -69,12 +74,13 @@ fn portal(w: &mut World) {
     let player = w.state.player;
     let spell = CONTENT.spell_id("spark").expect("spark");
     let me = w.state.actors[&player].clone();
-    let cast = super::cast::Cast::by_creature(&me, &CONTENT, (spell, CONTENT.spell(spell)));
+    let cast =
+        crate::world::magic::cast::Cast::by_creature(&me, &CONTENT, (spell, CONTENT.spell(spell)));
     let entry = (CONTENT.miscasts().iter())
         .find(|m| m.id == "pit")
         .cloned()
         .expect("the pit row");
-    let aim = super::miscast::Aim::Player(None);
+    let aim = crate::world::magic::miscast::Aim::Player(None);
     w.miscast(player, &cast, aim, &entry, &mut Vec::new());
 }
 
@@ -119,7 +125,9 @@ fn warden_here(w: &World) -> Option<ActorId> {
 /// The Pits' mouths in the hub, by their integers.
 fn mouths(w: &World) -> Vec<u32> {
     (w.state.levels["hub"].stairs.iter())
-        .filter_map(|l| pit::pit_of(&CONTENT, l.to.as_deref()?).map(|(s, _)| s))
+        .filter_map(|l| {
+            crate::world::levels::pit::pit_of(&CONTENT, l.to.as_deref()?).map(|(s, _)| s)
+        })
         .collect()
 }
 
@@ -310,7 +318,8 @@ fn a_miscasts_gate_in_a_pit_lets_loosed_fiends_through_who_fall_on_the_warden() 
         status: Vec::new(),
     };
     let here = w.state.current_level.clone();
-    let gate_id = travel::make_creature(&mut w.state, &CONTENT, &here, &spawn);
+    let gate_id =
+        crate::world::levels::travel::make_creature(&mut w.state, &CONTENT, &here, &spawn);
     w.creature_summons(gate_id, &mut Vec::new());
     let fiends = summoned_by(&w, gate_id);
     assert!(!fiends.is_empty(), "the gate let fiends through");

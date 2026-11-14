@@ -3,9 +3,9 @@
 //! counts, one killed by a trap or another creature does not; an actor's `faction_override`
 //! changes nothing; the objective names the tag's types; `what` renames the noun.
 
-use super::fight::Harm;
-use super::*;
 use crate::content::{ContentFiles, TrapId};
+use crate::world::combat::fight::Harm;
+use crate::world::*;
 
 const QUESTS: &str = r#"
 [[quest]]

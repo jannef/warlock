@@ -1,14 +1,14 @@
-//! Cursed rooms (spec §7 "Special rooms", design §5; `world/curse.rs`) and Consecrate
-//! (`world/consecrate.rs`): the dead killed inside rise two minutes later as undead of their
+//! Cursed rooms (spec §7 "Special rooms", design §5; `world/fixtures/curse.rs`) and Consecrate
+//! (`world/classes/consecrate.rs`): the dead killed inside rise two minutes later as undead of their
 //! level (the nearest level when none has theirs), unless their corpse is gone; Old delver;
 //! a whole cursed level; frozen floors catching up; Consecrate lifting a room or a level.
 
-use super::*;
 use crate::ability::{Ability, Unavailable};
 use crate::alignment::Score;
 use crate::content::{ClassActive, ContentFiles, CreatureId, CreatureSpawn};
 use crate::dump::{self, Layer};
 use crate::test_support::{builtin, run, said_text as said};
+use crate::world::*;
 
 /// A hall, 30 wide, with a cursed room over x 10 to 19. Lit, so the player sees all of it.
 const HALL: &str = "\
@@ -82,7 +82,7 @@ fn rat_at(w: &mut World, p: Pos) -> ActorId {
         status: Vec::new(),
     };
     let (content, level) = (w.content.clone(), w.state.current_level.clone());
-    travel::make_creature(&mut w.state, &content, &level, &spawn)
+    crate::world::levels::travel::make_creature(&mut w.state, &content, &level, &spawn)
 }
 
 /// Kills whoever stands at `p` (a giant rat put there if nobody does), by `by` (the player, or

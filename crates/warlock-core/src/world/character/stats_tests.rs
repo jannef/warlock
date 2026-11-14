@@ -1,11 +1,11 @@
 //! Stats (spec §8 "Stats"): every actor starts with its scores and potentials, they are saved and
 //! hashed, and the player perceives only their own scores.
 
-use super::*;
 use crate::content::ContentFiles;
 use crate::save;
 use crate::stats::{Stat, Stats};
 use crate::test_support::CONTENT;
+use crate::world::*;
 
 fn showcase() -> World {
     World::new(CONTENT.clone(), "showcase", None).expect("world")

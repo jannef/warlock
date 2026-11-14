@@ -3,20 +3,20 @@
 //! `shots` at the cell, one after another, for the price of one shot and one exertion; each is
 //! a shot as `fire` looses it (its own flight, attack, and missile). It stops early when the
 //! ammunition runs out or the player falls. It costs Focus (its talent's `resource`; R2,
-//! `world/focus.rs`), spent as it is loosed. Refused, taking no time and spending nothing, as a
+//! `world/classes/focus.rs`), spent as it is loosed. Refused, taking no time and spending nothing, as a
 //! shot is (nothing ready, out of range, on the overworld) and as a class active is (short of
 //! focus among them).
 
-use super::shoot::Loose;
-use super::{Spent, World};
 use crate::action::{AttackKind, Event};
 use crate::content::{ActionKind, ClassActive};
 use crate::geom::Pos;
+use crate::world::combat::shoot::Loose;
+use crate::world::{Spent, World};
 
 impl World {
     /// `use:ID:X,Y`: the player uses class active `active` at level cell `at`. Refused, taking
     /// no time, without it, while it is unavailable, or for one that aims at no cell.
-    pub(super) fn use_class_at(
+    pub(in crate::world) fn use_class_at(
         &mut self,
         active: ClassActive,
         at: Pos,

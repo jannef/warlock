@@ -1,16 +1,16 @@
-//! Whittling (`world/temper.rs`, `Craft::Whittle`; #1028): Temper's rules for wood, with a knife,
+//! Whittling (`world/crafting/temper.rs`, `Craft::Whittle`; #1028): Temper's rules for wood, with a knife,
 //! anywhere. Wood accepted and metal refused, the knife asked for and its reason, ten minutes
 //! and the Woodcraft mark, an interruption, and the one table Temper and Whittle share, row by
 //! row, by seed.
 
 use super::temper::{workable, workable_wood};
-use super::*;
 use crate::ability::{Ability, Unavailable};
 use crate::content::ContentFiles;
 use crate::magic::{Aspect, Worked};
 use crate::object::Stack;
 use crate::rng::Rng;
 use crate::test_support::said_text as said;
+use crate::world::*;
 
 /// A plain room, the player at (4, 3), and at `k` a kobold, when asked for. No anvil.
 const ROOM: &str = "\

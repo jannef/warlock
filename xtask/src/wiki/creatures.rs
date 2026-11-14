@@ -389,7 +389,7 @@ fn strikes_nothing(c: &CreatureDef) -> bool {
 }
 
 /// A creature of type `id` as a level spawns it, but bare: carrying, wearing, and wielding
-/// nothing, with no route, nowhere in particular (`world/travel.rs` makes the real ones). The
+/// nothing, with no route, nowhere in particular (`world/levels/travel.rs` makes the real ones). The
 /// tables read its numbers through the rules' own [`Actor`] methods, so they cannot drift from
 /// what a fight uses.
 ///
@@ -566,7 +566,7 @@ pub(super) fn creature_defences(content: &Content) -> String {
         if c.blood.is_none() {
             resists.push("never [bleeds](status-effects.md#bleeding)".into());
         }
-        // Acid blood (`world/corrode.rs`): what strikes it may come away damaged.
+        // Acid blood (`world/combat/corrode.rs`): what strikes it may come away damaged.
         if let Some(acid) = c.corrodes.filter(|a| a.what.eats(CorrodesWhat::Weapon)) {
             resists.push(format!(
                 "{}% to [damage](materials.md#item-damage) the weapon that strikes it ({})",
@@ -574,7 +574,7 @@ pub(super) fn creature_defences(content: &Content) -> String {
                 acid.kind.id()
             ));
         }
-        // Regeneration (`world/regen.rs`): its own healing pace, stopped by fire and acid.
+        // Regeneration (`world/health/regen.rs`): its own healing pace, stopped by fire and acid.
         let hp = match c.regen {
             100 => actor.max_hp(content).to_string(),
             pace => format!("{}, heals {} as fast", actor.max_hp(content), times(pace)),
@@ -722,7 +722,7 @@ pub(super) fn creature_attacks(content: &Content) -> String {
                 Some(_) => (format!("then {attack}"), "with the first".to_string()),
             };
             let mut caused = natural.map_or_else(Vec::new, |a| on_hit(content, a));
-            // Its filth (`world/corrode.rs`): a worn piece damaged.
+            // Its filth (`world/combat/corrode.rs`): a worn piece damaged.
             if let Some(acid) = c.corrodes.filter(|a| a.what.eats(CorrodesWhat::Armour)) {
                 caused.push(format!(
                     "{}% [damages](materials.md#item-damage) a piece worn ({})",
@@ -1167,7 +1167,7 @@ pub(super) fn creature_spells(content: &Content) -> String {
     out
 }
 
-/// Each creature's presence (`world/aura.rs`): its aura (the status, its degrees, how far, by
+/// Each creature's presence (`world/creatures/aura.rs`): its aura (the status, its degrees, how far, by
 /// sight or by hearing and how loud, the check that keeps it off, how often), the statuses its
 /// kind always has, and its cry (what it sounds like, how loud, how often on average).
 pub(super) fn creature_auras(content: &Content) -> String {

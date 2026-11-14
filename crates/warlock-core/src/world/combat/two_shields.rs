@@ -19,9 +19,9 @@
 //! stream, only when their chance is above 0, so fights and casts without two shields keep
 //! their draws.
 
-use super::{Actor, World};
 use crate::combat::Profile;
 use crate::content::{Content, Grip, ObjectId, TwoShields};
+use crate::world::{Actor, World};
 
 /// What fighting with two shields costs now (each eased by the style's rank and talents).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -83,7 +83,7 @@ impl World {
     /// above 0 and the first hit. `None` without two shields.
     pub(super) fn other_shield(
         &mut self,
-        attacker: super::ActorId,
+        attacker: crate::world::ActorId,
         hit: bool,
     ) -> Option<(ObjectId, Profile)> {
         let content = self.content.clone();
@@ -99,7 +99,7 @@ impl World {
     /// Whether the player's shields spoil the spell they are about to cast for `mana` (its
     /// base cost): by the spell-failure bane's chance, one draw only when it is above 0. A
     /// spoiled spell costs its mana (and, said by the caller, its time) and is said.
-    pub(super) fn shields_fumble(&mut self, mana: i32) -> bool {
+    pub(in crate::world) fn shields_fumble(&mut self, mana: i32) -> bool {
         let player = self.state.player;
         let Some(banes) = self.state.player().shield_banes(&self.content) else {
             return false;
@@ -114,7 +114,7 @@ impl World {
 
     /// `price` of actor `id`'s attack made heavier by the slowness of two shields, if it holds
     /// them.
-    pub(super) fn shields_slowed(&self, id: super::ActorId, price: i64) -> i64 {
+    pub(in crate::world) fn shields_slowed(&self, id: crate::world::ActorId, price: i64) -> i64 {
         let banes = (self.state.actors.get(&id)).and_then(|a| a.shield_banes(&self.content));
         match banes {
             Some(ShieldBanes { slow, .. }) if slow > 0 => price * (100 + i64::from(slow)) / 100,

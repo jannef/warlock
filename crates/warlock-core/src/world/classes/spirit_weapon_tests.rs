@@ -3,7 +3,6 @@
 //! the hand it strikes surer, threatens lower, and ignores Protection; it fades the moment it
 //! leaves the hand (removed, swapped, dropped, sold), is never thrown, and is never handed in.
 
-use super::*;
 use crate::ability::{Ability, Aim};
 use crate::action::parse_actions;
 use crate::character::CharacterSpec;
@@ -12,6 +11,7 @@ use crate::dump::{self, Layer};
 use crate::magic::describe::{self, LineKind};
 use crate::replay::Replay;
 use crate::test_support::{builtin, last, run};
+use crate::world::*;
 use std::sync::LazyLock;
 
 const SPIRIT: ClassActive = ClassActive::SpiritWeapon;
@@ -272,7 +272,7 @@ fn it_is_never_thrown_or_handed_in() {
     assert_eq!(spirits(&w), [2]);
     let dagger = w.content().object_id("dagger").expect("dagger");
     assert_eq!(
-        super::shop::count_of(&w.state.player().inventory, dagger),
+        crate::world::people::shop::count_of(&w.state.player().inventory, dagger),
         0
     );
 }
@@ -291,13 +291,13 @@ fn a_shop_never_sees_it() {
     let at = spirits(&w)[0];
     let keeper = w.state.current().shops[0].keeper;
     let currency = w.content().shops().expect("shops").currency;
-    let purse = super::shop::count_of(&w.state.actors[&keeper].inventory, currency);
+    let purse = crate::world::people::shop::count_of(&w.state.actors[&keeper].inventory, currency);
     let floor = w.state.current().objects_at(w.player_pos()).len();
     let out = run(&mut w, &format!("sell:{at}"));
     assert!(out[0].took_turn);
     assert!(spirits(&w).is_empty());
     assert_eq!(
-        super::shop::count_of(&w.state.actors[&keeper].inventory, currency),
+        crate::world::people::shop::count_of(&w.state.actors[&keeper].inventory, currency),
         purse
     );
     assert_eq!(w.state.current().objects_at(w.player_pos()).len(), floor);

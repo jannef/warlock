@@ -20,19 +20,19 @@
 //!
 //! [`Action::Pray`]: crate::action::Action::Pray
 
-use super::alignment::Deed;
 use super::outcome::leaned_kinds;
-use super::rest::Ended;
-use super::{Spent, World};
 use crate::action::Event;
 use crate::alignment::Alignment;
 use crate::content::{ActionKind, Offer};
 use crate::geom::{Dir, Pos};
 use crate::time::Duration;
+use crate::world::character::alignment::Deed;
+use crate::world::turn::rest::Ended;
+use crate::world::{Spent, World};
 
 /// A prayer under way: the altar's cell and how long it takes.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(super) struct Prayer {
+pub(in crate::world) struct Prayer {
     altar: Pos,
     seconds: u32,
 }
@@ -58,7 +58,7 @@ impl World {
     }
 
     /// The player begins to pray at the altar beside them; refused, taking no time, with none.
-    pub(super) fn start_prayer(&mut self) -> Spent {
+    pub(in crate::world) fn start_prayer(&mut self) -> Spent {
         let Some(altar) = self.altar_beside() else {
             self.say("There is no altar here to pray at.");
             return Spent::Nothing;
@@ -75,7 +75,7 @@ impl World {
     /// Prays turn after turn until the prayer is done or something breaks it (module docs): its
     /// last turn cut short to end exactly when its time is up, whatever the player's speed, as
     /// a rest's is.
-    pub(super) fn pray(&mut self, prayer: Prayer, events: &mut Vec<Event>) {
+    pub(in crate::world) fn pray(&mut self, prayer: Prayer, events: &mut Vec<Event>) {
         let until = self.state.time + Duration::seconds(u64::from(prayer.seconds));
         let turn = self.price_of(self.state.player, ActionKind::Pray);
         let ended = self.keep_at(

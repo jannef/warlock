@@ -2,14 +2,14 @@
 //! loop of a long action ([`World::keep_at`]) that resting, eating, and digging share.
 //! `world/mod.rs` has only the dispatch line.
 
-use super::encounter::Watch;
-use super::{ActorId, Spent, World};
 use crate::action::{DiseaseNews, Event, MAX_REST, Rest};
 use crate::content::{ActionKind, LevelKind, StatUse};
 use crate::geom::Pos;
 use crate::perception::VIEW_RADIUS;
 use crate::sight::{self, LineOfSight};
 use crate::time::{self, GameTime};
+use crate::world::levels::encounter::Watch;
+use crate::world::{ActorId, Spent, World};
 
 /// The player's line of sight as a long action keeps it: for the terrain changes made so far
 /// ([`World::reshaped`]) and where they stand.
@@ -19,14 +19,14 @@ impl World {
     /// How near, in steps (Chebyshev), a hostile creature in view must come to stop a long
     /// action ([`World::keep_at`], spec §8 "Rest"; `[long_action]` in `data/rules/tuning.toml`);
     /// one farther off may be seen and the action goes on.
-    pub(super) fn stop_within(&self) -> i32 {
+    pub(in crate::world) fn stop_within(&self) -> i32 {
         self.content.tuning().long_action.stop_within
     }
 }
 
 /// A creature that stopped a long action by coming within [`World::stop_within`] in view.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(super) struct Came {
+pub(in crate::world) struct Came {
     pub id: ActorId,
     /// Whether the player saw it farther off before (it came close), or not (it came into view).
     pub seen: bool,
@@ -34,7 +34,7 @@ pub(super) struct Came {
 
 /// How a long action (a rest, digging; [`World::keep_at`]) ended.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(super) enum Ended {
+pub(in crate::world) enum Ended {
     /// There was nothing more to do.
     Done,
     /// This hostile creature came close in view.
@@ -49,13 +49,18 @@ impl World {
     /// Rests until `until`: turn after turn of waiting ([`World::keep_at`]), the last cut short to
     /// end exactly at `until`, whatever the player's speed ([`World::price_until`]); then says
     /// how long the player rested. The player heals faster all the while.
-    pub(super) fn rest(&mut self, until: GameTime, goal: Rest, events: &mut Vec<Event>) {
+    pub(in crate::world) fn rest(&mut self, until: GameTime, goal: Rest, events: &mut Vec<Event>) {
         self.resting = true;
         self.rest_until(until, goal, events);
         self.resting = false;
     }
 
-    pub(super) fn rest_until(&mut self, until: GameTime, goal: Rest, events: &mut Vec<Event>) {
+    pub(in crate::world) fn rest_until(
+        &mut self,
+        until: GameTime,
+        goal: Rest,
+        events: &mut Vec<Event>,
+    ) {
         let start = self.state.time;
         let wait = self.price_of(self.state.player, ActionKind::Wait);
         let ended = self.keep_at(
@@ -84,7 +89,7 @@ impl World {
 
     /// What is said of a creature that stopped a long action ([`Came`]): "A kobold comes into
     /// view", or, seen farther off before, "The kobold comes close".
-    pub(super) fn came_line(&self, came: Came) -> String {
+    pub(in crate::world) fn came_line(&self, came: Came) -> String {
         let called = self.creature_called(came.id);
         if !came.seen {
             return format!("{called} comes into view");
@@ -117,7 +122,7 @@ impl World {
     /// without perception, which cannot change the outcome; only the last turn's events are
     /// kept, and the player's status effects beginning and ending in the others, their
     /// resources ending, and their diseases' news (so they are said).
-    pub(super) fn keep_at(
+    pub(in crate::world) fn keep_at(
         &mut self,
         events: &mut Vec<Event>,
         more: impl Fn(&Self) -> bool,
@@ -291,7 +296,7 @@ impl World {
     }
 
     /// When a rest toward `goal` ends: at most [`MAX_REST`] from now.
-    pub(super) fn start_rest(&mut self, goal: Rest) -> Spent {
+    pub(in crate::world) fn start_rest(&mut self, goal: Rest) -> Spent {
         if self.refused_afloat("You cannot rest in deep water.") {
             return Spent::Nothing;
         }

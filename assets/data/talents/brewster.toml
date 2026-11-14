@@ -1,6 +1,6 @@
 # A Crafts trade (the craftsperson design §3): a craftsperson's creation pick, never one the race
 # teaches everyone; trains Alchemy at 3d6 and hands down the tools of the trade
-# (world/trade.rs). Two sprigs of moonwort and two glowcaps: a potion of healing's and a potion of mana's herbs.
+# (world/crafting/trade.rs). Two sprigs of moonwort and two glowcaps: a potion of healing's and a potion of mana's herbs.
 [[talent]]
 id = "brewster"
 name = "Brewster"

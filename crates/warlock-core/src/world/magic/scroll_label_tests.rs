@@ -2,13 +2,13 @@
 //! scroll of identify, known from a starting kit, saved and hashed; the scroll of identify in
 //! loot and in the general store.
 
-use super::*;
 use crate::action::parse_actions;
 use crate::character::CharacterSpec;
 use crate::content::ContentFiles;
 use crate::magic::LootGrade;
 use crate::replay::Replay;
 use crate::test_support::{builtin, run, said as texts};
+use crate::world::*;
 
 /// A lit hall, the player carrying: a, three scrolls of fireball; b, two of lightning; c, two of
 /// identify; d, a sealed letter (no reading).

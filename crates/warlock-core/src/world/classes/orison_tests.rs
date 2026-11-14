@@ -1,10 +1,8 @@
-//! The priest's prayer (`world/orison.rs`, spec §8 "Class abilities"; the priest design §6.1,
+//! The priest's prayer (`world/classes/orison.rs`, spec §8 "Class abilities"; the priest design §6.1,
 //! §7): each use at its level, the priority order, the answers a tier gives, the refusal, the
 //! strain and its lock, the faces, and saves and replays.
 
-use super::caster_tests::{reach, world_with};
 use super::orison::Strain;
-use super::*;
 use crate::ability::Ability;
 use crate::action::parse_actions;
 use crate::alignment::Score;
@@ -13,6 +11,8 @@ use crate::dump::{self, Layer};
 use crate::replay::Replay;
 use crate::test_support::{CONTENT as BUILTIN, last, run, said};
 use crate::time::Duration;
+use crate::world::magic::caster_tests::{reach, world_with};
+use crate::world::*;
 
 /// A human priest of `level` (every score 14), Neutral, at full hit points and mana, Not
 /// hungry, and with no strain.
@@ -134,7 +134,7 @@ fn each_use_comes_at_its_level() {
     run(&mut w, "use:orison");
     let me = w.state.player();
     assert!(!me.damage.is_damaged());
-    assert!(super::actor::undrained(&me.drained));
+    assert!(crate::world::turn::actor::undrained(&me.drained));
     assert_eq!(last(&w), "You feel whole again.");
     // Mana at 32.
     let mut w = priest(32);

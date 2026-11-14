@@ -1,15 +1,15 @@
-//! Malison (spec §8 "Class abilities"; #905; `world/malison.rs`, `caster.rs::lore_blow`): the
+//! Malison (spec §8 "Class abilities"; #905; `world/magic/malison.rs`, `caster.rs::lore_blow`): the
 //! witch's at 18. The bite: a creature under a hex takes 3 more from her blows and her spells
 //! (Poison lore's +2 on the poisoned lands with spells too); none on an unhexed one. The tithe:
 //! a creature dying under a hex of hers, by any cause and anyone's hand, pays her half its level
 //! in mana (at least 1, to her maximum), never for her own death; no draws.
 
-use super::class_active_tests::{reach, world};
-use super::war_cry_tests::foe_at;
-use super::*;
 use crate::combat::{Blow, Strike};
 use crate::damage::Damage;
 use crate::test_support::run;
+use crate::world::classes::class_active_tests::{reach, world};
+use crate::world::classes::war_cry_tests::foe_at;
+use crate::world::*;
 
 /// A witch with Malison (and nothing else of the witch's beyond her kit), alone on the level,
 /// with mana to spare.

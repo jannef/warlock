@@ -1,6 +1,5 @@
 //! Actors: the player and creatures.
 
-use super::{Ally, FreeBlows, Talk};
 use crate::action::AttackKind;
 use crate::alignment::{Alignment, Band, Score};
 use crate::burden::Burden;
@@ -27,6 +26,7 @@ use crate::status::Effects;
 use crate::talent::{SharedMods, TalentMods, Talents};
 use crate::time::GameTime;
 use crate::weapon_skills::WeaponSkills;
+use crate::world::{Ally, FreeBlows, Talk};
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
 use std::collections::BTreeMap;
@@ -74,17 +74,17 @@ pub struct Mind {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub post: Option<Pos>,
     /// The turn the player last saw it (`WorldState::turn`), the player's half of being aware
-    /// of it (spec §8 "Surprise and sneak attacks", `world/surprise.rs`): set by perception in
+    /// of it (spec §8 "Surprise and sneak attacks", `world/combat/surprise.rs`): set by perception in
     /// the turn pipeline, and by an attack that caught the player unawares (never on load). Not part of its routine: [`Mind::is_calm`] ignores it.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub noticed: Option<u64>,
-    /// The turn the player slipped past it (`world/slip.rs`): won the contest when it would
+    /// The turn the player slipped past it (`world/combat/slip.rs`): won the contest when it would
     /// first have seen them by darkvision alone. While set (and within `[slip] lasts_turns`) it
     /// does not see them by darkvision, and is unaware of them. Not part of its routine:
     /// [`Mind::is_calm`] ignores it.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub missed: Option<u64>,
-    /// The turn a blow of the player's found it while it was unseen (`world/unseen.rs`): the
+    /// The turn a blow of the player's found it while it was unseen (`world/creatures/unseen.rs`): the
     /// player sees it for that turn. Not part of its routine: [`Mind::is_calm`] ignores it.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub glimpsed: Option<u64>,
@@ -131,7 +131,7 @@ pub struct Actor {
     pub level: String,
     pub pos: Pos,
     pub patrol: Option<Patrol>,
-    /// Scheduler energy (spec §8 "Speed", `world/schedule.rs`): the actor may act while this is
+    /// Scheduler energy (spec §8 "Speed", `world/turn/schedule.rs`): the actor may act while this is
     /// at least 0. It gains the creature type's speed per second of game time while the actor is
     /// on the current level; an action costs 1000 per second it takes.
     pub energy: i64,
@@ -142,7 +142,7 @@ pub struct Actor {
     /// and becomes the perceived sounds.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub heard: Vec<Heard>,
-    /// What a creature has in mind (`world/ai.rs`).
+    /// What a creature has in mind (`world/creatures/ai.rs`).
     #[serde(default, skip_serializing_if = "Mind::is_empty")]
     pub mind: Mind,
     /// What it carries, lettered `a` on (see [`crate::object`]).
@@ -228,26 +228,26 @@ pub struct Actor {
     /// neither, drawn as it is made. Read through [`Actor::graded`]. Left out of saves at 0.
     #[serde(default, skip_serializing_if = "is_ungraded")]
     pub grade: i8,
-    /// The creature that summoned it (spec §8 "Summoning", `world/summon.rs`), if one did: it
+    /// The creature that summoned it (spec §8 "Summoning", `world/creatures/summon.rs`), if one did: it
     /// counts toward that summoner's live summons. Left out of saves while `None`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub summoner: Option<ActorId>,
     /// What it was made of, a half cut off one of its type or what crawled out of a corpse
-    /// (docs/design/monster-dread.md §5.5, `world/split.rs`): its kill pays less and counts for
+    /// (docs/design/monster-dread.md §5.5, `world/creatures/split.rs`): its kill pays less and counts for
     /// no quest. Left out of saves while `None`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub split_from: Option<super::split::Split>,
-    /// Whose ally it is, and what it was told (spec §8 "Allies", `world/ally.rs`): a summon or a
+    pub split_from: Option<crate::world::creatures::split::Split>,
+    /// Whose ally it is, and what it was told (spec §8 "Allies", `world/allies/ally.rs`): a summon or a
     /// companion on the player's side. `None` for every other actor, and left out of saves
     /// then, so runs without allies save and hash as before.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub ally: Option<Ally>,
-    /// When a risen creature that serves no one departs (`world/corpse_spell.rs`: Rouse the
+    /// When a risen creature that serves no one departs (`world/magic/corpse_spell.rs`: Rouse the
     /// dead's berserk): it leaves nothing when it falls again. `None` for every other actor, and
     /// left out of saves and hashes then.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub risen: Option<GameTime>,
-    /// Whose guard its openings are in (the thief's mark; `world/mark.rs`): the creature its
+    /// Whose guard its openings are in (the thief's mark; `world/classes/mark.rs`): the creature its
     /// last chosen attack was at, while it holds a pool `marked` in data (Openings). Set and
     /// cleared only in `mark.rs`; creatures never have one. Left out of saves and hashes while
     /// `None`, so runs without a thief save and hash as before.
@@ -281,21 +281,21 @@ pub struct Actor {
     /// The talents a forgotten altar gave it for life (spec §7 "Special rooms": Chosen, a
     /// talent; Forsaken, a flaw), each also held in [`Actor::talents`]: never a
     /// level's pick, put back with a race's and a birth sign's gifts whenever those are
-    /// (`world/stars.rs`), and marked as the altar's where talents are shown.
+    /// (`world/character/stars.rs`), and marked as the altar's where talents are shown.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub boons: Vec<crate::talent::Taken>,
-    /// The spells it has learned for good (spec §8 "Spells"; `world/learn.rs`), each with the
-    /// rank it knows it at (1 to `MAX_SPELL_RANK`; `world/spell_rank.rs`): learned from
+    /// The spells it has learned for good (spec §8 "Spells"; `world/magic/learn.rs`), each with the
+    /// rank it knows it at (1 to `MAX_SPELL_RANK`; `world/magic/spell_rank.rs`): learned from
     /// grimoires, and a class ability's spell once its grimoire has deepened it (at rank 1 a
     /// class's spell is not here: its talents give it); both are what [`Actor::knows_spell`]
     /// asks, and [`Actor::spell_rank`] reads the rank. Rank 0 is a class's spell forgotten by a
-    /// miscast (`world/forget.rs`): not known.
+    /// miscast (`world/magic/forget.rs`): not known.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
     pub spells: BTreeMap<SpellId, u8>,
     /// Its streak of melee blows at one creature (Relentless, spec §8 "Birth sign"): `None`
     /// for an actor without the talent, or before its first blow.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub streak: Option<super::Streak>,
+    pub streak: Option<crate::world::Streak>,
     /// The unique character its level made it (`npc` in a level legend entry), whose dialogue it
     /// speaks rather than its type's.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -305,7 +305,7 @@ pub struct Actor {
     #[serde(default, skip_serializing_if = "Talk::is_new")]
     pub talk: Talk,
     /// The level it first left following the player down or up a staircase
-    /// (`world/stair_followers.rs`), where its kill counts for a quest; `None` for one that
+    /// (`world/levels/stair_followers.rs`), where its kill counts for a quest; `None` for one that
     /// never followed.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub home: Option<String>,
@@ -673,7 +673,7 @@ impl Actor {
     }
 
     /// Its natural armour (spec §8 "Combat"): its race's (`race`, the player's when the run has
-    /// a character, [`super::WorldState::race_of`]) if it has one, else its creature type's.
+    /// a character, [`crate::world::WorldState::race_of`]) if it has one, else its creature type's.
     pub fn hide<'c>(&self, content: &'c Content, race: Option<&'c RaceDef>) -> Option<&'c Hide> {
         (race.and_then(|r| r.natural.as_ref())).or(content.creature(self.creature).natural.as_ref())
     }
@@ -1068,7 +1068,10 @@ impl Actor {
 
     /// What is in its hands: each thing once (a two-handed weapon is in both), in hand order,
     /// with where in its inventory it is.
-    pub(super) fn in_hands<'c>(&self, content: &'c Content) -> Vec<(usize, &'c ObjectDef)> {
+    pub(in crate::world) fn in_hands<'c>(
+        &self,
+        content: &'c Content,
+    ) -> Vec<(usize, &'c ObjectDef)> {
         let mut held: Vec<usize> = Vec::new();
         for slot in content.hand_slots() {
             let Some(item) = self.equipment.get(slot) else {
@@ -1426,7 +1429,7 @@ impl Actor {
         profile.penetration += talents.offence.penetration_for(&profile.kinds);
         // A spirit weapon's gifts (the Hunter's Spirit weapon, `spirit_weapon.rs`).
         if let Some(stack) = weapon {
-            super::spirit_weapon::gifts(&talents, stack, &mut profile);
+            crate::world::classes::spirit_weapon::gifts(&talents, stack, &mut profile);
         }
         // Brutal critical (spec §8 "Class abilities"): a two-handed weapon's criticals hit harder.
         if talents.offence.two_handed_crit > 0
@@ -1504,7 +1507,7 @@ impl Actor {
         // Tentacles (a Kraken's pick): the off hand's blows harder.
         profile.bonus += talents.offence.melee_damage + talents.offence.off_hand_damage;
         profile.penetration += talents.offence.penetration_for(&profile.kinds);
-        super::spirit_weapon::gifts(&talents, stack, &mut profile);
+        crate::world::classes::spirit_weapon::gifts(&talents, stack, &mut profile);
         Some((stack.object, self.stanced(content, profile)))
     }
 

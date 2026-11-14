@@ -1,7 +1,7 @@
 # Gammer Wynflæd's quest (#1141; the fields: data/quests.toml): the Ascmearc's first escort.
 # Ælfrun, a girl of Holtwīc, went to the holly wood's edge and the dark court took her into its
 # hall. Asked, the wise-woman marks Ælfhām on the player's map (the reveal), and the girl is made
-# on the moss bed at its bottom (`waits`, world/escort_waits.rs); spoken with, she follows, and
+# on the moss bed at its bottom (`waits`, world/people/escort_waits.rs); spoken with, she follows, and
 # home in Holtwīc with the player she says her thanks and the wise-woman pays.
 
 [[quest]]

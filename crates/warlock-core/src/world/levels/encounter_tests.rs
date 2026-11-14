@@ -4,11 +4,11 @@
 //! built-in content with a table in the showcase campaign: kobolds (hostile), deer (wildlife),
 //! and the hermit (peaceful).
 
-use super::*;
 use crate::action::{Action, parse_actions};
 use crate::content::{ContentFiles, LevelKind, local_area_id};
 use crate::replay::Replay;
 use crate::test_support::{builtin, last_text as last, run as act};
+use crate::world::*;
 
 const TABLE: &str = r#"
 [[table]]
@@ -32,7 +32,7 @@ stance = "peaceful"
 group = [{ creature = "hermit", count = "1" }]
 "#;
 
-const RULES: &str = include_str!("../../../../assets/data/encounters.toml");
+const RULES: &str = include_str!("../../../../../assets/data/encounters.toml");
 
 /// The built-in content with the fixture table, under a clear sky and with nobody hungering;
 /// `certain`: every step rolls an encounter (the rates at their highest, the table at 1000 %).
@@ -483,7 +483,7 @@ fn forager(w: &mut World) {
     let from = w.player_pos();
     let wild = (level.terrain.iter())
         .map(|(p, _)| p)
-        .filter(|&p| super::forage::forage_ground(&content, level, p).is_some())
+        .filter(|&p| crate::world::skills::forage::forage_ground(&content, level, p).is_some())
         .filter(|&p| content.local_area(&campaign, &local_area_id(p)).is_some())
         .min_by_key(|&p| (p.chebyshev(from), p))
         .expect("wild land near the start");

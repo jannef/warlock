@@ -28,14 +28,14 @@
 //! the first in direction order on a tie), while a step takes it farther; cornered, it does what
 //! it would have done.
 
-use super::ai::Plan;
-use super::spell::Caster;
-use super::{ActorId, Spent, World};
 use crate::ability::Ability;
 use crate::action::{AttackKind, Event};
 use crate::content::{SignActive, Stance};
 use crate::geom::{Dir, Pos};
 use crate::noise::{self, Act};
+use crate::world::creatures::ai::Plan;
+use crate::world::magic::spell::Caster;
+use crate::world::{ActorId, Spent, World};
 
 impl World {
     /// Horn of plenty (`plenty`: hit points per level and the cooldown's degrees) on a Horn's
@@ -134,7 +134,7 @@ impl World {
 
     /// `plan`, what creature `id` was about to do, as fear changes it (module docs): a step
     /// away from the one who frightened it while one takes it farther; else `plan`.
-    pub(super) fn frightened(&self, id: ActorId, plan: Plan) -> Plan {
+    pub(in crate::world) fn frightened(&self, id: ActorId, plan: Plan) -> Plan {
         let content = &self.content;
         let Some(me) = self.state.actors.get(&id) else {
             return plan;

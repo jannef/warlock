@@ -6,14 +6,14 @@
 //! at once (`World::keep_resources_within_max`). No shipped file has these affixes yet, so the
 //! tests bring their own.
 
-use super::class_active_tests::beside;
-use super::*;
 use crate::character::CharacterSpec;
 use crate::content::{ContentFiles, ResourceId};
 use crate::dump::{self, Layer};
 use crate::magic::{Affix, Magic, Rarity};
 use crate::stats::{PerStat, Stats};
 use crate::test_support::run;
+use crate::world::classes::class_active_tests::beside;
+use crate::world::*;
 
 const AFFIXES: &str = r#"
 [[prefix]]

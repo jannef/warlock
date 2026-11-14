@@ -2,7 +2,6 @@
 //! fields join attacks and Defence, `cost` slows every action, `blocks` refuses actions and greys
 //! out abilities, `follows` begins a status as another ends, and all of it saves and replays.
 
-use super::*;
 use crate::ability::{Ability, OwnAbility, Unavailable};
 use crate::action::parse_actions;
 use crate::burden::Burden;
@@ -13,6 +12,7 @@ use crate::replay::Replay;
 use crate::stats::Stat;
 use crate::status::Effect;
 use crate::test_support::{run, said as messages};
+use crate::world::*;
 
 /// Statuses for the tests, after the built-in ones: a buff, a hex, a slow, one that blocks, and
 /// one that wears off or is cured, followed by a cooldown.

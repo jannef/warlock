@@ -2,10 +2,10 @@
 //! weapon's to-hit and damage, a launcher's range, what ammunition adds, armour's and a shield's
 //! Dv and Pv; an unidentified item's affixes count for nothing in them until it is identified.
 
-use super::*;
 use crate::action::Positions;
 use crate::magic::{Affix, Magic, Numbers, Rarity, describe};
 use crate::test_support::builtin;
+use crate::world::*;
 
 fn world() -> World {
     let content = builtin();

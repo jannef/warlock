@@ -2,10 +2,10 @@
 //! breathes its cone whenever its breath is ready and the hostile it sees stands in reach with a
 //! clear line, and between breaths closes in and strikes with each of its natural attacks.
 
-use super::*;
 use crate::action::{AttackKind, Event, parse_actions};
 use crate::content::ContentFiles;
 use crate::test_support::{builtin, said};
+use crate::world::*;
 
 const TERRAIN: &str = r##"
 [[terrain]]

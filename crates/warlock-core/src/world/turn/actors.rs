@@ -6,7 +6,7 @@
 //! which keep the index. An actor's level changes only in [`Actors::set_level`]. The index is
 //! derived: never saved or hashed (the map serializes as before), rebuilt on load.
 
-use super::{Actor, ActorId};
+use crate::world::{Actor, ActorId};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::collections::{BTreeMap, BTreeSet};
 use std::ops::Deref;
@@ -114,7 +114,7 @@ impl Actors {
 
     /// Whether the index says what the actors' own levels say (`WorldState::check`, and after
     /// every action in debug builds).
-    pub(super) fn indexed(&self) -> bool {
+    pub(in crate::world) fn indexed(&self) -> bool {
         self.by_level == index(&self.map)
     }
 }

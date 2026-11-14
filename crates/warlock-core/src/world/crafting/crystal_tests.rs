@@ -1,11 +1,10 @@
-//! Magic crystals in play (docs/design/enchanting.md §5, §10; `world/crystal.rs`): consuming one
+//! Magic crystals in play (docs/design/enchanting.md §5, §10; `world/crafting/crystal.rs`): consuming one
 //! through `eat` (the mana capped at the maximum, `[consume] marks` Willpower marks a crystal,
 //! the step toward evil diminishing, from the floor too, the rare materials refused with no
 //! time, a replay), and salvage's affix checks (a crystal of the affix's colour by the check,
 //! unidentified magic's too, unnamed, Enchanting's mark, a rare material now and then from a
 //! deep rare).
 
-use super::super::*;
 use crate::action::{Meal, parse_actions};
 use crate::alignment::Score;
 use crate::content::{ContentFiles, ObjectId, Rarity};
@@ -15,6 +14,7 @@ use crate::replay::Replay;
 use crate::skills::{SkillId, Trained};
 use crate::stats::{PerStat, Stat, Stats};
 use crate::test_support::{said_text as said, texts};
+use crate::world::*;
 use std::sync::LazyLock;
 
 const ROOM: &str = "\

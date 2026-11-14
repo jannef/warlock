@@ -22,11 +22,11 @@
 //! the player does not see the gazer. At a creature the player sees the gazer stare at: "The
 //! vampire stares at the wolf."
 
-use super::fight::End;
-use super::{ActorId, World};
 use crate::action::Event;
 use crate::content::{ActionKind, Gaze, the, the_start};
 use crate::geom::Pos;
+use crate::world::combat::fight::End;
+use crate::world::{ActorId, World};
 
 /// Said when a gazer the player does not see looks at them.
 pub(super) const UNSEEN: &str = "You feel a cold stare on you.";
@@ -110,7 +110,7 @@ impl World {
     }
 
     /// Actor `id` as the fight's lines name it, `seen` or not (`fight.rs::End`).
-    pub(super) fn end_of(&self, id: ActorId, seen: bool) -> End<'_> {
+    pub(in crate::world) fn end_of(&self, id: ActorId, seen: bool) -> End<'_> {
         let player = self.state.player;
         match self.state.actors.get(&id) {
             _ if id == player => End::You,

@@ -4,11 +4,11 @@
 //! check's margin eased as it is graded (`mastery::graded_margin`), never a failure's.
 
 use super::craft_make::make_out_for_test;
-use super::*;
 use crate::content::ContentFiles;
 use crate::object::Stack;
 use crate::skills::{SkillId, Trained};
 use crate::test_support::last_text as said;
+use crate::world::*;
 use std::sync::LazyLock;
 
 /// A forge with its anvil at (5, 2), the player beside it at (4, 3).

@@ -13,14 +13,14 @@
 //! and after (the free blows of stepping up, an encounter on the overworld) is the caller's.
 
 use super::ice::Footing;
-use super::{ActorId, World};
 use crate::action::Event;
 use crate::content::{LevelKind, StairsDir};
 use crate::geom::Pos;
 use crate::skills::Use;
+use crate::world::{ActorId, World};
 
 /// One step of the player's onto a cell, decided and priced ([`World::enter_cell`]).
-pub(super) struct Entry {
+pub(in crate::world) struct Entry {
     pub from: Pos,
     pub to: Pos,
     /// What the step did to the ice at `to` ([`World::tread`]).
@@ -39,7 +39,7 @@ pub(super) struct Entry {
 impl World {
     /// The player enters `entry.to` (the module docs); returns the energy a pit's climb costs on
     /// top of the step.
-    pub(super) fn enter_cell(&mut self, entry: Entry, events: &mut Vec<Event>) -> i64 {
+    pub(in crate::world) fn enter_cell(&mut self, entry: Entry, events: &mut Vec<Event>) -> i64 {
         let Entry {
             from,
             to,

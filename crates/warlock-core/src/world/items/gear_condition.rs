@@ -7,7 +7,7 @@
 //! - **Which pieces**: every single piece [`crate::gear::roll`] made that an anvil or a knife
 //!   could work (a weapon, a missile weapon, armour, or a shield with something to better; not a
 //!   stack of several, ammunition, a ring, or a spirit weapon), and that is not protected
-//!   ([`super::item_damage::protected`]: a unique, of Proof, or what any quest may ask for). A
+//!   ([`crate::world::combat::item_damage::protected`]: a unique, of Proof, or what any quest may ask for). A
 //!   fixed kit (a level file's placed gear, a vault's) is never rolled, so it stays as made.
 //! - **The draw**: one draw below [`PER_MILLE`] per piece, in pack order, against the odds of the
 //!   creature's tribe (the first `[[tribe]]` whose tag it has, else `[default]`) with the
@@ -26,13 +26,13 @@
 //!
 //! **Loot's make** (#1436) reads the same `[[depth]]` rows: [`crate::magic::make`].
 
-use super::item_damage::protected;
 use crate::content::{Content, CreatureId, ItemHarm, ObjectId, PER_MILLE};
 use crate::kit::Pack;
 use crate::magic::Worked;
 use crate::magic::make::{improvable, improve};
 use crate::object::Stack;
 use crate::rng::Rng;
+use crate::world::combat::item_damage::protected;
 use std::collections::BTreeSet;
 
 /// The stream the condition of the gear rolled from `gear/<key>` is drawn from.
@@ -61,7 +61,7 @@ pub(crate) fn apply(
         }
         let Some(improved) = odds.of(rng.below(PER_MILLE)) else {
             // Adamantium is never found damaged: it stays as made (`item_damage.rs`).
-            if super::item_damage::proof(content, stack) {
+            if crate::world::combat::item_damage::proof(content, stack) {
                 continue;
             }
             let mut worked = Worked::default();
@@ -110,4 +110,4 @@ pub(super) fn quest_objects(content: &Content) -> BTreeSet<ObjectId> {
         .collect()
 }
 
-// Tests: `world/gear_condition_tests.rs`.
+// Tests: `world/items/gear_condition_tests.rs`.

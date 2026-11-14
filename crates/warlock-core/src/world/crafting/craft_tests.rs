@@ -2,12 +2,12 @@
 //! what each takes in words, why one cannot be made now, the abilities menu's profession rows,
 //! and `craft:` refused with no time.
 
-use super::*;
 use crate::ability::Ability;
 use crate::content::ContentFiles;
 use crate::object::Stack;
 use crate::skills::{SkillId, Trained};
 use crate::test_support::builtin;
+use crate::world::*;
 use std::sync::LazyLock;
 
 /// The built-in content with two generic recipes: a long sword of stock, from Metalcraft 20, and

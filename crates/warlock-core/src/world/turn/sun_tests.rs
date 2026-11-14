@@ -1,12 +1,12 @@
 //! Sunlight and sky light through the whole turn pipeline (spec §5 "Sunlight").
 
 use super::light_tests::{check_invariants, check_wall_completion};
-use super::*;
 use crate::content::ContentFiles;
 use crate::light::{Light, Sun};
 use crate::perception::{CellView, Emitter, PerceptionView, SeenLight};
 use crate::replay::Replay;
 use crate::test_support::builtin;
+use crate::world::*;
 use proptest::prelude::*;
 use std::collections::BTreeSet;
 
@@ -149,7 +149,7 @@ pub(super) fn sky_world(map: &str, kind: &str, date: [u32; 3], time: &str, sky: 
     files.insert("data/creatures.toml", CREATURES);
     files.insert("data/lights.toml", LIGHTS);
     files.insert("data/vision.toml", VISION);
-    super::lamp_tests::with_lantern(&mut files);
+    crate::world::items::lamp_tests::with_lantern(&mut files);
     files.insert("data/legend.toml", LEGEND);
     files.insert(
         "levels/test.toml",

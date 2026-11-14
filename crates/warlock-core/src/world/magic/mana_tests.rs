@@ -2,11 +2,11 @@
 //! however time is cut and changed by resting, statuses, diseases, rooms, and starving (and by
 //! nothing else), the maximum falling, spending, levels, saves, and replays.
 
-use super::*;
 use crate::action::parse_actions;
 use crate::content::ContentFiles;
 use crate::replay::Replay;
 use crate::test_support::{builtin, run};
+use crate::world::*;
 
 // Round numbers: resting brings mana back three times as fast; dazed halves the pace; a hex
 // drains 2 mana a tick (every 30 s a degree) and stops it, easing a degree a minute; befuddled
@@ -125,7 +125,7 @@ fn status_text() -> String {
 fn files(scenario: &str, extra: &[(&str, &str)]) -> ContentFiles {
     let mut files = ContentFiles::builtin();
     files.replace_table("status", &status_text());
-    let diseases = include_str!("../../../../assets/data/diseases.toml");
+    let diseases = include_str!("../../../../../assets/data/diseases.toml");
     files.insert("data/diseases.toml", &format!("{diseases}\n{FOG}"));
     files.insert("data/experience.toml", EXPERIENCE);
     let rooms = ContentFiles::builtin().table_text("room_effects");

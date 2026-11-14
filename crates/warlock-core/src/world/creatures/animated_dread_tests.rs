@@ -2,11 +2,11 @@
 //! the rug of smothering engulfs at its own gentler harm, the bellows' gust staggers, the lantern
 //! bursts in burning oil as it dies, and the blades come notched or keen.
 
-use super::fight::Harm;
-use super::*;
 use crate::action::{AttackKind, Event, parse_actions};
 use crate::combat::Strike;
 use crate::content::{Affliction, BurstWhen, ContentFiles, CreatureSpawn, StatusId};
+use crate::world::combat::fight::Harm;
+use crate::world::*;
 use std::sync::LazyLock;
 
 /// A lit hall: the player at (2, 2), a rug east of them, a lantern west, a charnel heap below.

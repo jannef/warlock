@@ -1,5 +1,5 @@
 //! A creature type's splitting and what it dies into (docs/design/monster-dread.md §5.5, G5a
-//! and G5b; #1129): `splits` and `dies_into`. The rules are `world/split.rs`.
+//! and G5b; #1129): `splits` and `dies_into`. The rules are `world/creatures/split.rs`.
 //!
 //! - `splits = { on = ["slashing", "piercing"], least = 8 }`: a blow of a listed damage type
 //!   that leaves it alive with at least `2 × least` hit points cuts it in two.

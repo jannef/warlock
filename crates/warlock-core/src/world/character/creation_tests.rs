@@ -1,10 +1,10 @@
 //! Creation picks (spec §8 "Talents"): a character the player chose takes its talents at
 //! creation, named or at random, and records them; nothing is said and nothing waits.
 
-use super::*;
 use crate::character::CharacterSpec;
 use crate::replay::Replay;
 use crate::test_support::CONTENT;
+use crate::world::*;
 
 fn spec(text: &str) -> CharacterSpec {
     text.parse().expect("a character")

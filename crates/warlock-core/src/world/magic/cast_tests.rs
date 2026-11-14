@@ -4,10 +4,10 @@
 //! tried as the wizard's Arcane bolt, its file replaced (the ability's id is the spell's).
 
 use super::caster_tests::{kobold, kobold_at, reach, sp, world_with};
-use super::*;
 use crate::action::Event;
 use crate::combat::Strike;
 use crate::test_support::{last, run};
+use crate::world::*;
 
 use crate::stats::{PerStat, Stat, Stats};
 
@@ -36,7 +36,7 @@ fn wizard(content: Arc<Content>) -> World {
 /// The player casts Arcane bolt at the cell `(dx, dy)` from them, with full hit points and
 /// mana, `target` put back first where it stood (`(tx, ty)` from the player) with plenty of
 /// hit points; what its blows on `target` were, and the hit points it lost.
-pub(super) fn cast_at(
+pub(in crate::world) fn cast_at(
     w: &mut World,
     (dx, dy): (i32, i32),
     (target, (tx, ty)): (ActorId, (i32, i32)),
@@ -300,7 +300,7 @@ fn a_spell_without_a_roll_draws_nothing() {
 }
 
 /// Sets the player's scores in `scores` (every other 10, so its modifier is 0).
-pub(super) fn scores(w: &mut World, scores: &[(Stat, u8)]) {
+pub(in crate::world) fn scores(w: &mut World, scores: &[(Stat, u8)]) {
     let mut all = PerStat::splat(10);
     for &(stat, score) in scores {
         all[stat] = score;

@@ -8,16 +8,16 @@
 //! its magic lost), with a line when the player sees it fall ("The candlestick breaks apart.").
 //! Anything else it carried falls as any creature's does.
 
-use super::{Actor, World};
 use crate::geom::Pos;
 use crate::object::{Stack, break_up};
 use crate::rng::Rng;
+use crate::world::{Actor, World};
 
 impl World {
     /// What `actor`, a creature that just died, leaves of what it carried: everything, but for an
     /// animated one its body, which falls whole by the drop rule's chance (one draw per body
     /// stack) or broken into its parts. Also what broke, in order (for the break lines).
-    pub(super) fn remains(&self, actor: &Actor) -> (Vec<Stack>, Vec<Stack>) {
+    pub(in crate::world) fn remains(&self, actor: &Actor) -> (Vec<Stack>, Vec<Stack>) {
         let Some(body) = self.content.animated_body(actor.creature) else {
             return (actor.inventory.clone(), Vec::new());
         };
@@ -39,7 +39,12 @@ impl World {
     /// The lines for `broken`, an animated thing's components that broke as it fell at `at` on
     /// `level`: one each, if the player sees the cell ("The candlestick breaks apart."), else
     /// none.
-    pub(super) fn break_lines(&self, level: &str, at: Pos, broken: &[Stack]) -> Vec<String> {
+    pub(in crate::world) fn break_lines(
+        &self,
+        level: &str,
+        at: Pos,
+        broken: &[Stack],
+    ) -> Vec<String> {
         if broken.is_empty()
             || level != self.state.current_level
             || !self.perception.sees_actors_at(at)
@@ -58,4 +63,4 @@ impl World {
     }
 }
 
-// Tests: `world/animated_tests.rs`.
+// Tests: `world/creatures/animated_tests.rs`.

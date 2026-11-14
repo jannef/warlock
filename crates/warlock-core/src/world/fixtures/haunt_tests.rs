@@ -1,12 +1,12 @@
-//! Haunted rooms (spec §7 "Special rooms", design §9.8; `world/haunt.rs`): a rest inside is
+//! Haunted rooms (spec §7 "Special rooms", design §9.8; `world/fixtures/haunt.rs`): a rest inside is
 //! haunted at every full hour by undead of the floor's danger, out of view where they can be; the
 //! rest stops when one comes into view. Never outside the room, never while not resting, never on
 //! a level without a danger.
 
-use super::*;
 use crate::content::ContentFiles;
 use crate::test_support::{builtin, run};
 use crate::time::GameTime;
+use crate::world::*;
 
 /// A lit hall, 30 wide; its east part (x 10 on) the haunted room. A wall at x 18, open at its
 /// foot, hides the room's far end from its west part.

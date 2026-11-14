@@ -1,12 +1,12 @@
-//! Tempting hoards (spec §7 "Special rooms", design §9.7; `world/hoard.rs`, `mapgen/hoard.rs`):
+//! Tempting hoards (spec §7 "Special rooms", design §9.7; `world/fixtures/hoard.rs`, `mapgen/hoard.rs`):
 //! the first stack lifted inside seals the room (its doors shut and lock, guardians come at its
 //! edges, out of view where they can be), Old delver lets one go first, a room seals once, a cave
 //! blob gets only guardians, the dumps, saving, and a generated hoard's items.
 
-use super::*;
 use crate::action::Positions;
 use crate::content::{ContentFiles, SpecialRoom};
 use crate::test_support::{builtin, said_text as said};
+use crate::world::*;
 
 /// A lit hall, its east part (x 7 on, walls included) a tempting hoard with one door, closed
 /// (`+`, at (7, 3)), and an open one (`'`, at (7, 1)). Daggers lie at `a` and `b` inside. A wall
@@ -306,7 +306,7 @@ fn a_generated_hoard_holds_its_items_and_no_one() {
     let mut files = ContentFiles::builtin();
     let dungeons = format!(
         "{}{HOARDS}",
-        include_str!("../../../../assets/data/dungeons.toml")
+        include_str!("../../../../../assets/data/dungeons.toml")
     );
     files.insert("data/dungeons.toml", &dungeons);
     let content = Content::load(&files).expect("content");

@@ -1,12 +1,12 @@
-//! The dark face of the priest's prayer and Communion with the dark (`world/dark_face.rs`; the
+//! The dark face of the priest's prayer and Communion with the dark (`world/classes/dark_face.rs`; the
 //! priest design §6.2, §6.3): the plague and the poison passed to the nearest creature seen, a
 //! hex turned on its caster (not on one unseen), a hold's holder webbed, the brim; no strain in
 //! an unholy place and no Ebbing in a draining one, and nothing for the holy face.
 
-use super::*;
 use crate::alignment::Score;
 use crate::content::ContentFiles;
 use crate::test_support::{builtin, run, said_text as said};
+use crate::world::*;
 
 /// A lit hall: the player at (1, 1), a peaceful kobold beside them at `k` (2, 1), another at `j`
 /// (8, 1), and a peaceful skeleton (immune to poison) at `s` (5, 3); a wall at x 14 hides the

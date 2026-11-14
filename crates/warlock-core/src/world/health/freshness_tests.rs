@@ -2,11 +2,11 @@
 //! fresh a corpse or food is, in words, when a check passes; one who fails or is untrained is
 //! told nothing; eating food told trains Appraise.
 
-use super::*;
 use crate::character::CharacterSpec;
 use crate::content::ContentFiles;
 use crate::rot;
 use crate::time::GameTime;
+use crate::world::*;
 
 fn content(eager: bool) -> Arc<Content> {
     let mut files = ContentFiles::builtin();

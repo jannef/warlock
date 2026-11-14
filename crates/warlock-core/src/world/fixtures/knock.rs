@@ -5,14 +5,14 @@
 //! unlocked one. Where nothing locked stands (an unlocked door or chest, anything else) it is
 //! refused with no time and nothing spent, the same line for each. It draws nothing at random.
 
-use super::{Spent, World};
 use crate::content::ActionKind;
 use crate::geom::Dir;
+use crate::world::{Spent, World};
 
 impl World {
     /// `use:knock:DIR`: the lock in `dir` springs open, its mana spent; refused, with no time,
     /// where nothing locked stands.
-    pub(super) fn knock(&mut self, dir: Dir) -> Spent {
+    pub(in crate::world) fn knock(&mut self, dir: Dir) -> Spent {
         let Some(knock) = self.state.player().talent_mods(&self.content).magic.knock else {
             return Spent::Nothing;
         };
@@ -25,7 +25,11 @@ impl World {
                 self.say("You have too little mana.");
                 return Spent::Nothing;
             }
-            self.reveal_mimic(mimic, super::mimic::Reveal::Knocked, &mut Vec::new());
+            self.reveal_mimic(
+                mimic,
+                crate::world::creatures::mimic::Reveal::Knocked,
+                &mut Vec::new(),
+            );
             return Spent::Turn(self.price_of(player, ActionKind::Cast));
         }
         let level = self.state.current();

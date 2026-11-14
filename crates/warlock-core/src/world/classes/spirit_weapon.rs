@@ -10,7 +10,7 @@
 //!
 //! In the hand it strikes as its base with the talent's gifts ([`gifts`], read by `Actor::melee`
 //! and `Actor::off_hand_blow`): more to hit, criticals threatened lower, and every point of
-//! Protection ignored ([`super::weapon_active::ALL_PROTECTION`]: the soak draws nothing).
+//! Protection ignored ([`crate::world::combat::weapon_active::ALL_PROTECTION`]: the soak draws nothing).
 //!
 //! **The invariant**: a spirit stack exists only in a hand slot. Whatever takes it out of the
 //! hands while it stays in the pack makes it fade ([`World::fade_spirit`], at the end of
@@ -22,13 +22,13 @@
 //! one (no creature has the talent, and no gear names a spirit stack). Nothing here draws at
 //! random.
 
-use super::{Spent, World};
 use crate::action::Positions;
 use crate::combat::{FUMBLE, Profile};
 use crate::content::{ActionKind, ClassActive, Content, ObjectId, TalentEffect};
 use crate::object::{self, Stack};
 use crate::talent::MartialEffect;
 use crate::talent::TalentMods;
+use crate::world::{Spent, World};
 
 /// The shapes a spirit weapon may be called in: every object of the `melee_weapons` class with
 /// an attack that a hand holds, by weapon skill then id.
@@ -73,7 +73,7 @@ pub fn gift(content: &Content) -> Option<(i32, u8, bool, &str)> {
 /// `profile` struck with `stack` sharpened by a spirit weapon's gifts, when it is one and the
 /// striker has the talent: to hit, the threat lowered (never below the lowest roll that can hit),
 /// and every point of Protection ignored.
-pub(super) fn gifts(talents: &TalentMods, stack: &Stack, profile: &mut Profile) {
+pub(in crate::world) fn gifts(talents: &TalentMods, stack: &Stack, profile: &mut Profile) {
     let Some(gift) = talents.martial.spirit_weapon.filter(|_| stack.is_spirit()) else {
         return;
     };
@@ -81,20 +81,20 @@ pub(super) fn gifts(talents: &TalentMods, stack: &Stack, profile: &mut Profile) 
     let lowered = (i32::from(profile.threat) - i32::from(gift.threat)).max(FUMBLE + 1);
     profile.threat = u8::try_from(lowered).unwrap_or(profile.threat);
     if gift.ignores_protection {
-        profile.penetration = super::weapon_active::ALL_PROTECTION;
+        profile.penetration = crate::world::combat::weapon_active::ALL_PROTECTION;
     }
 }
 
 /// Whether `profile` ignores every point of Protection (a spirit weapon's): what the character
 /// screen's attacks say as "pierces armour".
 pub fn pierces_all(profile: &Profile) -> bool {
-    profile.penetration >= super::weapon_active::ALL_PROTECTION
+    profile.penetration >= crate::world::combat::weapon_active::ALL_PROTECTION
 }
 
 impl World {
     /// `use:ID:SHAPE`: the player uses class active `active` in the shape of object `shape`;
     /// only one that asks for a shape ([`ClassActive::aims_shape`]) may.
-    pub(super) fn use_class_shape(&mut self, active: ClassActive, shape: &str) -> Spent {
+    pub(in crate::world) fn use_class_shape(&mut self, active: ClassActive, shape: &str) -> Spent {
         if !active.aims_shape() {
             self.say(format!("`{}` takes no shape.", active.id()));
             return Spent::Nothing;
@@ -142,7 +142,7 @@ impl World {
 
     /// The spirit weapons the player holds out of the hands fade (module docs): taken out of the
     /// pack, the positions after them followed, each said. Returns the positions they had.
-    pub(super) fn fade_spirit(&mut self) -> Positions {
+    pub(in crate::world) fn fade_spirit(&mut self) -> Positions {
         self.fade_where(false)
     }
 
@@ -179,7 +179,10 @@ impl World {
     /// Of the inventory stacks `chosen` names (to drop, or to sell or leave in a shop), the
     /// spirit weapons are taken off and fade rather than leave the pack (module docs). Returns
     /// the rest, numbered for the pack without them, and what taking them off cost.
-    pub(super) fn release_spirit(&mut self, chosen: &Positions) -> (Positions, Vec<ActionKind>) {
+    pub(in crate::world) fn release_spirit(
+        &mut self,
+        chosen: &Positions,
+    ) -> (Positions, Vec<ActionKind>) {
         let inventory = &self.state.player().inventory;
         let spirit: Vec<usize> = (chosen.iter())
             .filter(|&i| inventory.get(i).is_some_and(Stack::is_spirit))

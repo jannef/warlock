@@ -20,7 +20,7 @@ Keep it current with the code, as CLAUDE.md says.
   `surprise`). The classes' lines and the drow's `optional_skills` (#682).
 - `assets/data/status/`: `surprised` (after Light-footed; `per_action`, `max = 1`, `refresh`,
   `cost = 150`, `seen = "surprised"`, its `start` and `end` lines).
-- `world/surprise.rs`, every rule of it:
+- `world/combat/surprise.rs`, every rule of it:
   - `World::unaware(id, other)` (moved from `ambush.rs` with `sees_now`): the one definition,
     both ways round. A creature: asleep or disguised, else `Mind::last_seen` unset and
     `sees_now` false (`creature_unaware`, a free function of the state, content, and light
@@ -53,7 +53,7 @@ Keep it current with the code, as CLAUDE.md says.
     its sufferer pays it; Surprised's extra eased by `StealthMods::surprise_ease` (Cool head) and
     the Initiative skill's `surprise_ease`, together capped at all of it, every other status's
     as its data says.
-- `world/slip.rs`, slipping past (#683): `looks_at` (the look of `ai.rs::nearest_hostile_in_sight`,
+- `world/combat/slip.rs`, slipping past (#683): `looks_at` (the look of `ai.rs::nearest_hostile_in_sight`,
   the one moment: the contest's four gameplay draws for a creature hunting no one that would
   see the player by darkvision alone, `sight::sees_by` and `sight::lit_for`; a lit look ends a
   slip), `World::slipped_past` (`Mind::missed` within `lasts_turns`), `end_slip` (clears it and,
@@ -61,7 +61,7 @@ Keep it current with the code, as CLAUDE.md says.
   `slip_lapses`, `attacked_near`. `SurpriseRules::slip_turns` (`[slip]`; `None` when off) and
   Stealth's `slip` benefit (`Effect::Slip`, read here only); the creature's side is its Willpower
   and its skills' `spot`.
-- `world/ambush.rs`, the sneak attack (#682): `World::sneak_dice(id)` (the Sneak attack skill's
+- `world/combat/ambush.rs`, the sneak attack (#682): `World::sneak_dice(id)` (the Sneak attack skill's
   `sneak_dice` d6s `and` the talents' `ambush`), `World::sneaks(attacker, target, unaware,
   missile)` (dice, unaware or `off_guard`: Surprised, Stunned; vitals for the attacker, a missile within
   `missile_reach` + `sneak_reach`, Chebyshev; no draw), `sneak_threat` (Master thief; never raises a threat an exploit lowered),
@@ -70,12 +70,12 @@ Keep it current with the code, as CLAUDE.md says.
   `Use::SneakAttack`, training stream), `has_vitals` and `vitals` (the struck side's
   `no_criticals`), `no_vital_spot` (Vital strike's and an
   exploit's "It has no vital spot.", a `news` line after the blow's).
-- `world/thief.rs`, the thief's actives and passive on surprise (#684): Lurk (`lurking` in
+- `world/classes/thief.rs`, the thief's actives and passive on surprise (#684): Lurk (`lurking` in
   `status/`, after Surprised: `per_action`, `max = 1`, `refresh`, "You wait in ambush.",
   no `end`), Vanishing act (`sneak_kill_status`); Exploit (`Technique::sneak`) is
-  `world/openings.rs`'s (`docs/dev/openings.md`). The hooks are
+  `world/classes/openings.rs`'s (`docs/dev/openings.md`). The hooks are
   the rows marked #684 below.
-- `world/lurk.rs`, lurking (#686): `World::lurker_waits` turns the step of `ai.rs::fight`'s plan
+- `world/combat/lurk.rs`, lurking (#686): `World::lurker_waits` turns the step of `ai.rs::fight`'s plan
   into a wait for a type with `lurks = true` (`CreatureDef::lurks`) while its hit points are at
   their maximum; an attack (a blow beside it, a shot or cast from where it stands) and a summons
   stand. No draws. The creatures that sneak-attack are data: `skills` (`sneak_attack`,
@@ -95,7 +95,7 @@ Keep it current with the code, as CLAUDE.md says.
   `surprise-check.md` (`check::ways` by edge and craft), `surprise-vitals.md` (every type
   `Content::has_vitals` refuses, and why). The page
   also includes `slipping-past.md` (`skills.rs`) and `creature-surprise.md` (`creatures.rs`).
-- `world/balance_probe.rs`, `balance_probe/tables.rs::sneak_attacks` (#688; `docs/balance.md`
+- `world/combat/balance_probe.rs`, `balance_probe/tables.rs::sneak_attacks` (#688; `docs/balance.md`
   "Sneak attacks"): the thief's first blow on an unaware monster with vitals against its plain
   blow, by level; Sneak attack set by `sneak_value(level)`, the dice `World::sneak_dice`, the
   side `Side::flat` (`World::flat_footed`), Master thief's `ambush_threat`.
@@ -160,7 +160,7 @@ so after a trap's line and before a creature's attack line); made: "You keep you
 you." (`say` for an attack, before its line; `news` for a trap, after its line). Look mode shows
 "surprised" (`seen`); the status bar shows Surprised.
 
-An unseen creature (`world/unseen.rs`: invisible, or shadowy in the dim) is never in the
+An unseen creature (`world/creatures/unseen.rs`: invisible, or shadowy in the dim) is never in the
 player's perception, so `Mind::noticed` is never set for it: its blow finds the player unaware
 as any unnoticed creature's does. A blow the player lands on one shows it for the turn
 (`Mind::glimpsed`), and it is noticed then.
@@ -191,16 +191,16 @@ as any unnoticed creature's does. A blow the player lands on one shows it for th
 
 ## Tests
 
-`world/surprise_tests.rs` (both ways round, memory, the check's outcomes and draws, sleepers and
+`world/combat/surprise_tests.rs` (both ways round, memory, the check's outcomes and draws, sleepers and
 mimics, the messages, flat-footed, free blows, the dear action and Cool head, Wary, traps and
 bystanders, the hash test, saves and replays, Hair trigger's blow, its one per surprise and the
-attacker it fells, Stalker's eye's gate); `world/ambush_tests.rs` (the ladder, the sum with
+attacker it fells, Stalker's eye's gate); `world/combat/ambush_tests.rs` (the ladder, the sum with
 the talents, the reach and Long reach, Surprised as the second door, the marks, the spell path,
-the craft and Initiative in the check); `world/vitals_tests.rs` (what has none, no critical, no
-dice, still surprised); `world/class_rogue_tests.rs`
+the craft and Initiative in the check); `world/combat/vitals_tests.rs` (what has none, no critical, no
+dice, still surprised); `world/classes/class_rogue_tests.rs`
 (`a_ranger_gains_stalkers_eye_at_level_two`); `weapon_active_tests` (Vital strike's line);
 `combat.rs` (no confirmation drawn); `content/surprise.rs` (parse and refusals, optional file,
-`[slip]` off); `world/slip_tests.rs` (the moment, made and lost, no second roll, each ending, the
+`[slip]` off); `world/combat/slip_tests.rs` (the moment, made and lost, no second roll, each ending, the
 creature that came to look caught unawares, another hostile, the no-draw test, saves and replays,
 the unaware mark on a creature slipped past); `ui/look.rs` (`stalkers_eye_tells_a_creature_unaware_of_you`),
 `ui/glyphs.rs` (the tint at both ends of the breath and under reduced effects);

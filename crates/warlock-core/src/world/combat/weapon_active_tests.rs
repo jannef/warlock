@@ -4,7 +4,6 @@
 //! and Drillmaster, and the pool granted with the first active a rank teaches.
 
 use super::weapon_active::Aimed;
-use super::*;
 use crate::ability::{Ability, Unavailable};
 use crate::action::AttackKind;
 use crate::combat::{Category, Defence, Strike};
@@ -12,6 +11,7 @@ use crate::content::{ContentFiles, STAMINA};
 use crate::equipment;
 use crate::test_support::said;
 use crate::weapon_skills::WeaponSkills;
+use crate::world::*;
 
 // Sure weapons of every kind the actives ask for, a shield, a tower of a shield, and a bow.
 const OBJECTS: &str = r##"

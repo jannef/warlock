@@ -3,11 +3,11 @@
 //! every level below the first rung, the base; the base never kills a level-1 character at full
 //! hit points; a door's and a chest's trap read the same rungs.
 
-use super::*;
 use crate::character::CharacterSpec;
 use crate::content::{ContentFiles, TrapEffect};
 use crate::dice::Roll;
 use crate::test_support::builtin;
+use crate::world::*;
 
 /// A lit hall: the player beside the west wall, a trapped closed door east of them.
 const HALL: &str = "\
@@ -227,7 +227,7 @@ fn bad_rungs_are_refused() {
         let text = format!(
             "{}\n[[trap]]\nid = \"odd\"\nname = \"odd trap\"\nfg = \"#ffffff\"\n{extra}\
              [trap.grows]\ndamage = \"{grows}\"\n",
-            include_str!("../../../../assets/data/traps.toml")
+            include_str!("../../../../../assets/data/traps.toml")
         );
         files.insert("data/traps.toml", &text);
         let e = Content::load(&files).expect_err(grows).to_string();

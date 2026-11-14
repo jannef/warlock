@@ -2,13 +2,13 @@
 //! creation, its two trades as bonus picks first, Time served's +6 on each, Eye for the make's
 //! lines in an item's description, and a scenario's own character's named picks.
 
-use super::*;
 use crate::character::{CharacterSpec, Gender};
 use crate::content::TalentId;
 use crate::dice::Dice;
 use crate::object::Stack;
 use crate::rng::Rng;
 use crate::world::pick_text;
+use crate::world::*;
 use std::sync::LazyLock;
 
 static CONTENT: LazyLock<Arc<Content>> = LazyLock::new(|| Arc::new(crate::background::storyless()));

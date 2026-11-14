@@ -22,14 +22,14 @@
 //!   "The scroll labelled ZUNBAR burns up.", "3 potions of healing freeze and shatter." Unseen,
 //!   nothing is said, and the pile simply shows less when next seen.
 
-use super::World;
-use super::item_damage::{proof, protected};
 use super::spell::Caster;
 use crate::content::DamageTypeId;
 use crate::geom::Pos;
 use crate::object::Stack;
 use crate::rng::Rng;
 use crate::text::capitalized;
+use crate::world::World;
+use crate::world::combat::item_damage::{proof, protected};
 use std::collections::BTreeSet;
 
 impl World {

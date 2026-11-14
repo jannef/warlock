@@ -4,9 +4,9 @@
 
 use super::caster_tests::sp;
 use super::spell_type_tests::{files, start};
-use super::*;
 use crate::content::SpellData;
 use crate::stats::{PerStat, Stat, Stats};
+use crate::world::*;
 
 const SPELLS: [&str; 12] = [
     "barkskin",

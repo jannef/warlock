@@ -2,10 +2,10 @@
 //! one path; known by a word and their type's colour until drunk or identified; marks; Thrifty
 //! drinker and Nose for draughts; the content checks.
 
-use super::*;
 use crate::character::CharacterSpec;
 use crate::content::ContentFiles;
 use crate::test_support::{CONTENT as BUILTIN, run, said};
+use crate::world::*;
 
 /// Every potion type, by id.
 const POTIONS: &[&str] = &[

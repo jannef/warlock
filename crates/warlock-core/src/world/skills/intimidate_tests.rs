@@ -1,17 +1,17 @@
-//! Intimidate (spec §8 "Skills": Intimidate; #868; `world/intimidate.rs`): the skill's use at one
+//! Intimidate (spec §8 "Skills": Intimidate; #868; `world/skills/intimidate.rs`): the skill's use at one
 //! foe, on War cry's check; its degrees by the ladder of `data/rules/intimidate.toml`; its
 //! refusals, with no time and no draw; a turn and a voice; each threat a mark of Intimidate.
 
-use super::class_active_tests::{suffers, world};
-use super::*;
 use crate::ability::Ability;
 use crate::noise::SoundKind;
 use crate::skills::{Effect, Trained};
 use crate::stats::{PerStat, Stat, Stats};
 use crate::test_support::{last, run};
+use crate::world::classes::class_active_tests::{suffers, world};
+use crate::world::*;
 
 /// A creature of type `creature` placed at `at`, every score `score`, awake and hostile; its id.
-pub(super) fn foe_at(w: &mut World, creature: &str, at: Pos, score: u8) -> ActorId {
+pub(in crate::world) fn foe_at(w: &mut World, creature: &str, at: Pos, score: u8) -> ActorId {
     let content = w.content().clone();
     let template = (w.state.actors.values())
         .find(|a| a.id != w.state.player)

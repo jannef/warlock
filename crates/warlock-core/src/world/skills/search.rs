@@ -36,11 +36,9 @@
 //! dark too: "You find a secret door!", "You notice a pressure plate: an arrow trap.", and for a
 //! door's trap "You notice that the door is trapped: an arrow trap.", a chest's "You notice that
 //! the coffer is trapped: an arrow trap." (a trap's `sign` is the floor's). A found breach is a
-//! hollow wall ([`super::LevelState::hollows`], remembered as the wall it is): "The wall here
+//! hollow wall ([`crate::world::LevelState::hollows`], remembered as the wall it is): "The wall here
 //! sounds hollow."; digging or a blast then opens it.
 
-use super::rest::Ended;
-use super::{ActorId, World};
 use crate::action::Event;
 use crate::check::check;
 use crate::content::StatUse;
@@ -50,11 +48,13 @@ use crate::sight::LineOfSight;
 use crate::skills::{Effect, Use};
 use crate::stats::Stat;
 use crate::text::article;
+use crate::world::turn::rest::Ended;
+use crate::world::{ActorId, World};
 use std::cell::Cell;
 
 /// A hidden feature on a cell of the current level.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(super) enum Hidden {
+pub(in crate::world) enum Hidden {
     /// A secret door of this difficulty.
     Door(u8),
     /// A hidden trap of this type.
@@ -68,7 +68,7 @@ pub(super) enum Hidden {
 
 /// Which of the two checks.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(super) enum Look {
+pub(in crate::world) enum Look {
     /// Searching: Intelligence and the Search skill (Detect traps for a trap).
     Active,
     /// In passing: Willpower and the Spot skill (Detect traps for a trap), less the passive
@@ -117,7 +117,7 @@ impl World {
 
     /// What finding `hidden` takes (spec §8 "Searching"): its own difficulty, plus on a branch
     /// level the branch's `hidden_per_depth` for each level below the first.
-    pub(super) fn difficulty_of(&self, hidden: Hidden) -> i32 {
+    pub(in crate::world) fn difficulty_of(&self, hidden: Hidden) -> i32 {
         let own = match hidden {
             Hidden::Door(difficulty) => i32::from(difficulty),
             Hidden::Trap(kind) => i32::from(self.content.trap(kind).difficulty),
@@ -153,7 +153,7 @@ impl World {
     /// penalty in passing. Then their talents (spec §8 "Talents"): Keen searcher's to searching,
     /// Alert's in passing, the search of Trap sense and the birth signs' (Always a way,
     /// Heedless) to both, and what they add to checks of the stat.
-    pub(super) fn search_modifier(&self, look: Look, hidden: Hidden) -> i32 {
+    pub(in crate::world) fn search_modifier(&self, look: Look, hidden: Hidden) -> i32 {
         let content = &self.content;
         let player = self.state.player();
         let race = self.player_race().map_or(0, |r| r.search);
@@ -186,7 +186,7 @@ impl World {
     /// trained in the Spot skill (a hidden trap: in Detect traps), or with a talent that notices
     /// (Alert), anything; else by their race, elves anything, dwarves what is on stone, and
     /// kobolds traps, or by a talent that notices on stone (Stonewise); else nothing.
-    pub(super) fn notices(&self, at: Pos, hidden: Hidden) -> bool {
+    pub(in crate::world) fn notices(&self, at: Pos, hidden: Hidden) -> bool {
         let content = &self.content;
         let player = self.state.player();
         let talents = player.talent_mods(content);
@@ -216,7 +216,7 @@ impl World {
 
     /// What the player's talents add to finding what is hidden at `at` for its being on stone
     /// (Stone sense, a dwarf's): both looks, searching and in passing.
-    pub(super) fn stone_find(&self, at: Pos) -> i32 {
+    pub(in crate::world) fn stone_find(&self, at: Pos) -> i32 {
         let bonus = self
             .state
             .player()
@@ -233,7 +233,7 @@ impl World {
     /// Searching for up to `turns` turns (spec §8 "Searching"): a turn of the `search` action
     /// after another through [`World::keep_at`], stopping when something is found, like a rest
     /// otherwise. A search of more than one turn that finds nothing says how it ended.
-    pub(super) fn search(&mut self, turns: u8, events: &mut Vec<Event>) {
+    pub(in crate::world) fn search(&mut self, turns: u8, events: &mut Vec<Event>) {
         let (start, found) = (self.state.time, self.found);
         let done = Cell::new(0u8);
         let ended = self.keep_at(
@@ -298,7 +298,7 @@ impl World {
     /// After a turn the player took (`run_turn`, before anyone else acts): the passive check for
     /// every hidden feature on the cells around them that they notice in passing at all. Draws
     /// nothing when there is none.
-    pub(super) fn notice_hidden(&mut self) {
+    pub(in crate::world) fn notice_hidden(&mut self) {
         let hidden = self.hidden_near(1);
         if hidden.is_empty() {
             return;
@@ -330,7 +330,11 @@ impl World {
         self.found += 1;
         match hidden {
             Hidden::Mimic(id) => {
-                self.reveal_mimic(id, super::mimic::Reveal::Found, &mut Vec::new());
+                self.reveal_mimic(
+                    id,
+                    crate::world::creatures::mimic::Reveal::Found,
+                    &mut Vec::new(),
+                );
             }
             Hidden::Door(_) => {
                 let Some(secret) = self.state.current().secrets.get(&at).copied() else {

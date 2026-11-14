@@ -9,10 +9,10 @@
 //! Anywhere else it is refused with no time spent; a player outside the bands its `alignment`
 //! names prays unanswered (`World::unanswered`). Nothing here draws at random.
 
-use super::{Deed, Spent, World, rest::Ended};
 use crate::action::Event;
 use crate::content::{ActionKind, ClassActive};
 use crate::time::GameTime;
+use crate::world::{Deed, Spent, World, turn::rest::Ended};
 
 /// What a consecration lifts.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -68,7 +68,7 @@ impl World {
 
     /// Prays turn after turn until `until`, unless something interrupts (module docs); then the
     /// place is consecrated.
-    pub(super) fn consecrate(&mut self, until: GameTime, events: &mut Vec<Event>) {
+    pub(in crate::world) fn consecrate(&mut self, until: GameTime, events: &mut Vec<Event>) {
         let wait = self.price_of(self.state.player, ActionKind::Wait);
         let ended = self.keep_at(
             events,

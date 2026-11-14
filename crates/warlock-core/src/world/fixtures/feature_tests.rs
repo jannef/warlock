@@ -1,12 +1,12 @@
-//! A feature of the ground the player arrives on is named (`world/feature.rs`): once per arrival,
+//! A feature of the ground the player arrives on is named (`world/fixtures/feature.rs`): once per arrival,
 //! before what lies there, never again while they stay; ordinary ground says nothing. One that
 //! cannot be stood on (a statue) is named, with its place's note, on arriving beside it.
 
-use super::*;
 use crate::action::Rest;
 use crate::content::ContentFiles;
 use crate::test_support::builtin;
 use crate::time::Duration;
+use crate::world::*;
 
 /// A hall with an altar (`A`, in an echoing room), a faint rune (`R`), an altar with a chalice
 /// on it (`C`), and stairs down.
@@ -201,7 +201,7 @@ fn the_hunters_statue_on_fyrdelf_reads_its_inscription() {
     let (at, _) = (template.terrain.iter())
         .find(|(_, t)| **t == statue)
         .expect("the statue");
-    super::travel::instantiate_level(&mut w.state, &content, &template);
+    crate::world::levels::travel::instantiate_level(&mut w.state, &content, &template);
     let beside = (Dir::ALL.into_iter())
         .map(|d| at.step(d))
         .find(|&p| w.state.actor_at(id, p).is_none())

@@ -4,7 +4,6 @@
 //! surplus, says so in words, may pass the potential (which stays), and brings Toughness's hit
 //! point; nothing without the data.
 
-use super::*;
 use crate::action::AttackKind;
 use crate::character::CharacterSpec;
 use crate::combat::{Blow, Category, Strike};
@@ -14,11 +13,12 @@ use crate::skills::Use;
 use crate::stats::{PerStat, Stat, Stats};
 use crate::test_support::{CONTENT as BUILTIN, run, said};
 use crate::time::{DAWN, DAY};
+use crate::world::*;
 use std::sync::LazyLock;
 
 /// The built-in content with every training chance at 100, so marks come without a draw.
 static SURE: LazyLock<Arc<Content>> = LazyLock::new(|| {
-    let text = include_str!("../../../../assets/data/stats.toml");
+    let text = include_str!("../../../../../assets/data/stats.toml");
     let sure: String = (text.lines())
         .map(|l| match l.starts_with("chance = ") {
             true => "chance = 100\n".to_string(),

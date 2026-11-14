@@ -1,5 +1,5 @@
 //! Trapped chests (spec §8 "Chests", docs/design/chests-and-treasure.md §3.5, §9;
-//! `world/chest.rs`): a chest's trap springs at whoever opens it (a bump, a key, Pick lock) and
+//! `world/fixtures/chest.rs`): a chest's trap springs at whoever opens it (a bump, a key, Pick lock) and
 //! at whoever smashes it with a kick, never on a kick that holds; its arrow flies out of the box;
 //! a burst blows the chest apart with nothing spared (the fireball's own blast on a coffer, the
 //! frost's or a kist's by the rule); Disarm made leaves the chest shut and untrapped, failed
@@ -7,8 +7,6 @@
 //! it; Trap sense halves its blow; a blast from afar springs nothing and drops it; levels refuse
 //! a pit on a chest and a trap on an open one; the dumps; a replay.
 
-use super::search::Hidden;
-use super::*;
 use crate::action::parse_actions;
 use crate::check::{self, Checked};
 use crate::content::ContentFiles;
@@ -17,6 +15,8 @@ use crate::replay::Replay;
 use crate::rng::Rng;
 use crate::skills::{SkillId, Trained};
 use crate::test_support::{run, said_text as said};
+use crate::world::skills::search::Hidden;
+use crate::world::*;
 
 /// A lit hall: the player at the west end of the walk (row 2), trapped chests along row 1: a
 /// coffer with a hidden arrow trap holding bread (`A`, x 1), a coffer with a fireball trap

@@ -21,7 +21,6 @@
 //! Its name is said instead of "your hound" wherever an ally is named ([`World::called`],
 //! `fight::End::Named`, `ally.rs::pack_phrase`). It dies as any creature does, leaving a corpse.
 
-use super::{Actor, ActorId, AllySource, LevelState, World, WorldState};
 use crate::character::CharacterSpec;
 use crate::combat::Profile;
 use crate::content::{CompanionGrowth, Content, CreatureId, LevelKind};
@@ -29,6 +28,7 @@ use crate::geom::Pos;
 use crate::rng::Rng;
 use crate::sight::LineOfSight;
 use crate::stats::Stat;
+use crate::world::{Actor, ActorId, AllySource, LevelState, World, WorldState};
 use serde::{Deserialize, Serialize};
 
 /// What a companion is beyond an ally ([`AllySource::Companion`]).
@@ -133,7 +133,7 @@ impl World {
     }
 
     /// Ally `id` as the subject of a sentence: its name ("Snel"), else "Your wolf".
-    pub(super) fn ally_subject(&self, id: ActorId) -> String {
+    pub(in crate::world) fn ally_subject(&self, id: ActorId) -> String {
         if let Some(escort) = (self.state.actors.get(&id)).filter(|a| a.escorting().is_some()) {
             return crate::text::capitalized(&self.called(escort));
         }
@@ -149,7 +149,7 @@ impl World {
     /// Animal companion's beast as the run begins (the module docs): drawn, made beside the
     /// player (into the retinue on the overworld), named, and said. Nothing without the talent,
     /// the data, the ally core, a character, or with a companion already.
-    pub(super) fn bring_companion(&mut self) {
+    pub(in crate::world) fn bring_companion(&mut self) {
         let content = self.content.clone();
         if self.companion().is_some() || content.allies().is_none() {
             return;
@@ -212,9 +212,9 @@ impl World {
         let before = actor.max_hp(&content);
         let grade = (rules.growth).grade(level, content.creature(actor.creature).level);
         actor.faction_override = faction;
-        actor.mind = super::Mind::default();
+        actor.mind = crate::world::Mind::default();
         actor.patrol = None;
-        actor.ally = Some(super::Ally {
+        actor.ally = Some(crate::world::Ally {
             master: player,
             source: AllySource::Companion(CompanionData {
                 name: name.clone(),
@@ -222,7 +222,7 @@ impl World {
                 scent: None,
                 quarry: None,
             }),
-            order: super::Order::Follow,
+            order: crate::world::Order::Follow,
             retinue: false,
             until: None,
         });
@@ -234,7 +234,7 @@ impl World {
     /// The player's level changed: the grade of each kept beast of theirs (a companion, a
     /// familiar) follows it (never down), its hit points rising with its maximum; "Snel grows
     /// stronger." among the level's news, in actor id order.
-    pub(super) fn grow_companion(&mut self) {
+    pub(in crate::world) fn grow_companion(&mut self) {
         let content = self.content.clone();
         let Some(rules) = content.companions() else {
             return;
@@ -355,13 +355,13 @@ impl Actor {
     }
 
     /// Hit points above the type's: `hp_per_level` a level ([`Actor::max_hp`]).
-    pub(super) fn growth_hp(&self, content: &Content) -> i32 {
+    pub(in crate::world) fn growth_hp(&self, content: &Content) -> i32 {
         self.growth(content)
             .map_or(0, |(g, above)| g.hp_per_level * above)
     }
 
     /// What the grade adds to `stat`: Strength, Dexterity, and Toughness +1 per `stat_every`.
-    pub(super) fn growth_stat(&self, content: &Content, stat: Stat) -> i32 {
+    pub(in crate::world) fn growth_stat(&self, content: &Content, stat: Stat) -> i32 {
         match stat {
             Stat::Strength | Stat::Dexterity | Stat::Toughness => self
                 .growth(content)
@@ -371,7 +371,7 @@ impl Actor {
     }
 
     /// Natural Defence the grade adds: +1 per `defence_every` ([`Actor::defence`]).
-    pub(super) fn growth_defence(&self, content: &Content) -> i32 {
+    pub(in crate::world) fn growth_defence(&self, content: &Content) -> i32 {
         self.growth(content)
             .map_or(0, |(g, above)| above / g.defence_every)
     }
@@ -380,7 +380,7 @@ impl Actor {
     /// "Creatures" (a hide (grade − 10) ÷ 8, a bony body grade ÷ 6, an armoured one grade ÷ 4 +
     /// 1, by what its hide is called; a body with none, none), for the type's own to be taken
     /// over when it is more ([`Actor::protection_plus`]); 0 for anyone else.
-    pub(super) fn growth_protection(&self, content: &Content) -> i32 {
+    pub(in crate::world) fn growth_protection(&self, content: &Content) -> i32 {
         let Some(data) = self.kept() else {
             return 0;
         };
@@ -391,7 +391,7 @@ impl Actor {
     /// `profile` with what the grade adds to a companion's blow: +1 to hit per `to_hit_every`,
     /// +1 damage per `damage_bonus_every`, one more die per `damage_dice_every`
     /// ([`Actor::melee`]).
-    pub(super) fn grown(&self, content: &Content, mut profile: Profile) -> Profile {
+    pub(in crate::world) fn grown(&self, content: &Content, mut profile: Profile) -> Profile {
         if let Some((g, above)) = self.growth(content) {
             profile.to_hit += above / g.to_hit_every;
             profile.bonus += above / g.damage_bonus_every;

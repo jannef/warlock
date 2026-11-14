@@ -1,19 +1,19 @@
-//! War cry (spec §8 "Class abilities"; #844; `world/war_cry.rs`): the berserker's roar at 25,
+//! War cry (spec §8 "Class abilities"; #844; `world/classes/war_cry.rs`): the berserker's roar at 25,
 //! for 4 rage and a wait; the hostiles that hear and see the berserker and have vitals check
 //! their nerve against Strength and Intimidate, and the failed flee; never refused but for want
 //! of rage; each cry a mark of Intimidate.
 
 use super::class_active_tests::{reach, suffers, world};
-use super::*;
 use crate::ability::{Ability, Unavailable};
 use crate::content::ClassActive;
 use crate::noise::SoundKind;
 use crate::skills::{Effect, Trained, Use};
 use crate::stats::{PerStat, Stat, Stats};
 use crate::test_support::{last, run};
+use crate::world::*;
 
 /// A creature of type `creature` placed at `at`, every score `score`, awake and hostile; its id.
-pub(super) fn foe_at(w: &mut World, creature: &str, at: Pos, score: u8) -> ActorId {
+pub(in crate::world) fn foe_at(w: &mut World, creature: &str, at: Pos, score: u8) -> ActorId {
     let content = w.content().clone();
     // The level is emptied of its creatures (`crier`): a fresh showcase lends one to copy.
     let fresh = world("berserker");

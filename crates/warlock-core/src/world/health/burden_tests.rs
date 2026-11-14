@@ -4,13 +4,13 @@
 //! louder steps; dwarves shrugging off Burdened; messages when the burden changes; creatures by
 //! the same rules; nothing new saved.
 
-use super::*;
 use crate::action::parse_actions;
 use crate::character::CharacterSpec;
 use crate::content::ContentFiles;
 use crate::noise::Act;
 use crate::replay::Replay;
 use crate::test_support::{last_text as last_message, run, texts};
+use crate::world::*;
 
 const TERRAIN: &str = r##"
 [[terrain]]

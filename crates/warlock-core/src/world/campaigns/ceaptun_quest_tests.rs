@@ -3,13 +3,13 @@
 //! the fen minster is accepted, Fyrdelf as the lost shaft is, which waits for the barrow's
 //! heart); the chalice handed in; the branches' arrival lines; and a replay.
 
-use super::*;
 use crate::action::parse_actions;
 use crate::content::ContentFiles;
 use crate::dump::{self, Layer};
 use crate::object::Stack;
 use crate::replay::Replay;
 use crate::test_support::{run as act, texts};
+use crate::world::*;
 use std::sync::LazyLock;
 
 const HILD: Pos = Pos::new(27, 25);
@@ -44,7 +44,7 @@ fn topics(world: &World, npc: Pos) -> Vec<String> {
 
 fn carried(world: &World, object: &str) -> u32 {
     let object = world.content().object_id(object).expect("an object");
-    super::shop::count_of(&world.state().player().inventory, object)
+    crate::world::people::shop::count_of(&world.state().player().inventory, object)
 }
 
 /// Marks `done` quests done, as if handed in.
@@ -240,7 +240,7 @@ fn grave_goods_gives_a_trained_healer_a_hundred_marks() {
 #[test]
 fn a_reward_naming_an_unknown_skill_is_refused() {
     let hild = "campaigns/ascmearc/data/quests/hild.toml";
-    let text = include_str!("../../../../assets/campaigns/ascmearc/data/quests/hild.toml");
+    let text = include_str!("../../../../../assets/campaigns/ascmearc/data/quests/hild.toml");
     let mut files = ContentFiles::builtin();
     for (from, expect) in [
         ("skills = { healing = ", "reward: unknown skill `healing`"),

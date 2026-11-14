@@ -19,13 +19,13 @@
 //!
 //! Danger is hidden in the game; dev dumps and the wiki state it.
 
-use super::{ActorId, World, travel};
 use crate::content::danger::{self, Spawning};
 use crate::content::{CreatureSpawn, Stance};
 use crate::geom::Pos;
 use crate::perception::Perception;
 use crate::rng::Rng;
 use crate::time::{Duration, GameTime};
+use crate::world::{ActorId, World, levels::travel};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeSet;
 
@@ -91,7 +91,7 @@ impl World {
 
     /// The creatures on the current level hostile to the player that its cap counts (a vault's
     /// monster pool stands outside it, [`Spawner::outside`]).
-    pub(super) fn hostiles_here(&self) -> u32 {
+    pub(in crate::world) fn hostiles_here(&self) -> u32 {
         let (player, level) = (self.state.player, &self.state.current_level);
         let here = (self.state.actors.on_level(level)).filter(|a| a.id != player);
         let spawner = self.state.current().spawner.as_ref();
@@ -105,7 +105,7 @@ impl World {
 
     /// The end of a turn: every attempt due on the current level is made (spec §7 "Danger
     /// levels"). Quiet delver puts each next attempt off longer.
-    pub(super) fn spawn_tick(&mut self) {
+    pub(in crate::world) fn spawn_tick(&mut self) {
         let id = self.state.current_level.clone();
         let Some((_, _, spawning)) = self.content.spawning(&id) else {
             return;
@@ -139,7 +139,7 @@ impl World {
 
     /// When the player arrives on level `id`: its next attempt is `every` from now, as if no
     /// time had passed there (floors the player is not on stay frozen).
-    pub(super) fn arrive_spawner(&mut self, id: &str) {
+    pub(in crate::world) fn arrive_spawner(&mut self, id: &str) {
         let Some((_, _, spawning)) = self.content.spawning(id) else {
             return;
         };
@@ -151,7 +151,7 @@ impl World {
 
     /// One attempt on the current level; `forced` (the dev action) skips the cap and the chance.
     /// Returns the creature that came, if one did.
-    pub(super) fn attempt(&mut self, forced: bool) -> Option<ActorId> {
+    pub(in crate::world) fn attempt(&mut self, forced: bool) -> Option<ActorId> {
         let id = self.state.current_level.clone();
         let (_, _, spawning) = self.content.spawning(&id)?;
         let spawning = spawning.clone();
@@ -240,10 +240,10 @@ impl World {
 
     /// The dev action `spawn` ([`crate::action::Action::Spawn`]): one attempt on the current
     /// level now, whatever its cap and chance. Takes no time.
-    pub(super) fn spawn_dev(&mut self) -> super::Spent {
+    pub(in crate::world) fn spawn_dev(&mut self) -> crate::world::Spent {
         if self.danger(&self.state.current_level.clone()) == 0 {
             self.say("Nothing comes here: the level has no danger (dev).");
-            return super::Spent::Nothing;
+            return crate::world::Spent::Nothing;
         }
         match self.attempt(true) {
             Some(actor) => {
@@ -256,6 +256,6 @@ impl World {
             }
             None => self.say("Nothing could come: no cell out of sight (dev)."),
         }
-        super::Spent::NoTime
+        crate::world::Spent::NoTime
     }
 }

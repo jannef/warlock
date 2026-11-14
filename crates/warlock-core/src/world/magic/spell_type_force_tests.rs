@@ -1,16 +1,16 @@
-//! The spell types' second table (`world/spell_type.rs`, `[types]` in `data/spells.toml`): force's
+//! The spell types' second table (`world/magic/spell_type.rs`, `[types]` in `data/spells.toml`): force's
 //! shove, its blast on doors and thin ice; poison's degree; necrotic's bite and the undead's
 //! immunity; acid's Corroded.
 
 use super::caster_tests::{kobold_at, sp};
 use super::spell::Caster;
 use super::spell_type_tests::{cast, cell, files as hall_files, put_back, start, status};
-use super::*;
 use crate::action::Event;
 use crate::combat::Strike;
 use crate::content::{Burst, ContentFiles, DamageTypeId};
 use crate::damage::Damage;
 use crate::dump::{self, Layer};
+use crate::world::*;
 
 /// A hall, the player at (6, 5). In its north wall, y 3, four doors (plain at x 10, locked at
 /// x 12, trapped at x 14, far off at x 20) and a stout door with nothing to break to at x 11, and

@@ -1,13 +1,13 @@
-//! A fresh corpse's gifts to the stats (spec §8 "Hunger"; `world/eat.rs::corpse_gifts`, design
+//! A fresh corpse's gifts to the stats (spec §8 "Hunger"; `world/health/eat.rs::corpse_gifts`, design
 //! `docs/design/stat-training.md` §8): sure training marks into the pile, a rare chance to widen
 //! the potential, never a score; the tags' defaults under each creature's own `on_eat`; the
 //! words; Gourmand's doubling; and nothing from a rotten or vomited corpse.
 
-use super::*;
 use crate::action::Meal;
 use crate::content::ContentFiles;
 use crate::stats::Stat;
 use crate::test_support::{builtin, said_text as said};
+use crate::world::*;
 
 /// Food underfoot, nothing else about.
 const PANTRY: &str = r##"
@@ -321,7 +321,7 @@ fn skill_gifts_without_words_are_refused() {
         "{e}"
     );
     let mut files = ContentFiles::builtin();
-    let text = include_str!("../../../../assets/data/hunger.toml");
+    let text = include_str!("../../../../../assets/data/hunger.toml");
     files.insert(
         "data/hunger.toml",
         &text.replace("\ndecipher_script = {", "\ndecypher_script = {"),
@@ -330,7 +330,7 @@ fn skill_gifts_without_words_are_refused() {
     assert!(e.contains("unknown skill `decypher_script`"), "{e}");
 }
 
-// Profane corpses (docs/design/profane-gifts.md §4, §7.2, §9; `world/profane.rs::profane_meal`):
+// Profane corpses (docs/design/profane-gifts.md §4, §7.2, §9; `world/character/profane.rs::profane_meal`):
 // Gnægan's meal, the draw, and the pull toward evil.
 
 /// A giant rat out of sight that walks into view while the player eats.

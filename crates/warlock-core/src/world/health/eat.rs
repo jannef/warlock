@@ -15,7 +15,7 @@
 //! and feeds nothing. A remedy (food with `cures`, `data/objects.toml`) then cures what it
 //! names, as [`World::cure`] does (a disease remedy ends every disease, spec §8 "Diseases").
 //!
-//! **Rotten food** (spec §8 "Hunger"; food rots by its age, `world/rot.rs`): eating any food
+//! **Rotten food** (spec §8 "Hunger"; food rots by its age, `world/health/rot.rs`): eating any food
 //! past its keeping is risky (vomiting, else sickness and exposure to the diseases rotten food
 //! carries, [`World::expose_to`], and then it feeds). Old food is as good as fresh. A race that
 //! `eats_rotten` (ratfolk) eats it without harm: it only feeds them.
@@ -28,9 +28,9 @@
 //! the potential by 1 ("You feel you could grow stronger yet."), the skills it teaches (an
 //! untrained one learned, a trained one raised up to the corpse's cap; a caster's corpse,
 //! Decipher script), healing, harm, a profane corpse's gifts and deed (a layer boss's:
-//! [`World::profane_meal`], `world/profane.rs`), and extra nutrition; a rotten one has lost all
+//! [`World::profane_meal`], `world/character/profane.rs`), and extra nutrition; a rotten one has lost all
 //! of that. A corpse never raises a score itself: the
-//! marks wait for the checks (`world/stat_training.rs`). The player learns what a corpse does
+//! marks wait for the checks (`world/character/stat_training.rs`). The player learns what a corpse does
 //! only by eating it.
 //!
 //! **Sickness**: harm from what was eaten is degrees of the status `sickness` names
@@ -38,19 +38,19 @@
 //! the one way to give a status; it costs hit points as time passes and may kill ("Died of
 //! poison").
 
-use super::{Actor, Cause, Ended, Spent, World};
 use crate::action::{DiseaseNews, Event, Meal, Positions};
 use crate::content::{ActionKind, ObjectId, the, the_start};
 use crate::object::{self, Stack};
 use crate::stats::Stat;
 use crate::talent::TalentMods;
 use crate::time::GameTime;
+use crate::world::{Actor, Cause, Ended, Spent, World};
 use std::cell::Cell;
 
 /// A meal under way: where the food is, the food as it lay when the meal began (its object and
 /// when it was made; food is never magic), and the turns it takes.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(super) struct Dish {
+pub(in crate::world) struct Dish {
     meal: Meal,
     object: ObjectId,
     died: Option<GameTime>,
@@ -79,7 +79,7 @@ impl World {
     /// spec §8 "Potions"), a magic crystal consumed at once ([`World::consume_crystal`]), food is
     /// a meal. Refused, taking no time, when there is no such stack, or it is none of those, or
     /// it is food and nobody hungers.
-    pub(super) fn eat(&mut self, meal: Meal, events: &mut Vec<Event>) -> Spent {
+    pub(in crate::world) fn eat(&mut self, meal: Meal, events: &mut Vec<Event>) -> Spent {
         let content = self.content.clone();
         let stack = match meal {
             Meal::Pack(i) => self.state.player().inventory.get(i).cloned(),
@@ -95,7 +95,7 @@ impl World {
             });
             return Spent::Nothing;
         };
-        // A magic crystal is consumed at once (`world/crystal.rs`).
+        // A magic crystal is consumed at once (`world/crafting/crystal.rs`).
         if (content.crystals()).is_some_and(|c| c.colour_of_object(stack.object).is_some()) {
             return self.consume_crystal(meal, &stack);
         }
@@ -126,7 +126,7 @@ impl World {
     /// eats, the others act, perception), each turn the `eat` action, stopping early after a turn
     /// in which a creature came into view or a message was logged that stops a rest, or the
     /// player died. The food is eaten only when the last turn is done.
-    pub(super) fn dine(&mut self, dish: Dish, events: &mut Vec<Event>) {
+    pub(in crate::world) fn dine(&mut self, dish: Dish, events: &mut Vec<Event>) {
         let left = Cell::new(dish.turns);
         let ended = self.keep_at(
             events,
@@ -266,7 +266,7 @@ impl World {
             let degrees = harm.roll(&mut self.state.rng);
             self.sicken(degrees, events);
         }
-        // A layer boss's: its signature, its draws, the deed (`world/profane.rs`).
+        // A layer boss's: its signature, its draws, the deed (`world/character/profane.rs`).
         self.profane_meal(&on_eat);
         self.feed(nutrition.saturating_add(on_eat.satiation).max(0), what);
     }
@@ -338,7 +338,12 @@ impl World {
     /// A rotten corpse: the player vomits (a chance), else it makes them sick, exposes them to
     /// the diseases rotten food carries (grave rot), and then feeds them; a player whose race
     /// `eats_rotten` it only feeds.
-    pub(super) fn eat_rotten(&mut self, nutrition: i32, what: ObjectId, events: &mut Vec<Event>) {
+    pub(in crate::world) fn eat_rotten(
+        &mut self,
+        nutrition: i32,
+        what: ObjectId,
+        events: &mut Vec<Event>,
+    ) {
         let content = self.content.clone();
         let Some(rotten) = content.hunger().map(|h| &h.rotten) else {
             return;
@@ -555,7 +560,7 @@ impl World {
 
     /// `actor`, a creature that just died, leaves its corpse (if its type leaves one) on top of
     /// the pile where it fell, dying now.
-    pub(super) fn leave_corpse(&mut self, actor: &Actor) {
+    pub(in crate::world) fn leave_corpse(&mut self, actor: &Actor) {
         let Some(corpse) = self.content.corpse_of(actor.creature) else {
             return;
         };

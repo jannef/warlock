@@ -5,7 +5,6 @@
 //! resistance as a dose, the plunge is cold, spells and traps are typed, and fights with
 //! resistances replay.
 
-use super::*;
 use crate::action::{AttackKind, Event};
 use crate::combat::{Blow, Strike};
 use crate::content::{ContentFiles, DamageTypeId};
@@ -13,6 +12,7 @@ use crate::damage::{Damage, IMMUNE, MAX_RESISTANCE, ResistanceWord};
 use crate::magic::{Affix, Magic, Rarity};
 use crate::object::Stack;
 use crate::test_support::said;
+use crate::world::*;
 use std::sync::LazyLock;
 
 /// A lit room beside the built-in content: the player (`@`) between a salamander (`s`, immune

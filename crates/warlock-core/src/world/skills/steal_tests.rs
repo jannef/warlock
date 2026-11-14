@@ -2,7 +2,6 @@
 //! wielded), empty pockets, a caught thief turned on, a robbed shopkeeper, the refusals, the
 //! draws it makes, training, the abilities menu, saves, and replays.
 
-use super::*;
 use crate::ability::Ability;
 use crate::action::parse_actions;
 use crate::combat;
@@ -11,6 +10,7 @@ use crate::geom::Dir;
 use crate::replay::Replay;
 use crate::stats::{Stat, Stats};
 use crate::test_support::last_text as last;
+use crate::world::*;
 
 // A lit den: the player between a gardener (west), who carries nothing, and a peaceful kobold
 // (east) with a short sword in hand and coins and apples in its pack.

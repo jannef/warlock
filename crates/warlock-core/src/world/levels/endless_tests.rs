@@ -1,7 +1,6 @@
 //! The endless branch (`endless.rs`; spec §7 "The endless branch"): depth and danger, floors made
 //! anew by every staircase, what crosses and what is gone, the save, and replays.
 
-use super::*;
 use crate::action::Action;
 use crate::character::CharacterSpec;
 use crate::content::Generator;
@@ -9,6 +8,7 @@ use crate::dump::{self, Layer};
 use crate::mapgen;
 use crate::replay::Replay;
 use crate::test_support::{CONTENT, run, said};
+use crate::world::*;
 use proptest::prelude::*;
 
 const BRANCH: &str = "grundleas";
@@ -307,7 +307,7 @@ fn the_generator_draw_gives_both_rooms_and_caves() {
     assert_eq!(def.endless.map(|e| e.caves), Some(15));
     let (mut rooms, mut caves) = (0, 0);
     for made in 0..200 {
-        let seed = endless::floor_seed(&CONTENT, 9, &floor(3), made);
+        let seed = super::endless::floor_seed(&CONTENT, 9, &floor(3), made);
         let id = floor(3);
         let t = mapgen::generate(&CONTENT, ("ascmearc", seed), &id, None).expect("a floor");
         match (t.terrain.width(), t.terrain.height()) {
@@ -416,7 +416,7 @@ fn a_unique_on_a_floor_left_may_come_again() {
         status: Vec::new(),
     };
     let here = w.state.current_level.clone();
-    let id = travel::make_creature(&mut w.state, &CONTENT, &here, &spawn);
+    let id = super::travel::make_creature(&mut w.state, &CONTENT, &here, &spawn);
     let name = CONTENT.creature(unique).id.clone();
     assert!(w.state.progress.uniques.contains(&name));
     take(&mut w, StairsDir::Down);
@@ -453,7 +453,7 @@ fn put_beside(w: &mut World, name: &str) -> ActorId {
         status: Vec::new(),
     };
     let here = w.state.current_level.clone();
-    travel::make_creature(&mut w.state, &CONTENT, &here, &spawn)
+    super::travel::make_creature(&mut w.state, &CONTENT, &here, &spawn)
 }
 
 /// A kobold beside the player as they take the stairs `dir`; it is told of them.

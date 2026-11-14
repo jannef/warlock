@@ -2,7 +2,6 @@
 //! refused before its ki is spent, the spend, and what it gives.
 
 use super::class_active_tests::{at_normal_speed, beside, reach, suffers, world};
-use super::*;
 use crate::ability::{Ability, Unavailable};
 use crate::action::{AttackKind, parse_actions};
 use crate::character::CharacterSpec;
@@ -11,6 +10,7 @@ use crate::content::{ClassActive, ContentFiles, ResourceId};
 use crate::dump::{self, Layer};
 use crate::replay::Replay;
 use crate::test_support::{builtin, last, run};
+use crate::world::*;
 
 fn ki(w: &World) -> ResourceId {
     w.content().resource_id("ki").expect("ki")
@@ -403,7 +403,7 @@ fn stillness_ends_what_holds_and_clouds_at_once_and_no_more() {
 #[test]
 fn stillness_names_only_statuses_the_content_has() {
     let mut files = ContentFiles::builtin();
-    let still = include_str!("../../../../assets/data/talents/still_mind.toml");
+    let still = include_str!("../../../../../assets/data/talents/still_mind.toml");
     let bad = still.replace("\"webbed\",", "\"befuddled\",");
     files.insert("data/talents/still_mind.toml", &bad);
     let err = Content::load(&files)
@@ -466,7 +466,7 @@ fn shot_at(w: &mut World, shots: usize) -> Vec<Option<crate::combat::Strike>> {
     let at = w.player_pos();
     let mut strikes = Vec::new();
     for _ in 0..shots {
-        let flight = super::shoot::Flight {
+        let flight = crate::world::combat::shoot::Flight {
             kind: AttackKind::Ranged,
             with: arrow,
             flies: arrow,

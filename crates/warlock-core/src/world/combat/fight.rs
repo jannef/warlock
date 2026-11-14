@@ -55,7 +55,6 @@
 //! beside an opportunist its blow; [`World::second_blow`] decides each.
 
 use super::free_blow::{self, Cue, Free, FreeBlow};
-use super::{Actor, ActorId, AttackSkills, Spent, World, WorldState};
 use crate::action::{AttackKind, Event};
 use crate::combat::{self, Blow, Category, Profile, Strike, Target};
 use crate::content::{
@@ -69,6 +68,7 @@ use crate::object;
 use crate::skills::Use;
 use crate::text::{article, capitalized};
 use crate::time::GameTime;
+use crate::world::{Actor, ActorId, AttackSkills, Spent, World, WorldState};
 use serde::{Deserialize, Serialize};
 
 /// How the player's run ended (spec §6 "Death").
@@ -169,7 +169,7 @@ impl Cause {
 /// What hurt an actor, and so what a death by it is put down to ([`World::hurt`], the one way
 /// hit points go down).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(super) enum Harm {
+pub(in crate::world) enum Harm {
     /// Another actor's blow, shot, or kick: it killed, and a kill by the player earns them its
     /// experience (spec §8 "Experience").
     Actor(ActorId),
@@ -203,7 +203,7 @@ pub(super) enum Harm {
 /// "small shield", "kick"), what it does to its target ("hits", "bites", "shoots", "bashes",
 /// "kicks"), and what the player does with it ("hit", "bash", "kick").
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub(super) struct Words {
+pub(in crate::world) struct Words {
     noun: String,
     verb: String,
     you: String,
@@ -212,7 +212,7 @@ pub(super) struct Words {
 impl Words {
     /// What hits ("arrow", "fireball") and what it does ("hits", "burns"); what the player does
     /// with it follows ("hit", "burn").
-    pub(super) fn new(noun: &str, verb: &str) -> Self {
+    pub(in crate::world) fn new(noun: &str, verb: &str) -> Self {
         Self {
             noun: noun.into(),
             verb: verb.into(),
@@ -250,7 +250,7 @@ impl Words {
     /// What `actor` attacks with, by `kind`; a shot or a throw is made `with` its missile, a
     /// bash with a shield, an off-hand blow with the off hand's weapon; `damage` is the kind of
     /// damage the blow did, which a weapon's blow is said with.
-    pub(super) fn of(
+    pub(in crate::world) fn of(
         actor: &Actor,
         kind: AttackKind,
         with: Option<ObjectId>,
@@ -286,7 +286,7 @@ impl Words {
 
 /// One end of an attack as the player perceives it.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(super) enum End<'a> {
+pub(in crate::world) enum End<'a> {
     You,
     /// A creature the player sees, by its type's name.
     Seen(&'a str),
@@ -304,7 +304,7 @@ pub(super) enum End<'a> {
 
 impl End<'_> {
     /// As the subject: "You", "The kobold", "Something", "The arrow".
-    pub(super) fn subject(self) -> String {
+    pub(in crate::world) fn subject(self) -> String {
         match self {
             End::You => "You".into(),
             End::Yours(name) => format!("Your {name}"),
@@ -315,7 +315,7 @@ impl End<'_> {
     }
 
     /// As the object: "you", "the kobold", "something".
-    pub(super) fn object(self) -> String {
+    pub(in crate::world) fn object(self) -> String {
         match self {
             End::You => "you".into(),
             End::Yours(name) => format!("your {name}"),
@@ -378,7 +378,7 @@ pub(super) fn second_person(verb: &str) -> String {
 
 /// What a target's armour is called in the messages of the blows it turns (spec §6 "Attacks").
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
-pub(super) struct Guard<'a> {
+pub(in crate::world) struct Guard<'a> {
     /// Its natural armour, for a blow that missed because of it: "shell".
     pub(super) hide: Option<&'a str>,
     /// What took all of a blow its Protection soaked: the piece it wears with the most
@@ -389,7 +389,11 @@ pub(super) struct Guard<'a> {
 impl<'a> Guard<'a> {
     /// The guard of `target` (alive, or fallen this action), if it is known, in `state` (the
     /// player's race may give them a hide).
-    pub(super) fn of(target: Option<&Actor>, content: &'a Content, state: &WorldState) -> Self {
+    pub(in crate::world) fn of(
+        target: Option<&Actor>,
+        content: &'a Content,
+        state: &WorldState,
+    ) -> Self {
         let Some(target) = target else {
             return Self::default();
         };
@@ -406,7 +410,7 @@ impl<'a> Guard<'a> {
 /// target's armour, for a blow it turned or soaked. Why an attack missed, and what a blow
 /// soaked to nothing glanced off, is said only when the player saw both ends; `None` if they
 /// saw neither and were not the target.
-pub(super) fn attack_message(
+pub(in crate::world) fn attack_message(
     attacker: End<'_>,
     target: End<'_>,
     words: &Words,
@@ -495,7 +499,7 @@ pub(super) fn attack_message(
 
 /// The message for a death the player saw: "The giant rat dies." (a creature's by the verb of its
 /// type, `dies`: "The animated chair splinters."), or the player's own.
-pub(super) fn death_message(who: End<'_>, dies: &str) -> String {
+pub(in crate::world) fn death_message(who: End<'_>, dies: &str) -> String {
     match who {
         End::You => "You die...".into(),
         End::Seen(name) => format!("{} {dies}.", crate::content::the_start(name)),
@@ -506,7 +510,7 @@ pub(super) fn death_message(who: End<'_>, dies: &str) -> String {
 }
 
 /// What the player reads when a spell's shove drives `who` back (`spell_type.rs`).
-pub(super) fn driven_message(who: End<'_>) -> String {
+pub(in crate::world) fn driven_message(who: End<'_>) -> String {
     match who {
         End::You => "You are driven back.".into(),
         End::Seen(name) => format!("{} is driven back.", crate::content::the_start(name)),
@@ -524,7 +528,7 @@ impl World {
 
     /// An actor alive, or one that died during the current action (for the words of what it
     /// did before it died).
-    pub(super) fn actor_or_fallen(&self, id: ActorId) -> Option<&Actor> {
+    pub(in crate::world) fn actor_or_fallen(&self, id: ActorId) -> Option<&Actor> {
         (self.state.actors.get(&id)).or_else(|| self.fallen.iter().find(|a| a.id == id))
     }
 
@@ -533,7 +537,7 @@ impl World {
     /// ([`World::second_blow`]), a shot with the missile weapon it has ready (with none, an
     /// intent only), or a spell (an intent only: spells are cast by `cast.rs`). Returns the (first)
     /// blow, if one was struck.
-    pub(super) fn attack(
+    pub(in crate::world) fn attack(
         &mut self,
         attacker: ActorId,
         target: ActorId,
@@ -593,7 +597,7 @@ impl World {
     ///
     /// Only the second blow may draw while deciding, and only the flurry (its ki) and
     /// Retribution (its zeal, and an exertion) spend; the other free blows do neither.
-    pub(super) fn second_blow(
+    pub(in crate::world) fn second_blow(
         &mut self,
         striker: ActorId,
         target: ActorId,
@@ -794,7 +798,7 @@ impl World {
 
     /// The weapon skill and fighting style actor `id`'s attack of `kind` made `with` a missile,
     /// a shield, or the off hand's weapon (or not) draws on ([`Actor::attack_skills`]).
-    pub(super) fn skills_of(
+    pub(in crate::world) fn skills_of(
         &self,
         id: ActorId,
         kind: AttackKind,
@@ -808,7 +812,7 @@ impl World {
     /// Rolls an attack of `kind` made `with` a missile, a shield, or the off hand's weapon (or
     /// not), drawing on weapon skill and fighting style `skills` (the player's earn their
     /// marks), and applies it, with its noise if `noisy`.
-    pub(super) fn resolve(
+    pub(in crate::world) fn resolve(
         &mut self,
         attacker: ActorId,
         target: ActorId,
@@ -865,7 +869,11 @@ impl World {
         // A blow at a disguised mimic finds it out (`mimic.rs`), after the sneak attack is
         // decided: it was unaware.
         if self.disguised(target) {
-            self.reveal_mimic(target, super::mimic::Reveal::Struck, events);
+            self.reveal_mimic(
+                target,
+                crate::world::creatures::mimic::Reveal::Struck,
+                events,
+            );
         }
         let profile = profile.map(|p| self.sneak_threat(attacker, unseen, p));
         // A blow at the unseen (`unseen.rs`).
@@ -1011,7 +1019,7 @@ impl World {
 
     /// The level of actor `id` as weapon marks weigh it (spec §8 "Weapon skills"): a
     /// creature's type's (spec §8 "Experience"), the player's own.
-    pub(super) fn level_of(&self, id: ActorId) -> u32 {
+    pub(in crate::world) fn level_of(&self, id: ActorId) -> u32 {
         if id == self.state.player {
             return u32::from(self.player_level());
         }
@@ -1023,13 +1031,13 @@ impl World {
     /// a blow blocked) or not. It earns its marks ([`crate::content::MarkRules`]), and a rank
     /// gained waits in `news` to be said after the attack's own messages: "You feel more skilled
     /// with long blades." No numbers.
-    pub(super) fn practise(&mut self, skill: WeaponSkillId, success: bool, level: u32) {
+    pub(in crate::world) fn practise(&mut self, skill: WeaponSkillId, success: bool, level: u32) {
         self.practise_at(skill, success, level, 100);
     }
 
     /// [`World::practise`] for `percent` of the marks (a target dummy's, `dummy.rs`). Returns
     /// whether a rank was gained.
-    pub(super) fn practise_at(
+    pub(in crate::world) fn practise_at(
         &mut self,
         skill: WeaponSkillId,
         success: bool,
@@ -1105,14 +1113,14 @@ impl World {
             return false;
         }
         let level = self.player_level();
-        super::focus::hold(&content, self.player_mut(), &[stamina], level);
+        crate::world::classes::focus::hold(&content, self.player_mut(), &[stamina], level);
         true
     }
 
     /// Actor `id` loses `damage` hit points to `harm`, the one way hit points go down (blows,
     /// traps, status effects, diseases, starving, the plunge through the ice); at 0 it dies of
     /// it, unless the harm spares the last hit point. Returns whether it died.
-    pub(super) fn hurt(
+    pub(in crate::world) fn hurt(
         &mut self,
         id: ActorId,
         damage: i32,
@@ -1125,7 +1133,7 @@ impl World {
         }
         // Any harm finds a disguised mimic out (`mimic.rs`), and ends a slip past (`slip.rs`).
         if self.disguised(id) {
-            self.reveal_mimic(id, super::mimic::Reveal::Struck, events);
+            self.reveal_mimic(id, crate::world::creatures::mimic::Reveal::Struck, events);
         }
         self.end_slip(id);
         // Talents (spec §8 "Talents": Immune to pain): a hit does less after the soak, never
@@ -1201,7 +1209,7 @@ impl World {
     /// one did it). A creature leaves the world; the player's run ends. A creature killed by the
     /// player earns them its experience (spec §8 "Experience"), and so does one that dies of a
     /// status effect the player caused (`by`: a wound they dealt bleeds it to death).
-    pub(super) fn dies(
+    pub(in crate::world) fn dies(
         &mut self,
         id: ActorId,
         by: Option<ActorId>,
@@ -1306,7 +1314,7 @@ impl World {
         // does one risen berserk (`corpse_spell.rs`).
         if actor.risen.is_some()
             || (actor.ally.as_ref())
-                .is_some_and(|a| matches!(a.source, super::AllySource::Summoned { .. }))
+                .is_some_and(|a| matches!(a.source, crate::world::AllySource::Summoned { .. }))
         {
             self.fallen.push(actor);
             return Vec::new();
@@ -1358,7 +1366,12 @@ impl World {
     /// that may follow it ([`World::second_blow`]: the off hand's, a shield bash, then a cleave
     /// or the target's riposte). Each message is said at once, by what the player knows as they
     /// strike; events reach presentation only if they saw the target.
-    pub(super) fn player_attacks(&mut self, target: ActorId, seen: bool, events: &mut Vec<Event>) {
+    pub(in crate::world) fn player_attacks(
+        &mut self,
+        target: ActorId,
+        seen: bool,
+        events: &mut Vec<Event>,
+    ) {
         let player = self.state.player;
         self.choose_mark(target);
         let first = self.player_blow(target, seen, None, events);
@@ -1408,7 +1421,7 @@ impl World {
     /// The player strikes `target` in melee with what they wield, as `profile` says (a class
     /// active's blow: Smite's dice, Quivering palm's bare hand), its noise made: an attack they
     /// chose at it (the mark rule, `mark.rs`).
-    pub(super) fn player_blow_with(
+    pub(in crate::world) fn player_blow_with(
         &mut self,
         target: ActorId,
         seen: bool,
@@ -1433,7 +1446,7 @@ impl World {
     /// wield ([`Actor::kick`]: it draws on and trains unarmed fighting, and no fighting style),
     /// said and shown like any blow, with the free blows the end of an attack brings
     /// ([`World::after_attack`]).
-    pub(super) fn player_kicks(
+    pub(in crate::world) fn player_kicks(
         &mut self,
         target: ActorId,
         dir: Dir,
@@ -1471,7 +1484,7 @@ impl World {
     /// [`World::attack_cost`]), and the free blows the end of an attack brings
     /// ([`World::after_attack`]). Refused (no time) without a
     /// shield to bash with, with nobody there, and against someone not hostile.
-    pub(super) fn bash(&mut self, dir: Dir, events: &mut Vec<Event>) -> Spent {
+    pub(in crate::world) fn bash(&mut self, dir: Dir, events: &mut Vec<Event>) -> Spent {
         let content = self.content.clone();
         let player = self.state.player;
         let Some((shield, profile)) = self.state.player().bash(&content) else {

@@ -1,17 +1,17 @@
 //! People: talk, quests, shops, guilds (docs/dev/npcs.md, quests.md, shops.md, guild.md).
 
-mod escort;
-mod escort_waits;
+pub(in crate::world) mod escort;
+pub(in crate::world) mod escort_waits;
 mod goodwill;
-mod guild;
+pub(in crate::world) mod guild;
 mod lure;
-mod quest;
+pub(in crate::world) mod quest;
 mod quest_roll;
-mod rumour;
+pub(in crate::world) mod rumour;
 mod service;
-mod shop;
-mod talk;
-mod wares;
+pub(in crate::world) mod shop;
+pub(in crate::world) mod talk;
+pub(in crate::world) mod wares;
 cfg_if! {
     if #[cfg(test)] {
         mod escort_tests;

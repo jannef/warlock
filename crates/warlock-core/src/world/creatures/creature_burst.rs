@@ -31,14 +31,14 @@
 //! creature harmed, in actor id order, all from the gameplay stream; the ruin's draws are its
 //! own stream's. Nothing is saved: the burst is a type's data.
 
-use super::spell::{Caster, Reach, burst_cells};
-use super::{ActorId, World};
 use crate::action::{AttackKind, Event};
 use crate::combat::Strike;
 use crate::content::{Burst, BurstWhen, CreatureId, TrapNoise, the_start};
 use crate::geom::Pos;
 use crate::noise::SoundKind;
 use crate::object;
+use crate::world::magic::spell::{Caster, Reach, burst_cells};
+use crate::world::{ActorId, World};
 
 /// How loud a burst is on its cell: a fireball trap's explosion.
 const LOUDNESS: u16 = 150;
@@ -72,7 +72,7 @@ impl World {
     /// Creature `id` of type `creature` just died on cell `at` of level `level`: its death
     /// throes, if its type has them and it died on the player's level. Its words join the news,
     /// said after the death that caused them.
-    pub(super) fn death_throes(
+    pub(in crate::world) fn death_throes(
         &mut self,
         id: ActorId,
         (at, level): (Pos, &str),

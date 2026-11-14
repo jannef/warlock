@@ -26,13 +26,13 @@
 //! the fallback harm's dice. Picking the nearest hostile draws nothing.
 
 use super::cast::Cast;
-use super::fight::Harm;
-use super::{ActorId, World};
 use crate::action::Event;
 use crate::content::{CreatureId, CreatureSpawn, LevelKind, SpellPurpose, Stance};
 use crate::damage::Damage;
 use crate::dice::Dice;
 use crate::text::{and_list, capitalized};
+use crate::world::combat::fight::Harm;
+use crate::world::{ActorId, World};
 
 impl World {
     /// Spell `cast` backfires on `caster`, at its base roll or, when `full`, its cast's (module
@@ -189,7 +189,7 @@ impl World {
                 asleep: false,
                 status: Vec::new(),
             };
-            super::travel::make_creature(&mut self.state, &content, &level, &spawn);
+            crate::world::levels::travel::make_creature(&mut self.state, &content, &level, &spawn);
             self.spawned += 1;
             match came.iter_mut().find(|(c, _)| *c == creature) {
                 Some((_, n)) => *n += 1,
@@ -199,7 +199,7 @@ impl World {
         let words: Vec<String> = (came.iter())
             .map(|&(c, n)| {
                 let def = content.creature(c);
-                super::ally::few(&def.name, &def.plural, n)
+                crate::world::allies::ally::few(&def.name, &def.plural, n)
             })
             .collect();
         let list = crate::text::capitalized(&and_list(

@@ -1,7 +1,7 @@
 //! The witch's familiar (spec §8 "Allies": "The familiar"; docs/design/witch-familiar.md, §16
 //! the owner's round; `docs/dev/familiar.md`): a small beast of the old craft at her heel. It is
 //! an ally of the core (`ally.rs`) with `source = Familiar(CompanionData)`, `until = None`: a
-//! **kept** beast ([`super::AllySource::kept`]) as the ranger's companion is, so it is named,
+//! **kept** beast ([`crate::world::AllySource::kept`]) as the ranger's companion is, so it is named,
 //! grows with its master's level, always comes along, and leaves a corpse by the companion's
 //! rules (`companion.rs`). What is its own:
 //!
@@ -29,13 +29,13 @@
 //! Nothing here draws from any stream but the start's, a kept beast's name's, and a calling's. A
 //! run without a familiar calls none of it to any effect.
 
-use super::rest::Ended;
-use super::{Actor, ActorId, AllySource, CompanionData, Spent, World, WorldState};
 use crate::action::{AttackKind, Event};
 use crate::character::{CharacterSpec, RememberedFamiliar};
 use crate::content::{ActionKind, Content, CreatureId, LevelKind, Stacking};
 use crate::geom::Pos;
 use crate::rng::Rng;
+use crate::world::turn::rest::Ended;
+use crate::world::{Actor, ActorId, AllySource, CompanionData, Spent, World, WorldState};
 use std::cell::Cell;
 
 impl Actor {
@@ -103,7 +103,7 @@ impl World {
     /// the retinue on the overworld), named, and said: "Tibb, your cat, winds about your
     /// ankles." Nothing without the talent, the data, the ally core, a character, or with a
     /// familiar already.
-    pub(super) fn bring_familiar(&mut self) {
+    pub(in crate::world) fn bring_familiar(&mut self) {
         let content = self.content.clone();
         if self.familiar().is_some() || content.allies().is_none() {
             return;
@@ -181,7 +181,7 @@ impl World {
 
     /// `use:call_familiar`: the player sits down to call, or is refused with no time (module
     /// docs). The ability itself and the statuses that block it are `use_class`'s.
-    pub(super) fn start_calling(&mut self) -> Spent {
+    pub(in crate::world) fn start_calling(&mut self) -> Spent {
         use crate::ability::Unavailable;
         let turns = (self.content.familiars())
             .filter(|_| self.content.allies().is_some())
@@ -202,7 +202,7 @@ impl World {
     }
 
     /// Calls turn after turn until the ritual is done or something interrupts (module docs).
-    pub(super) fn calling(&mut self, turns: u32, events: &mut Vec<Event>) {
+    pub(in crate::world) fn calling(&mut self, turns: u32, events: &mut Vec<Event>) {
         let left = Cell::new(turns);
         let ended = self.keep_at(
             events,
@@ -266,7 +266,7 @@ impl World {
     /// at the degrees they would cast it now, with them as the giver, and every other hex of
     /// theirs on it that stacks by refreshing starts afresh at its own degree. Nothing for
     /// anyone else, for a target that is the master, or without the data.
-    pub(super) fn familiar_touch(
+    pub(in crate::world) fn familiar_touch(
         &mut self,
         attacker: ActorId,
         target: ActorId,

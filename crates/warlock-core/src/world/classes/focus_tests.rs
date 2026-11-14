@@ -2,13 +2,13 @@
 //! grants it for good, a shot spends 2 of it for a tenth less time, and Volley costs 6 of it
 //! instead of a cooldown.
 
-use super::*;
 use crate::ability::{Ability, Unavailable};
 use crate::action::parse_actions;
 use crate::character::CharacterSpec;
 use crate::content::{ClassActive, Factor, ResourceId, percent_of};
 use crate::replay::Replay;
 use crate::test_support::{CONTENT as BUILTIN, last, run};
+use crate::world::*;
 
 /// A human ranger in the showcase (seed 7), with their kit, at `level` with every choice spent.
 fn ranger(level: u8) -> World {

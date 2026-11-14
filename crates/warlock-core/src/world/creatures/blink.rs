@@ -21,11 +21,11 @@
 //! **Words**: "The blink dog is suddenly beside you." where the player sees it land, "The blink
 //! dog is suddenly beside the kobold." beside another target; unseen, nothing.
 
-use super::{ActorId, World};
 use crate::action::Event;
 use crate::content::{ActionKind, the_start};
 use crate::geom::Pos;
 use crate::sight::LineOfSight;
+use crate::world::{ActorId, World};
 
 impl World {
     /// Whether creature `id` blinks now to its target on `at`, its path there blocked (module
@@ -41,7 +41,7 @@ impl World {
     }
 
     /// Where creature `id` may blink to beside its target on `at`, in row order (module docs).
-    pub(super) fn blink_landings(&self, id: ActorId, at: Pos) -> Vec<Pos> {
+    pub(in crate::world) fn blink_landings(&self, id: ActorId, at: Pos) -> Vec<Pos> {
         let me = &self.state.actors[&id];
         let Some(range) = (self.content.creature(me.creature).blinks.as_ref()).map(|b| b.range)
         else {
@@ -60,7 +60,12 @@ impl World {
 
     /// Creature `id` blinks beside its target on `at` (its AI saw to it that it can). Returns
     /// the price: a step's.
-    pub(super) fn creature_blinks(&mut self, id: ActorId, at: Pos, events: &mut Vec<Event>) -> i64 {
+    pub(in crate::world) fn creature_blinks(
+        &mut self,
+        id: ActorId,
+        at: Pos,
+        events: &mut Vec<Event>,
+    ) -> i64 {
         let price = self.price_of(id, ActionKind::Step);
         let cells = self.blink_landings(id, at);
         let me = &self.state.actors[&id];

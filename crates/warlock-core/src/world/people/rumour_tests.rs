@@ -1,14 +1,14 @@
-//! Rumoured ways (spec §8 "Dialogue", "Rumoured ways"; `world/rumour.rs`): asking Godgifu of
+//! Rumoured ways (spec §8 "Dialogue", "Rumoured ways"; `world/people/rumour.rs`): asking Godgifu of
 //! Cēaptūn about a place marks the way there on the player's overworld map, the cells about a
 //! route and not the whole region, idempotently, in no time; the hidden locations along the ways
 //! stay hidden; the memory layer shows the marks once the player is back on the map; a replay.
 
-use super::*;
 use crate::action::parse_actions;
 use crate::content::{ContentFiles, TerrainId};
 use crate::dump::{self, Layer};
 use crate::replay::Replay;
 use crate::test_support::{run as act, texts};
+use crate::world::*;
 use std::sync::LazyLock;
 
 const OVERWORLD: &str = "ascmearc";

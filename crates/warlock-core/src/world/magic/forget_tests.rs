@@ -7,9 +7,9 @@
 use super::caster_tests::{kobold, sp};
 use super::learn_tests::{given, kitted, set_decipher};
 use super::miscast::Aim;
-use super::*;
 use crate::content::{ContentFiles, Miscast};
 use crate::test_support::{run, said};
+use crate::world::*;
 
 /// The built-in entry `id`.
 fn entry(w: &World, id: &str) -> Miscast {

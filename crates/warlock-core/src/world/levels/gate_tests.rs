@@ -4,10 +4,10 @@
 //! fiends through on its cooldown at no cost, `loosed`, to its `most`; no creature but the
 //! player's side picks it for a target, and a blast hurts it as anything.
 
-use super::caster_tests::{kobold, world_with};
-use super::*;
 use crate::content::{ContentFiles, Stance};
 use crate::test_support::builtin;
+use crate::world::magic::caster_tests::{kobold, world_with};
+use crate::world::*;
 
 /// The built-in content where every cast miscasts and the table is the `only` row alone,
 /// covering every total.
@@ -170,7 +170,7 @@ fn a_monster_or_a_loosed_fiend_beside_a_gate_never_attacks_it_and_the_player_may
         status: Vec::new(),
     };
     let level = w.state.current_level.clone();
-    let fiend = travel::make_creature(&mut w.state, &content, &level, &spawn);
+    let fiend = super::travel::make_creature(&mut w.state, &content, &level, &spawn);
     w.state.actors.get_mut(&fiend).expect("the fiend").hp = 100_000;
     *w.perception = crate::perception::Perception::compute(&w.state, &w.content, &mut w.lights);
     for other in [k, fiend] {

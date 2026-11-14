@@ -1,6 +1,6 @@
 # The craftsperson's class ability from level 25 (spec §8 "Class abilities": Trapwright; the
 # craftsperson design §7.6): an active of the abilities menu's Class group, the rig list then a
-# direction (`rig:tripwire:E`, `world/rig.rs`, the rigs `data/rigs.toml`).
+# direction (`rig:tripwire:E`, `world/crafting/rig.rs`, the rigs `data/rigs.toml`).
 [[talent]]
 id = "trapwright"
 name = "Trapwright"

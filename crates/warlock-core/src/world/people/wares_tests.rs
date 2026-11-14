@@ -1,13 +1,13 @@
-//! The pedlar's offer (#808; `world/wares.rs`, docs/dev/encounters.md "The pedlar's offer"):
+//! The pedlar's offer (#808; `world/people/wares.rs`, docs/dev/encounters.md "The pedlar's offer"):
 //! one favoured item at a fixed price, made the same for the same run, bought or left, refused
 //! without the gold, sold once; the three uniques by a forced chance, each once a run; the load
 //! checks; a save and a replay.
 
-use super::*;
 use crate::action::parse_actions;
 use crate::content::{ContentFiles, Rarity};
 use crate::replay::Replay;
 use crate::test_support::run as act;
+use crate::world::*;
 use std::sync::LazyLock;
 
 const ROAD: Pos = Pos::new(19, 28);

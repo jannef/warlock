@@ -2,8 +2,6 @@
 //! talents, a lucky day one more and a title; they are computed, never stored as a choice, so a
 //! restored run gets them afresh; and each of the first gifts changes the one rule it names.
 
-use super::search::{Hidden, Look};
-use super::*;
 use crate::burden::Burden;
 use crate::character::CharacterSpec;
 use crate::combat::{self, Target};
@@ -12,6 +10,8 @@ use crate::dump::{self, Layer};
 use crate::rng::Rng;
 use crate::stats::{PerStat, Stats};
 use crate::test_support::CONTENT as BUILTIN;
+use crate::world::skills::search::{Hidden, Look};
+use crate::world::*;
 
 /// A human warrior in the showcase, born under the `element` `animal` on day `day` of the
 /// month (the run restored with that birth, so the gifts are granted as a load grants them).
@@ -438,7 +438,7 @@ fn gifts_cannot_be_picked_and_dumps_mark_them() {
 /// The built-in content with `horoscope.toml` replaced by `text`.
 fn load_horoscope(edit: impl Fn(&str) -> String) -> Result<Content, String> {
     let mut files = ContentFiles::builtin();
-    let text = edit(include_str!("../../../../assets/data/horoscope.toml"));
+    let text = edit(include_str!("../../../../../assets/data/horoscope.toml"));
     files.insert("data/horoscope.toml", &text);
     Content::load(&files).map_err(|e| e.to_string())
 }

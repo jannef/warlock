@@ -22,7 +22,6 @@
 //! without vitals (`Content::has_vitals`: the bones, the spirits, the animated). Nothing limits
 //! trying again (the owner's rule): the time is the price.
 
-use super::{Spent, World};
 use crate::action::Event;
 use crate::content::{ActionKind, Stance};
 use crate::fov::radius2;
@@ -30,11 +29,12 @@ use crate::geom::Pos;
 use crate::noise::Act;
 use crate::skills::{Effect, Use};
 use crate::text::capitalized;
+use crate::world::{Spent, World};
 
 impl World {
     /// [`crate::Action::Intimidate`]: the player threatens the creature on `at` (see the module
     /// docs).
-    pub(super) fn intimidate(&mut self, at: Pos, events: &mut Vec<Event>) -> Spent {
+    pub(in crate::world) fn intimidate(&mut self, at: Pos, events: &mut Vec<Event>) -> Spent {
         let content = self.content.clone();
         let player = self.state.player;
         let trained = crate::ability::Ability::Intimidate.had_by(self.state.player(), &content);

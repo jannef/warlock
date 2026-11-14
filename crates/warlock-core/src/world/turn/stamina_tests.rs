@@ -5,12 +5,12 @@
 //! point every two base turns, resting too, and Deep lungs, Steady breathing, and Second breath
 //! change it through the existing resource hooks.
 
-use super::class_active_tests::{reach, world};
-use super::*;
 use crate::character::CharacterSpec;
 use crate::content::ResourceId;
 use crate::stats::{PerStat, Stat, Stats, modifier};
 use crate::test_support::run;
+use crate::world::classes::class_active_tests::{reach, world};
+use crate::world::*;
 
 fn stamina(w: &World) -> ResourceId {
     w.content().resource_id("stamina").expect("stamina")

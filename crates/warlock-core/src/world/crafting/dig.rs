@@ -19,7 +19,6 @@
 //! follow the terrain as they do a door's: [`World::set_terrain`] drops the light masks the cell
 //! could change, and perception sees and remembers the rubble like any terrain.
 
-use super::{Ended, LevelState, Spent, World};
 use crate::action::{Breach, Event, MAX_REST};
 use crate::content::StatUse;
 use crate::content::{ActionKind, Content, Effect, LevelKind};
@@ -31,6 +30,7 @@ use crate::stats::Stat;
 use crate::talent::TalentMods;
 use crate::text::{article, capitalized};
 use crate::time::Duration;
+use crate::world::{Ended, LevelState, Spent, World};
 
 /// The work done on a wall is kept in twentieths of a point of hardness, so a dig's work,
 /// power × (Strength + 10) / 20, needs no rounding.
@@ -54,7 +54,7 @@ pub const UNTRAINED: &str = "You do not know how to mine: that takes the Mining 
 /// `data/mining.toml` names (Mining; no rule without that file). The one check, read by
 /// [`World::start_dig`] and by perception ([`crate::PerceptionView::dig_refusal`]), so the
 /// game asks for no direction where the rules would refuse. Creatures do not dig.
-pub fn dig_refusal(digger: &super::Actor, content: &Content) -> Option<&'static str> {
+pub fn dig_refusal(digger: &crate::world::Actor, content: &Content) -> Option<&'static str> {
     if digger.dig_tool(content).is_none() {
         return Some("You have no digging tool ready.");
     }
@@ -87,7 +87,7 @@ impl World {
     /// Starts digging toward `dir` (spec §8 "Digging"): refused, taking no time, without a
     /// digging tool ready or untrained in Mining ([`dig_refusal`]), on the overworld, and toward
     /// anything that is no wall that breaks.
-    pub(super) fn start_dig(&mut self, dir: Dir) -> Spent {
+    pub(in crate::world) fn start_dig(&mut self, dir: Dir) -> Spent {
         if self.refused_afloat("You cannot dig in deep water.") {
             return Spent::Nothing;
         }
@@ -125,7 +125,7 @@ impl World {
 
     /// Digs into the wall at `at` turn after turn until it gives way, something interrupts, or a
     /// day has passed ([`World::keep_at`]), then says how it went.
-    pub(super) fn dig(&mut self, at: Pos, events: &mut Vec<Event>) {
+    pub(in crate::world) fn dig(&mut self, at: Pos, events: &mut Vec<Event>) {
         let start = self.state.time;
         let wall = self.state.current().terrain.get(at).copied();
         let name = wall.map_or_else(String::new, |t| self.content.terrain(t).name.clone());
@@ -154,7 +154,7 @@ impl World {
             (true, Ended::Said | Ended::Done) => format!("You stop digging after {took}."),
         };
         self.say(text);
-        // Dug through: what Mining breaks out of it (`world/mine.rs`).
+        // Dug through: what Mining breaks out of it (`world/crafting/mine.rs`).
         if !standing(self)
             && let Some(wall) = wall
         {
@@ -247,7 +247,7 @@ impl World {
 
     /// Breaks the wall at `p` on the current level into what it becomes: the work done on it is
     /// gone, solid rock around it shows its face, and light follows ([`World::set_terrain`]).
-    pub(super) fn break_wall(&mut self, p: Pos, cause: Breach, events: &mut Vec<Event>) {
+    pub(in crate::world) fn break_wall(&mut self, p: Pos, cause: Breach, events: &mut Vec<Event>) {
         let level = self.state.current();
         let Some(breaks) = (level.terrain.get(p)).and_then(|t| self.content.terrain(*t).breaks)
         else {
@@ -266,7 +266,7 @@ impl World {
     }
 
     /// What a creature is called at the start of a sentence: "A kobold", "An elf".
-    pub(super) fn creature_called(&self, id: super::ActorId) -> String {
+    pub(in crate::world) fn creature_called(&self, id: crate::world::ActorId) -> String {
         let creature = self.state.actors[&id].creature;
         let name = &self.content.creature(creature).name;
         if crate::content::is_proper(name) {

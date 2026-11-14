@@ -1,15 +1,15 @@
-//! Field forge (spec §8 "Class abilities"; the craftsperson design §7.7; `world/field_forge.rs`):
+//! Field forge (spec §8 "Class abilities"; the craftsperson design §7.7; `world/crafting/field_forge.rs`):
 //! the craftsperson's level-32 active sets an ingot on a heap of stones beside them in an hour,
 //! a makeshift anvil for good, which serves every recipe at the anvil, Temper, and the walk-in,
 //! and which a pick clears to floor with nothing mined out of it.
 
-use super::*;
 use crate::ability::{Ability, Aim};
 use crate::action::parse_actions;
 use crate::beside::{Beside, Target};
 use crate::content::{ClassActive, ContentFiles, Offer, RecipeUse};
 use crate::object::Stack;
 use crate::test_support::{last_text as last, run};
+use crate::world::*;
 
 const FORGE: ClassActive = ClassActive::FieldForge;
 

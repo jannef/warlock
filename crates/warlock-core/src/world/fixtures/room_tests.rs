@@ -1,10 +1,10 @@
 //! Special rooms in the turn pipeline (spec §7 "Special rooms"): what each effect does, the
 //! first-entry message, what the player knows of a room, and saving.
 
-use super::*;
 use crate::content::ContentFiles;
 use crate::noise::{self, Act};
 use crate::test_support::{builtin, last_text as last_message, run as apply};
+use crate::world::*;
 
 /// A hall, 25 wide: the west part plain, the east part (walls included) the special room
 /// `effect`. The player stands in the plain part unless the map puts them elsewhere.
@@ -118,7 +118,7 @@ fn shadowed_rooms_keep_under_a_third_of_all_light() {
         }
     }
     assert!(inside > 10, "the room is in view");
-    super::light_tests::check_invariants(&dark).expect("light invariants");
+    crate::world::turn::light_tests::check_invariants(&dark).expect("light invariants");
 }
 
 #[test]
@@ -473,7 +473,7 @@ fn effects_at_folds_the_room_and_the_level() {
         Act::Step(outside),
     );
     assert_eq!(step.map(|n| n.loudness), Some(90));
-    super::light_tests::check_invariants(&w).expect("light invariants");
+    crate::world::turn::light_tests::check_invariants(&w).expect("light invariants");
     // A level without one: the room alone.
     let plain = hall_with("shadowed", "");
     assert_eq!(plain.effects_at("test_room", inside).light(), 30);
@@ -606,5 +606,5 @@ fn a_black_chamber_keeps_no_light_at_all() {
     }
     assert!(view.is_visible(Pos::new(10, 3)), "the hall outside is lit");
     assert_eq!(view.light_kept(Pos::new(10, 3)), Some(100));
-    super::light_tests::check_invariants(&w).expect("light invariants");
+    crate::world::turn::light_tests::check_invariants(&w).expect("light invariants");
 }

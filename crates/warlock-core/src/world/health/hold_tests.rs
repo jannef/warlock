@@ -2,13 +2,13 @@
 //! holder dies, leaves, or is held or slowed, lasts a few turns at most, and the held player's
 //! step is a struggle to break free.
 
-use super::*;
 use crate::action::parse_actions;
 use crate::content::{Affliction, ContentFiles, StatusId};
 use crate::geom::{Dir, Pos};
 use crate::replay::Replay;
 use crate::stats::{PerStat, Stats};
 use crate::test_support::said as messages;
+use crate::world::*;
 
 /// A creature whose bite always holds, with a grip of 40 (a natural 24 alone breaks it), and one
 /// whose bite holds with the status's own grip.

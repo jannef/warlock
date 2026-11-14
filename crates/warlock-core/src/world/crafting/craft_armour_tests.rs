@@ -5,11 +5,11 @@
 
 use super::craft::RecipeLack;
 use super::craft_make::make_out_for_test;
-use super::*;
 use crate::content::{ContentFiles, RecipeId};
 use crate::object::Stack;
 use crate::skills::{SkillId, Trained};
 use crate::test_support::{last_text as said, run as apply};
+use crate::world::*;
 
 /// A forge with its anvil at (5, 2) and the player beside it at (4, 3).
 const ROOM: &str = "\

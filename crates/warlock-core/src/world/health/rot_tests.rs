@@ -3,16 +3,16 @@
 //! frozen on another level), piles cleaned as they are perceived, stacks keeping the oldest age,
 //! eating rotten food of any kind, shops and rotten food, the dev dump, saves, and replays.
 
-use super::*;
 use crate::action::{Meal, Positions, parse_actions};
 use crate::content::ContentFiles;
 use crate::object::Stack;
 use crate::replay::Replay;
 use crate::rot::{self, Stage as Age};
 use crate::test_support::{builtin, run, texts};
+use crate::world::*;
 
 /// The built-in hunger file, to edit for a test.
-const HUNGER: &str = include_str!("../../../../assets/data/hunger.toml");
+const HUNGER: &str = include_str!("../../../../../assets/data/hunger.toml");
 
 /// Food underfoot (two loaves of bread on top, keeping five days and lasting ten; a food
 /// ration, keeping a month), and stairs down to the cellar.

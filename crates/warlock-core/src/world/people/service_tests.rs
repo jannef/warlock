@@ -1,12 +1,12 @@
 //! Services (spec §8 "Services"; the campaign design §6.1): a fixture sister who cures and mends
 //! for gold, asked for like topics; the price, the refusals, Pious, saves, and replays.
 
-use super::*;
 use crate::action::parse_actions;
 use crate::content::ContentFiles;
 use crate::replay::Replay;
 use crate::stats::Stat;
 use crate::test_support::{builtin, last_text as last_message, run};
+use crate::world::*;
 
 /// The sister's words and services, added to the built-in dialogue.
 const SISTER: &str = r##"

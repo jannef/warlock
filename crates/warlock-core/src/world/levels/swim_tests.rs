@@ -1,11 +1,11 @@
-//! Swim (spec §8 "Skills"; `step_price`, `wade`, `world/ice.rs`): wading made cheaper, and a
+//! Swim (spec §8 "Skills"; `step_price`, `wade`, `world/levels/ice.rs`): wading made cheaper, and a
 //! plunge through the ice halved by a check.
 
-use super::*;
 use crate::check::check;
 use crate::content::ContentFiles;
 use crate::skills::{Effect, SkillId, Trained, Use};
 use crate::stats::Stat;
+use crate::world::*;
 use std::sync::{Arc, LazyLock};
 
 const POND: &str = r#"

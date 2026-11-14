@@ -39,7 +39,7 @@ pub enum OffenceEffect {
     /// threaten a critical this many natural points lower (Tempered).
     BestSkillThreat { value: i32 },
     /// An initiative check it makes against a hostile attacker beside it is answered with a
-    /// free blow at once (Hair trigger; `Cue::Startled`, `world/free_blow.rs`).
+    /// free blow at once (Hair trigger; `Cue::Startled`, `world/combat/free_blow.rs`).
     StartledBlow,
     /// A free blow the actor is given (spec §8 "Free blows"); `one_in` (the gatekeeper's only)
     /// makes it a chance: one in that many, scaled by the stance's `gatekeeper` percent.

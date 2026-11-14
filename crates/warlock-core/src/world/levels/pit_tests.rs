@@ -3,11 +3,11 @@
 //! floor; two Pits apart; the first floor's `<` to the mouth after a climb; the orphan rule; the
 //! dev scenario.
 
-use super::miscast::Aim;
-use super::*;
 use crate::action::{Action, parse_actions};
 use crate::content::Miscast;
 use crate::test_support::{CONTENT, said};
+use crate::world::magic::miscast::Aim;
+use crate::world::*;
 
 fn start(scenario: &str, seed: u64) -> World {
     World::new(CONTENT.clone(), scenario, Some(seed)).expect("world")
@@ -25,7 +25,8 @@ fn entry(id: &str) -> Miscast {
 fn befalls(w: &mut World, caster: ActorId, id: &str) {
     let spell = CONTENT.spell_id("spark").expect("spark");
     let me = w.state.actors[&caster].clone();
-    let cast = super::cast::Cast::by_creature(&me, &CONTENT, (spell, CONTENT.spell(spell)));
+    let cast =
+        crate::world::magic::cast::Cast::by_creature(&me, &CONTENT, (spell, CONTENT.spell(spell)));
     let aim = if caster == w.state.player {
         Aim::Player(None)
     } else {
@@ -44,7 +45,7 @@ fn portal(w: &mut World, id: &str) {
 fn mouths(w: &World) -> Vec<(Pos, u32)> {
     (w.state.current().stairs.iter())
         .filter_map(|s| {
-            let (pit, depth) = pit::pit_of(&CONTENT, s.to.as_deref()?)?;
+            let (pit, depth) = super::pit::pit_of(&CONTENT, s.to.as_deref()?)?;
             (s.dir == StairsDir::Down && depth == 1).then_some((s.pos, pit))
         })
         .collect()
@@ -168,7 +169,7 @@ fn a_creatures_portal_opens_a_pit_too() {
         status: Vec::new(),
     };
     let level = w.state.current_level.clone();
-    let k = travel::make_creature(&mut w.state, &CONTENT, &level, &spawn);
+    let k = super::travel::make_creature(&mut w.state, &CONTENT, &level, &spawn);
     w.state.actors.get_mut(&k).expect("kobold").pos = here;
     let player = w.state.player;
     w.state.actors.get_mut(&player).expect("player").pos = Pos::new(-50, -50);
@@ -192,7 +193,7 @@ fn two_portals_make_two_pits_and_their_floors_differ() {
         let id = format!("hellegeat@{s}:1");
         let seed = w.state.level_seed(&CONTENT, &id);
         let visit = crate::mapgen::Visit::default();
-        travel::level_template(&CONTENT, ("showcase", seed), &id, (Some("hub"), &visit))
+        super::travel::level_template(&CONTENT, ("showcase", seed), &id, (Some("hub"), &visit))
             .expect("made")
             .terrain
             .clone()

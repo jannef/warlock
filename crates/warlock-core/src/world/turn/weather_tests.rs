@@ -3,7 +3,6 @@
 //! it changes, rests woken by rain, and the dev override in replays and saves.
 
 use super::light_tests::check_invariants;
-use super::*;
 use crate::action::parse_actions;
 use crate::content::Climate;
 use crate::fov::radius2;
@@ -12,6 +11,7 @@ use crate::perception::Emitter;
 use crate::replay::Replay;
 use crate::test_support::{CONTENT, texts, world};
 use crate::weather::{Clouds, Weather, weather_at};
+use crate::world::*;
 
 /// From the showcase start to the courtyard, up the stairs nook's `<`.
 const TO_COURTYARD: &str =

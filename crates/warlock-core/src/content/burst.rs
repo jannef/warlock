@@ -1,9 +1,9 @@
 //! A creature type's burst (the dread design `docs/design/monster-dread.md` §5.3, #1127):
 //! `[creature.burst]`, the burst of its element it goes off in. A vortex bursts **instead of
 //! attacking** beside its target and dies of it (`when = "touches"`); an elemental bursts where
-//! it dies (`when = "dies"`, its death throes). The rules are `world/creature_burst.rs`.
+//! it dies (`when = "dies"`, its death throes). The rules are `world/creatures/creature_burst.rs`.
 //!
-//! The burst is the spells' shared burst (`world/spell.rs`), centred on the creature's own cell,
+//! The burst is the spells' shared burst (`world/magic/spell.rs`), centred on the creature's own cell,
 //! `radius` cells across (0 to [`RADII`]'s end). Its riders are the spell types' rider form:
 //! a status, its severity, and a chance.
 

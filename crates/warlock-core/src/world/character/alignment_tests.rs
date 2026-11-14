@@ -3,13 +3,13 @@
 //! band crossings said as notes, what reads it (cold greetings, quest offers, a good keeper's
 //! prices, abilities that ask for an alignment), saves, and replays.
 
-use super::*;
 use crate::action::{Meal, parse_actions};
 use crate::alignment::{Alignment, Band, Score};
 use crate::content::{ClassActive, ContentFiles, Sign};
 use crate::object::Stack;
 use crate::replay::Replay;
 use crate::test_support::{builtin, last_text as last, run};
+use crate::world::*;
 
 const TERRAIN: &str = r##"
 [[terrain]]
@@ -231,7 +231,7 @@ fn files_with(map: &str) -> ContentFiles {
         ("data/legend.toml", LEGEND),
         (
             "data/alignment.toml",
-            include_str!("../../../../assets/data/alignment.toml"),
+            include_str!("../../../../../assets/data/alignment.toml"),
         ),
         (
             "data/vision.toml",

@@ -44,14 +44,14 @@
 //! it (`sign_picks.rs`).
 
 use super::path::{Cost, Search};
-use super::stride::Coarse;
-use super::{Actor, ActorId, Mind, World, WorldState, beast_friend};
 use crate::action::{AttackKind, Event};
 use crate::content::{ActionKind, Combat, Content, SpellId, Stance};
 use crate::fov::radius2;
 use crate::geom::{Dir, Pos};
 use crate::noise::Heard;
 use crate::sight::{self, By, LineOfSight};
+use crate::world::turn::stride::Coarse;
+use crate::world::{Actor, ActorId, Mind, World, WorldState, allies::beast_friend};
 
 /// Extra cost of a path through a cell another actor stands on, in steps: a creature walks a
 /// detour of up to this many more steps around someone in its way, else waits behind them.
@@ -69,7 +69,7 @@ const SEARCH_LIMIT: i32 = 64;
 
 /// What a creature does with one action.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(super) enum Plan {
+pub(in crate::world) enum Plan {
     Attack {
         target: ActorId,
         kind: AttackKind,
@@ -94,7 +94,7 @@ pub(super) enum Plan {
 
 /// Where a path query leaves a creature.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(super) enum Route {
+pub(in crate::world) enum Route {
     /// It is already where it wants to be.
     There,
     Step(Dir),
@@ -106,7 +106,7 @@ pub(super) enum Route {
 
 /// What a step does.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(super) enum Stepped {
+pub(in crate::world) enum Stepped {
     /// Moved, for this energy price.
     Moved(i64),
     /// Opened the closed door in the way instead, for this energy price (priced before the door
@@ -121,14 +121,14 @@ impl World {
     /// One action of creature `id` on the current level, taken whenever the scheduler lets it act
     /// (phase 2; `schedule.rs` decides who acts when, and so how often). Returns the action's
     /// energy price, which with the creature's speed decides how soon it may act again: a step
-    /// costs the step onto the destination ([`super::LevelState::step_price`]), anything else its
+    /// costs the step onto the destination ([`crate::world::LevelState::step_price`]), anything else its
     /// action's cost (an attack, opening a door, waiting; [`crate::content::Content::action_cost`],
     /// where a creature type may give its attacks their own) over the 6-second base.
     ///
     /// This is the one place a creature decides and does something; whatever the action lets
     /// the player perceive (events, noise) starts here too. What the creature heard since it
-    /// last acted ([`super::Actor::heard`]) is read here and spent.
-    pub(super) fn creature_turn(&mut self, id: ActorId, events: &mut Vec<Event>) -> i64 {
+    /// last acted ([`crate::world::Actor::heard`]) is read here and spent.
+    pub(in crate::world) fn creature_turn(&mut self, id: ActorId, events: &mut Vec<Event>) -> i64 {
         // A target dummy never acts (`dummy.rs`).
         if self.dummy(id).is_some() {
             return self.price_of(id, ActionKind::Wait);
@@ -198,7 +198,7 @@ impl World {
         self.mutter(id);
         self.cry(id, plan);
         if slow {
-            price.saturating_mul(i64::from(super::stride::STRIDE))
+            price.saturating_mul(i64::from(crate::world::turn::stride::STRIDE))
         } else {
             price
         }
@@ -206,7 +206,7 @@ impl World {
 
     /// Creature `id` steps in `dir` ([`World::creature_steps`]); returns what it did and its
     /// price: the step, opening the door in the way, or waiting when blocked.
-    pub(super) fn step_or_wait(
+    pub(in crate::world) fn step_or_wait(
         &mut self,
         id: ActorId,
         dir: Dir,
@@ -296,7 +296,10 @@ impl World {
     /// The nearest hostile actor creature `id` sees (ties: the lower id), and where it stands.
     /// Sight is computed only if a hostile is within the creature's sight radius, nearest first,
     /// and only as far as the first one it sees: line of sight only out to its distance.
-    pub(super) fn nearest_hostile_in_sight(&mut self, id: ActorId) -> Option<(ActorId, Pos)> {
+    pub(in crate::world) fn nearest_hostile_in_sight(
+        &mut self,
+        id: ActorId,
+    ) -> Option<(ActorId, Pos)> {
         self.nearest_in_sight(id, &|state, content, me, a| {
             content.stance_of(me.faction(content), a.faction(content)) == Stance::Hostile
                 && !beast_friend::befriended(state, content, me, a)
@@ -306,7 +309,7 @@ impl World {
     /// The nearest actor creature `id` sees that `wanted` (of the state, the content, the
     /// creature, and the other) says it is after (ties: the lower id), and where it stands; a
     /// disguised mimic never. Sight as [`World::nearest_hostile_in_sight`] computes it.
-    pub(super) fn nearest_in_sight(
+    pub(in crate::world) fn nearest_in_sight(
         &mut self,
         id: ActorId,
         wanted: &dyn Fn(&WorldState, &Content, &Actor, &Actor) -> bool,
@@ -346,7 +349,8 @@ impl World {
                 }
             };
             // The player may slip past it unseen in the dark (`slip.rs`).
-            if super::slip::looks_at(state, content, lights, los, &eye, id, other, p) {
+            if crate::world::combat::slip::looks_at(state, content, lights, los, &eye, id, other, p)
+            {
                 return Some((other, p));
             }
         }
@@ -356,7 +360,7 @@ impl World {
     /// Step 2: attack the target at `at`, or get where the creature can. A ranged creature
     /// with nothing to shoot (no missile weapon ready, or no ammunition for it left) fights in
     /// melee; it shoots no farther than its missile weapon does.
-    pub(super) fn fight(&self, id: ActorId, target: ActorId, at: Pos) -> Plan {
+    pub(in crate::world) fn fight(&self, id: ActorId, target: ActorId, at: Pos) -> Plan {
         let me = &self.state.actors[&id];
         let def = self.content.creature(me.creature);
         let attack = |kind| Plan::Attack { target, kind };
@@ -467,7 +471,13 @@ impl World {
 
     /// Whether a shot from `from` at `target` on `to` would fly clear: no opaque cell and no
     /// actor (but the shooter `shooter` itself, who would have moved) on the line between.
-    pub(super) fn clear_shot(&self, from: Pos, to: Pos, shooter: ActorId, target: ActorId) -> bool {
+    pub(in crate::world) fn clear_shot(
+        &self,
+        from: Pos,
+        to: Pos,
+        shooter: ActorId,
+        target: ActorId,
+    ) -> bool {
         let level = self.state.current();
         let occupied = |p: Pos| {
             (self.state.actors.on_level(&level.id))
@@ -480,7 +490,7 @@ impl World {
     /// How creature `id` gets to a cell `goal` accepts, all of which lie within `reach` of
     /// `target`: a shortest path over walkable cells (and closed doors, if it opens them) that
     /// no one else stands on.
-    pub(super) fn route(
+    pub(in crate::world) fn route(
         &self,
         id: ActorId,
         target: Pos,
@@ -547,7 +557,7 @@ impl World {
     /// player does not step into a special room whose effect it shuns (a sanctuary, spec §7
     /// "Special rooms") from outside it; one already inside may move about in it, and leave.
     /// Hallowed ground (Sanctuary, `sanctuary.rs`) is shunned the same way.
-    pub(super) fn shuns(&self, id: ActorId) -> impl Fn(Pos) -> bool + '_ {
+    pub(in crate::world) fn shuns(&self, id: ActorId) -> impl Fn(Pos) -> bool + '_ {
         let level = self.state.current();
         let hostile = self.stance(id, self.state.player) == Stance::Hostile;
         let from = self.state.actors.get(&id).map(|me| me.pos);
@@ -566,7 +576,7 @@ impl World {
     /// ([`World::swing_open`]). Either makes noise. An overloaded
     /// creature opens doors but does not step. A creature hostile to the player does not step
     /// (or open a door) into a sanctuary ([`World::shuns`]): it waits.
-    pub(super) fn creature_steps(
+    pub(in crate::world) fn creature_steps(
         &mut self,
         id: ActorId,
         dir: Dir,
@@ -622,7 +632,7 @@ impl World {
         }
         // Ice there may give way under it (spec §5 "Ice"); never under an incorporeal one.
         let footing = if phases {
-            super::ice::Footing::Plain
+            crate::world::levels::ice::Footing::Plain
         } else {
             self.tread(id, from, to)
         };

@@ -1,4 +1,4 @@
-//! The song talents (#1495): the bard's songs (spec §8 "Class abilities"; `world/song.rs`) and
+//! The song talents (#1495): the bard's songs (spec §8 "Class abilities"; `world/classes/song.rs`) and
 //! Virtuoso. [`SongEffect`] is the data (a talent's `[[effect]]` of one of [`SongEffect::KINDS`]),
 //! [`SongMods`] the sum every rule reads (`TalentMods::song`). A new effect of the area is a
 //! variant here, its field and its arm in [`SongMods::add`] here, its wiki text in
@@ -12,7 +12,7 @@ use serde::Deserialize;
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize)]
 #[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
 pub enum SongEffect {
-    /// A song (spec §8 "Class abilities", the bard's songs; `world/song.rs`): class active `id`
+    /// A song (spec §8 "Class abilities", the bard's songs; `world/classes/song.rs`): class active `id`
     /// (`use:inspire`), sung aloud. Who it is `on` suffers `severity` degrees of `status`, and the
     /// singer's Music's `song_degrees` more; it costs **one** thing, `cost` of `resource`
     /// (Inspire's 3 Inspiration) or `mana`. A song on its hearers asks each hostile one a
@@ -123,7 +123,7 @@ impl SongMods {
     }
 }
 
-/// A song (spec §8 "Class abilities", the bard's songs; `world/song.rs`): the class active it
+/// A song (spec §8 "Class abilities", the bard's songs; `world/classes/song.rs`): the class active it
 /// is, whom it is sung on, the status it gives at its base degrees, what it costs (`None`:
 /// nothing, a Virtuoso's), and for a song on its hearers the stat they check and its difficulty.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

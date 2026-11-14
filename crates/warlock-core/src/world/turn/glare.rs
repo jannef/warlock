@@ -4,10 +4,10 @@
 //! ([`crate::perception`]), [`World::glared`] for their attacks, and [`World::glare_news`] says
 //! when it begins and ends. Creatures are never light-blind.
 
-use super::{ActorId, World};
 use crate::combat::Profile;
 use crate::content::LightBlind;
 use crate::sight;
+use crate::world::{ActorId, World};
 
 /// Said as strong light begins to dazzle the player.
 const DAZZLED: &str = "The bright light dazzles you.";
@@ -30,7 +30,7 @@ impl World {
 
     /// `profile`, an attack actor `attacker` makes, as being dazzled leaves it: its race's
     /// `to_hit` worse while strong light dazzles it.
-    pub(super) fn glared(&mut self, attacker: ActorId, mut profile: Profile) -> Profile {
+    pub(in crate::world) fn glared(&mut self, attacker: ActorId, mut profile: Profile) -> Profile {
         if let Some(blind) = self.dazzles(attacker) {
             profile.to_hit += blind.to_hit;
         }

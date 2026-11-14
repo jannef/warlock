@@ -3,7 +3,6 @@
 //! level brings its abilities, the bonus picks come from the class's trees, each passive changes
 //! the rule it names, and the actives (Volley, Inspire) are used from the abilities menu.
 
-use super::*;
 use crate::ability::{Ability, Unavailable};
 use crate::action::parse_actions;
 use crate::character::CharacterSpec;
@@ -15,6 +14,7 @@ use crate::replay::Replay;
 use crate::skills::Effect;
 use crate::stats::{PerStat, Stats};
 use crate::test_support::{CONTENT as BUILTIN, last, run, said};
+use crate::world::*;
 
 /// A human of `class` in the showcase (seed 7), with their kit, born under no sign, every score
 /// 14.
@@ -555,7 +555,10 @@ fn lurking_a_hostile_stepping_up_takes_the_thiefs_blow_unawares_unless_it_hunts_
     let events = step_to(&mut w, kobold, here.step(Dir::E));
     assert!(struck(&events, player, kobold));
     assert!(!caught(&w), "{:?}", w.news);
-    assert_eq!(w.technique, super::weapon_active::Technique::default());
+    assert_eq!(
+        w.technique,
+        crate::world::combat::weapon_active::Technique::default()
+    );
     // The next action ends it.
     ready(&mut w, false);
     w.state.actors.get_mut(&kobold).expect("kobold").pos = far.step(Dir::E);

@@ -3,12 +3,12 @@
 
 use super::caster_tests::world_with;
 use super::miscast::Aim;
-use super::*;
 use crate::action::Rest;
 use crate::content::{ContentFiles, Miscast, MishapEffect};
 use crate::stats::Stat;
 use crate::test_support::{builtin, said};
 use crate::time::{DAY, Duration};
+use crate::world::*;
 
 /// A wizard who knows Spark, with the built-in content.
 fn wizard() -> World {

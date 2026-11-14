@@ -3,12 +3,12 @@
 //! time the player sees one, after the turn's other perception lines. The types whose line was
 //! said are `Progress::sighted`, saved with the run.
 
-use super::{ActorKind, World};
+use crate::world::{ActorKind, World};
 
 impl World {
     /// Says the first-sight line of every type the player sees now for the first time (module
     /// docs), in the order perception lists them.
-    pub(super) fn first_sight(&mut self) {
+    pub(in crate::world) fn first_sight(&mut self) {
         let content = self.content.clone();
         let seen: Vec<_> = (self.perception().actors().iter())
             .filter(|a| a.kind == ActorKind::Creature && self.state.actors.contains_key(&a.id))

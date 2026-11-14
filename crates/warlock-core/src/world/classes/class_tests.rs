@@ -3,7 +3,6 @@
 //! creation, and again on a restore; bonus picks come from the class's trees; and each ability
 //! changes the one rule it names.
 
-use super::*;
 use crate::ability::Ability;
 use crate::action::parse_actions;
 use crate::character::CharacterSpec;
@@ -14,6 +13,7 @@ use crate::replay::Replay;
 use crate::rng::Rng;
 use crate::stats::{PerStat, Stat, Stats};
 use crate::test_support::{CONTENT as BUILTIN, last, said};
+use crate::world::*;
 
 /// A human of `class` in the showcase.
 fn world(class: &str) -> World {
@@ -346,23 +346,29 @@ fn class_levels_replay_exactly() {
 fn shop_favour_follows_the_talents_up_to_its_cap() {
     let mut w = world("warrior");
     let shops = BUILTIN.shops().expect("shops");
-    let base = crate::world::shop::favour(&BUILTIN, shops, w.state.player());
+    let base = crate::world::people::shop::favour(&BUILTIN, shops, w.state.player());
     give(&mut w, "haggler");
-    let haggler = crate::world::shop::favour(&BUILTIN, shops, w.state.player());
+    let haggler = crate::world::people::shop::favour(&BUILTIN, shops, w.state.player());
     assert_eq!(haggler, (base + 15).clamp(-MAX_FAVOUR, MAX_FAVOUR));
     // Presence of 40 is far past the cap, which holds.
     w.player_mut().stats.gift(Stat::Presence, 30);
-    let capped = crate::world::shop::favour(&BUILTIN, shops, w.state.player());
+    let capped = crate::world::people::shop::favour(&BUILTIN, shops, w.state.player());
     assert_eq!(capped, MAX_FAVOUR);
 }
 
 #[test]
 fn checks_of_a_stat_take_the_talents_bonus() {
     let mut w = world("warrior");
-    let passive = w.search_modifier(super::search::Look::Passive, super::search::Hidden::Door(0));
+    let passive = w.search_modifier(
+        crate::world::skills::search::Look::Passive,
+        crate::world::skills::search::Hidden::Door(0),
+    );
     give(&mut w, "iron_will");
     assert_eq!(
-        w.search_modifier(super::search::Look::Passive, super::search::Hidden::Door(0)),
+        w.search_modifier(
+            crate::world::skills::search::Look::Passive,
+            crate::world::skills::search::Hidden::Door(0)
+        ),
         passive + 2
     );
     assert_eq!(mods(&w).vigour.check(Stat::Willpower), 2);

@@ -16,9 +16,9 @@
 //!
 //! Derived at cast time; nothing is saved. Nothing is clamped (decision 16).
 
-use super::{Actor, CastBy};
 use crate::content::{Content, Effect as ItemEffect, SpellData, SpellMods};
 use crate::talent::MagicEffect;
+use crate::world::{Actor, CastBy};
 
 impl Actor {
     /// What its talents, worn items, and rank do to a cast of `spell` of its own (module

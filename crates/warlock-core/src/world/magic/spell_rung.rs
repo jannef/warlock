@@ -23,7 +23,6 @@
 //!
 //! Integers only: a count, a sum, a minimum. Nothing holds what the hooks add (decision 16).
 
-use super::Actor;
 use super::cast::Reach;
 use crate::combat;
 use crate::content::{
@@ -32,6 +31,7 @@ use crate::content::{
 };
 use crate::dice::Roll;
 use crate::stats::{Stat, Stats};
+use crate::world::Actor;
 
 /// Who casts a spell, for the rung of its roll: the caster's own cast (by its stats and rungs), a
 /// spell scroll read at its own rungs, or a wand used at its own rungs.

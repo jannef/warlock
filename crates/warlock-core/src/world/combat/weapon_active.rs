@@ -22,7 +22,6 @@
 //! `fight.rs::resolve`; Piercing shot's flight, `shoot.rs::fly`) and cleared after it. Creatures
 //! use no actives. Deciding never draws: the blows draw as any blow does.
 
-use super::{Actor, ActorId, AttackSkills, Spent, World};
 use crate::ability::Ability;
 use crate::action::{AttackKind, Event};
 use crate::combat::{Blow, Profile, Target};
@@ -34,15 +33,16 @@ use crate::content::{
 use crate::dice::{Dice, Roll};
 use crate::geom::{Dir, Pos};
 use crate::text::capitalized;
+use crate::world::{Actor, ActorId, AttackSkills, Spent, World};
 
 /// The penetration an `ignore_protection` blow or shot has: more than any Protection, so none
 /// of it soaks (and no soak is drawn).
-pub(super) const ALL_PROTECTION: i32 = 1_000;
+pub(in crate::world) const ALL_PROTECTION: i32 = 1_000;
 
 /// The player's weapon active under way (not saved): what its attack does beyond a plain one
 /// that its profile cannot carry, read where the attack is resolved, cleared after it.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
-pub(super) struct Technique {
+pub(in crate::world) struct Technique {
     /// The Defence categories the next attack the player makes is rolled without (False lead): taken
     /// by that attack.
     pub(super) ignores: Categories,
@@ -51,24 +51,24 @@ pub(super) struct Technique {
     pub(super) pierce: bool,
     /// The next blow the player strikes is a sneak attack whatever its target knows (the
     /// thief's Exploit, `openings.rs`): taken by that blow.
-    pub(super) sneak: bool,
+    pub(in crate::world) sneak: bool,
     /// The openings the next blow the player strikes spends (Exploit, `openings.rs`; 0 none):
     /// taken by that blow, whose sneak dice they add to.
-    pub(super) exploit: u16,
+    pub(in crate::world) exploit: u16,
     /// The creature a thrown exploit is aimed at (`openings.rs`): `sneak` and `exploit` are
     /// taken by the attack on it only, and one on anyone else the missile meets first is a
     /// plain throw. `None`: the next attack's, whoever it strikes (Exploit's blow).
-    pub(super) at: Option<ActorId>,
+    pub(in crate::world) at: Option<ActorId>,
     /// Whether the thrown exploit hit the creature it was aimed at: set where `exploit` is taken.
-    pub(super) struck: bool,
+    pub(in crate::world) struck: bool,
     /// The free blow the player is about to strike from a lurk, at this creature stepping up
     /// beside them (`thief.rs`): taken by that blow.
-    pub(super) lurk: Option<ActorId>,
+    pub(in crate::world) lurk: Option<ActorId>,
 }
 
 /// What a weapon active was aimed at, as the action text gives it.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(super) enum Aimed {
+pub(in crate::world) enum Aimed {
     Nothing,
     Dir(Dir),
     Cell(Pos),
@@ -118,7 +118,12 @@ impl Actor {
 impl World {
     /// `use:ID[:DIR|:X,Y]` of weapon active `name` (module docs), aimed `aim`. Refused, taking
     /// no time, as the module docs say.
-    pub(super) fn use_weapon(&mut self, name: &str, aim: Aimed, events: &mut Vec<Event>) -> Spent {
+    pub(in crate::world) fn use_weapon(
+        &mut self,
+        name: &str,
+        aim: Aimed,
+        events: &mut Vec<Event>,
+    ) -> Spent {
         let content = self.content.clone();
         let me = self.state.player();
         let known = (content.weapon_ability_id(name))
@@ -395,7 +400,7 @@ impl World {
     /// `target` moves a cell along `dir`, if that cell is free (walkable, no trap, no ice, nobody
     /// there: a teleport's check, no draw): where it was, if it moved. Into a wall or another it
     /// stays where it is.
-    pub(super) fn drive_back(
+    pub(in crate::world) fn drive_back(
         &mut self,
         target: ActorId,
         dir: Dir,

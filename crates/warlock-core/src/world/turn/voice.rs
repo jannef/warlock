@@ -6,16 +6,16 @@
 //! source they do not see. The player made it, so they do not hear it; the map shows where it
 //! sounded ([`Event::VoiceThrown`]). An ability in the one registry ([`crate::ability`]).
 
-use super::{Spent, World};
 use crate::action::Event;
 use crate::content::ActionKind;
 use crate::geom::Pos;
 use crate::noise::Act;
+use crate::world::{Spent, World};
 
 impl World {
     /// The player throws their voice to `at`: refused, taking no time, without the ability (the
     /// bard's Throw your voice), on the overworld (which is silent), at their own cell, out of reach, or at a cell they do not see or that is solid.
-    pub(super) fn throw_voice(&mut self, at: Pos, events: &mut Vec<Event>) -> Spent {
+    pub(in crate::world) fn throw_voice(&mut self, at: Pos, events: &mut Vec<Event>) -> Spent {
         if !crate::ability::Ability::ThrowVoice.had_by(self.state.player(), &self.content) {
             self.say("You do not know how to throw your voice.");
             return Spent::Nothing;

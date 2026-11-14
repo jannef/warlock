@@ -2,11 +2,11 @@
 //! Silenced on everyone inside, which refuses casting, reading, and throwing one's voice, a
 //! creature's spells too; it eases soon after leaving.
 
-use super::*;
 use crate::action::Rest;
 use crate::content::{ActionKind, ContentFiles, StatusId};
 use crate::test_support::{last_text as last, run, said_text as said};
 use crate::time::Duration;
+use crate::world::*;
 
 /// A hall, 25 wide: the west part plain, the east part (x 14 on, walls included) a silent vault
 /// when `room`. A creature stands at `k` inside it.

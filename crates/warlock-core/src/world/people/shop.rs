@@ -34,7 +34,6 @@
 //! never shown but as gold. A deal made (goods paid for, the player's own sold) may train
 //! Negotiation ([`Use::Deal`]).
 
-use super::{ActorId, Deed, Spent, World};
 use crate::action::{Event, Meal, Positions};
 use crate::content::StatUse;
 use crate::content::{ActionKind, Content, MAX_FAVOUR, ShopId, ShopPlan, Shops, TerrainId};
@@ -43,6 +42,7 @@ use crate::grid::Grid;
 use crate::object::{self, Stack};
 use crate::skills::{Effect, Use};
 use crate::stats::Stat;
+use crate::world::{ActorId, Deed, Spent, World};
 use serde::{Deserialize, Serialize};
 
 /// How a shop's keeper stands toward the player.
@@ -217,15 +217,15 @@ pub fn unpaid_parts(inventory: &[Stack], unpaid: &[Stack]) -> Vec<u32> {
 /// bargaining), plus what a good keeper makes of their alignment (spec §8 "Alignment"), at most
 /// [`MAX_FAVOUR`] either way. Talents (spec §8 "Class abilities": the merchant's Haggler) add
 /// theirs before the cap. Never shown.
-pub fn favour(content: &Content, shops: &Shops, actor: &super::Actor) -> i32 {
-    let alignment = super::alignment::keeper_favour(content, shops, actor);
+pub fn favour(content: &Content, shops: &Shops, actor: &crate::world::Actor) -> i32 {
+    let alignment = crate::world::character::alignment::keeper_favour(content, shops, actor);
     (haggling(content, shops, actor) + alignment).clamp(-MAX_FAVOUR, MAX_FAVOUR)
 }
 
 /// What `actor`'s own gifts for haggling give, in percent, before the cap: their Presence,
 /// their skills, and their talents, without a keeper's view of their alignment. A service's
 /// price moves by it (`service.rs`: a healer's and a sage's, #1031).
-pub fn haggling(content: &Content, shops: &Shops, actor: &super::Actor) -> i32 {
+pub fn haggling(content: &Content, shops: &Shops, actor: &crate::world::Actor) -> i32 {
     let presence = actor.stats.modifier(Stat::Presence) * i32::from(shops.presence);
     let bargain = actor.skill_effect(content, Effect::Bargain);
     presence + bargain + actor.talent_mods(content).fortune.favour_percent
@@ -242,7 +242,7 @@ pub fn count_of(stacks: &[Stack], object: crate::content::ObjectId) -> u32 {
 
 /// Takes `amount` of `object` out of `stacks`, from the last stack back. Returns the positions
 /// of the stacks that emptied and are gone (to follow with the equipment).
-pub(super) fn take(
+pub(in crate::world) fn take(
     stacks: &mut Vec<Stack>,
     object: crate::content::ObjectId,
     amount: u32,
@@ -289,19 +289,19 @@ impl World {
     }
 
     /// The open shop the player stands in on the current level: its index.
-    pub(super) fn shop_here(&self) -> Option<usize> {
+    pub(in crate::world) fn shop_here(&self) -> Option<usize> {
         let here = self.player_pos();
         (self.state.current().shops.iter()).position(|s| s.is_open() && s.contains(here))
     }
 
     /// The player's favour in prices now.
-    pub(super) fn player_favour(&self) -> i32 {
+    pub(in crate::world) fn player_favour(&self) -> i32 {
         favour(&self.content, self.shop_kinds(), self.state.player())
     }
 
     /// A deal was made (goods paid for, or sold): Negotiation's mark, Presence's for the trade,
     /// and another of Presence's when Negotiation bettered the price.
-    pub(super) fn train_deal(&mut self) {
+    pub(in crate::world) fn train_deal(&mut self) {
         self.train(Use::Deal);
         self.train_stat(StatUse::Trade);
         if self
@@ -321,7 +321,7 @@ impl World {
 
     /// What `stack` lying at `p` costs, if it is for sale there: in an open shop, traded, and
     /// not rotten food.
-    pub(super) fn asking_price(&self, p: Pos, stack: &Stack) -> Option<u32> {
+    pub(in crate::world) fn asking_price(&self, p: Pos, stack: &Stack) -> Option<u32> {
         let shops = self.content.shops()?;
         let shop = (self.state.current().shops.iter()).find(|s| s.is_open() && s.contains(p))?;
         if self.spoilt(stack) {
@@ -333,7 +333,7 @@ impl World {
 
     /// The player picked up `got` in the open shop they stand in: what is for sale is now unpaid.
     /// Returns the price of each stack (`None` for what is free to take: rotten food too).
-    pub(super) fn picked_up_goods(&mut self, got: &[Stack]) -> Vec<Option<u32>> {
+    pub(in crate::world) fn picked_up_goods(&mut self, got: &[Stack]) -> Vec<Option<u32>> {
         let Some(i) = self.shop_here() else {
             return vec![None; got.len()];
         };
@@ -361,14 +361,14 @@ impl World {
     /// is now owed for; unpaid food from the pack stays owed, as the bill counts by object and
     /// nothing that uses goods up takes them off it. The keeper says so. (Rotten food lying
     /// there was worth nothing; unpaid food from the pack is priced as the bill prices it.)
-    pub(super) fn ate_goods(&mut self, meal: Meal, food: &Stack) {
+    pub(in crate::world) fn ate_goods(&mut self, meal: Meal, food: &Stack) {
         self.consumed_goods(meal, food, false);
     }
 
     /// [`World::ate_goods`] for a potion drunk (spec §8 "Potions"): bought as food eaten is, and
     /// named as the player knows it ("You drink it, you buy it: 40 gold for the fizzy red
     /// potion.").
-    pub(super) fn drank_goods(&mut self, meal: Meal, potion: &Stack) {
+    pub(in crate::world) fn drank_goods(&mut self, meal: Meal, potion: &Stack) {
         self.consumed_goods(meal, potion, true);
     }
 
@@ -420,7 +420,7 @@ impl World {
     }
 
     /// Whom the player owes how much in the open shop they stand in, if anything.
-    pub(super) fn owing(&self) -> Option<(String, u32)> {
+    pub(in crate::world) fn owing(&self) -> Option<(String, u32)> {
         let shop = &self.state.current().shops[self.shop_here()?];
         let owed = shop.owed(self.shop_kinds(), &self.content, self.player_favour());
         (owed > 0).then(|| (shop.name.clone(), owed))
@@ -482,7 +482,7 @@ impl World {
     /// the player's own things, a drop says what the shop offers for what it buys and keeps
     /// them, a sale takes the offer from the keeper's purse. Returns `None` outside an open
     /// shop.
-    pub(super) fn trade(&mut self, positions: &Positions, sell: bool) -> Option<Spent> {
+    pub(in crate::world) fn trade(&mut self, positions: &Positions, sell: bool) -> Option<Spent> {
         let i = self.shop_here()?;
         let len = self.state.player().inventory.len();
         if len == 0 {
@@ -618,7 +618,7 @@ impl World {
 
     /// Whether the player may shoot or throw inventory stack `item` here: not unpaid goods in the
     /// shop they stand in. Says why not.
-    pub(super) fn may_loose(&mut self, item: usize) -> bool {
+    pub(in crate::world) fn may_loose(&mut self, item: usize) -> bool {
         let Some(i) = self.shop_here() else {
             return true;
         };
@@ -635,7 +635,7 @@ impl World {
     /// The open shop the player owes that a step from `from` onto `to` leaves by one of its
     /// ways out, if any: the step its keeper turns back ([`World::turned_back`]), and one a
     /// charge may not take (`charge.rs`).
-    pub(super) fn owing_exit(&self, from: Pos, to: Pos) -> Option<&Shop> {
+    pub(in crate::world) fn owing_exit(&self, from: Pos, to: Pos) -> Option<&Shop> {
         (self.state.current().shops.iter())
             .find(|s| s.is_open() && s.contains(from) && s.is_exit(to) && !s.unpaid.is_empty())
     }
@@ -645,7 +645,7 @@ impl World {
     /// owe it something. They are pushed one cell away from the way out, the other way from the
     /// step, or else onto the nearest free cell of the shop floor (the first in row order among
     /// the nearest), or else they stay where they are. Says why.
-    pub(super) fn turned_back(&mut self, from: Pos, to: Pos) -> Option<Pos> {
+    pub(in crate::world) fn turned_back(&mut self, from: Pos, to: Pos) -> Option<Pos> {
         let shop = self.owing_exit(from, to)?.clone();
         let level = self.state.current();
         let free = |p: Pos| {
@@ -675,7 +675,7 @@ impl World {
     /// The player stepped from `from` to `to` on the current level: entering an open shop the
     /// keeper greets them; leaving one owing anything (any way but its ways out, which turn them
     /// back) is theft (spec §7 "Shops").
-    pub(super) fn shop_step(&mut self, from: Pos, to: Pos) {
+    pub(in crate::world) fn shop_step(&mut self, from: Pos, to: Pos) {
         let content = self.content.clone();
         for i in 0..self.state.current().shops.len() {
             let shop = &self.state.current().shops[i];
@@ -711,7 +711,7 @@ impl World {
 
     /// The player attacked actor `target`: a keeper of an open shop on the current level is
     /// outraged (said after the attack's own messages).
-    pub(super) fn provoke(&mut self, target: ActorId) {
+    pub(in crate::world) fn provoke(&mut self, target: ActorId) {
         let shops = &self.state.current().shops;
         let Some(i) = shops.iter().position(|s| s.is_open() && s.keeper == target) else {
             return;
@@ -726,7 +726,7 @@ impl World {
     /// Actor `victim` caught the player stealing from it (spec §8 "Stealing"): a keeper of an
     /// open shop on the current level is outraged, as a robbed one is, and says so. Returns
     /// whether it was one.
-    pub(super) fn caught_stealing(&mut self, victim: ActorId) -> bool {
+    pub(in crate::world) fn caught_stealing(&mut self, victim: ActorId) -> bool {
         let shops = &self.state.current().shops;
         let Some(i) = shops.iter().position(|s| s.is_open() && s.keeper == victim) else {
             return false;
@@ -738,7 +738,7 @@ impl World {
     }
 
     /// Actor `id` on level `level` died: a shop it kept is abandoned, its goods free to take.
-    pub(super) fn keeper_died(&mut self, id: ActorId, level: &str) {
+    pub(in crate::world) fn keeper_died(&mut self, id: ActorId, level: &str) {
         let Some(level) = self.state.levels.get_mut(level) else {
             return;
         };
@@ -750,7 +750,11 @@ impl World {
 
     /// [`crate::action::Action::Pay`]: pays ([`World::pay`]) and, with a direction, steps that
     /// way at once. Paid, the player steps out at once; a step that fails leaves them paid.
-    pub(super) fn pay_then(&mut self, then: Option<Dir>, events: &mut Vec<Event>) -> Spent {
+    pub(in crate::world) fn pay_then(
+        &mut self,
+        then: Option<Dir>,
+        events: &mut Vec<Event>,
+    ) -> Spent {
         let paid = self.pay();
         match (paid, then) {
             (Spent::NoTime, Some(dir)) => match self.player_moves(dir, events) {

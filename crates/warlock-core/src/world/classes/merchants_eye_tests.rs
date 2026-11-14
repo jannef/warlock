@@ -2,13 +2,13 @@
 //! stack the player carries (`use:merchants_eye:c`), identifies it as the scroll of identify
 //! would, for the time of a reading, with nothing else spent.
 
-use super::*;
 use crate::ability::{Ability, Aim};
 use crate::action::parse_actions;
 use crate::content::{ActionKind, ClassActive, ContentFiles, Rarity};
 use crate::item_list::ItemList;
 use crate::magic::{Affix, Magic};
 use crate::test_support::{last, run};
+use crate::world::*;
 
 const EYE: ClassActive = ClassActive::MerchantsEye;
 

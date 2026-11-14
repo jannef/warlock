@@ -1,14 +1,14 @@
-//! Forgotten altars and prayer (spec §7 "Special rooms"; `world/pray.rs`, `world/outcome.rs`):
+//! Forgotten altars and prayer (spec §7 "Special rooms"; `world/fixtures/pray.rs`, `world/fixtures/outcome.rs`):
 //! the Here group lists Pray only beside an altar, a broken prayer gives nothing, the lean by
 //! side and band (Pious), the hooks, the shares of the draw, exhaustion, the explosion, the
 //! deed, and a spent altar kept as terrain alone.
 
-use super::*;
 use crate::ability::Ability;
 use crate::alignment::{Alignment, Score};
 use crate::content::{ContentFiles, OutcomeDef, OutcomeKind, OutcomeTable};
 use crate::test_support::{builtin, said_text as said};
-use crate::world::outcome::leaned_kinds;
+use crate::world::fixtures::outcome::leaned_kinds;
+use crate::world::*;
 
 /// A room with a forgotten altar at (5, 2), the player beside it at (4, 3), and at `k` a kobold
 /// (also beside it), when asked for.

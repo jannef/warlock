@@ -2,9 +2,9 @@
 //! never one the race teaches everyone; each trains its skill, hands down its tools, and makes
 //! the skill's level-up roll a step up.
 
-use super::*;
 use crate::character::CharacterSpec;
 use crate::object::Stack;
+use crate::world::*;
 use std::sync::LazyLock;
 
 // Without background stories: what the trades alone hand down.

@@ -24,7 +24,6 @@
 //! `song` action's `blocks` (`data/status/`), while Silenced. Nothing is drawn but the
 //! training marks and a hearers song's checks.
 
-use super::{ActorId, Spent, World};
 use crate::action::Event;
 use crate::check;
 use crate::content::{ActionKind, ClassActive, SongOn, Stance, StatUse, StatusId};
@@ -32,6 +31,7 @@ use crate::noise::Act;
 use crate::skills::{Effect, Use};
 use crate::stats::Stat;
 use crate::talent::SongCost;
+use crate::world::{ActorId, Spent, World};
 
 impl World {
     /// The player sings song `active` (see the module docs); [`World::may_use_class`] has

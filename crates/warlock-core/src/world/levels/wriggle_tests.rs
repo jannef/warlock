@@ -1,13 +1,13 @@
 //! Wriggling past (`wriggle.rs`, #1032): a step into a creature that keeps its post is a refusal
 //! untrained and an automatic Escape artist check trained.
 
-use super::talk::Refusal;
-use super::*;
 use crate::content::ContentFiles;
 use crate::geom::{Dir, Pos};
 use crate::skills::{SkillId, Trained};
 use crate::stats::{PerStat, Stat, Stats};
 use crate::test_support::last_text as last;
+use crate::world::people::talk::Refusal;
+use crate::world::*;
 
 /// The player and a shopkeeper keeping its post east of them.
 const ROOM: &str = "#########\n#.@s....#\n#.......#\n#########\n";
@@ -149,7 +149,7 @@ fn the_other_refusals_stand_for_the_trained() {
     for why in [Refusal::TooBig, Refusal::Water] {
         assert!(matches!(
             w.wriggle(id, why, Pos::new(3, 1), true),
-            wriggle::Wriggled::No
+            super::wriggle::Wriggled::No
         ));
     }
 }

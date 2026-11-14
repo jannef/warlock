@@ -5,10 +5,10 @@
 //! the player is `afflict(player, status, 1, player)`).
 //!
 //! - **Stats**: a `penalty` may raise scores as well as lower them (Raging: Strength +2); every
-//!   rule reads them through [`super::Actor::effective_stats`].
+//!   rule reads them through [`crate::world::Actor::effective_stats`].
 //! - **Fighting**: a status's `combat` to-hit and damage join every attack profile with the
-//!   combat stance's ([`super::Actor::stanced`]); its Dodge and Parry join the actor's Defence
-//!   ([`super::Actor::defence`]). Creatures too: a hex is a status on a creature.
+//!   combat stance's ([`crate::world::Actor::stanced`]); its Dodge and Parry join the actor's Defence
+//!   ([`crate::world::Actor::defence`]). Creatures too: a hex is a status on a creature.
 //! - **Slowness**: its `cost` multiplies the price of every action the actor takes, after its
 //!   burden and hunger (`World::burdened`, the one place every price passes).
 //! - **Blocks**: the player cannot take an action of a kind a status of theirs `blocks` (a raging
@@ -24,17 +24,17 @@
 //!   cannot be used ([`crate::ability::Unavailable::While`]), a visible limit that only time
 //!   lifts.
 
-use super::{Spent, World};
 use crate::action::{Action, Event};
 use crate::content::{ActionKind, Stance};
 use crate::geom::Dir;
 use crate::status::Effect;
 use crate::world::ActorId;
+use crate::world::{Spent, World};
 
 impl World {
     /// Refuses the player's `action` while one of their statuses blocks actions of its kind
     /// ("You cannot read while raging."), taking no time; `None` lets it go ahead.
-    pub(super) fn refuse_blocked(&mut self, action: &Action) -> Option<Spent> {
+    pub(in crate::world) fn refuse_blocked(&mut self, action: &Action) -> Option<Spent> {
         let kind = self.kind_of(action)?;
         let status = (self.state.player().effects).blocking(&self.content, kind)?;
         let name = self.content.status(status).name.to_lowercase();
@@ -165,7 +165,12 @@ impl World {
     /// last were): the player is told, each status that one `follows` begins at one degree,
     /// caused by whoever caused the one that ended, and hit points above a maximum an ended
     /// status raised fall back within it.
-    pub(super) fn ended(&mut self, id: ActorId, ended: &[Effect], events: &mut Vec<Event>) {
+    pub(in crate::world) fn ended(
+        &mut self,
+        id: ActorId,
+        ended: &[Effect],
+        events: &mut Vec<Event>,
+    ) {
         if ended.is_empty() {
             return;
         }

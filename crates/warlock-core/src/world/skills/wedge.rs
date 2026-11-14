@@ -10,7 +10,6 @@
 //! goes with the closed door ([`World::set_terrain`]). Refused, taking no time, without the
 //! skill, a closed door that way, or a door already wedged. Marks Woodcraft ([`Use::Wedge`]).
 
-use super::{ActorId, Spent, World};
 use crate::ability::Ability;
 use crate::action::Event;
 use crate::content::ActionKind;
@@ -19,10 +18,11 @@ use crate::geom::{Dir, Pos};
 use crate::noise::Act;
 use crate::skills::{Effect, Use};
 use crate::stats::Stat;
+use crate::world::{ActorId, Spent, World};
 
 impl World {
     /// The player wedges the door in `dir` shut (module docs).
-    pub(super) fn wedge(&mut self, dir: Dir) -> Spent {
+    pub(in crate::world) fn wedge(&mut self, dir: Dir) -> Spent {
         let player = self.state.player;
         if !Ability::Wedge.had_by(self.state.player(), &self.content) {
             self.say("You do not know how to wedge a door.");
@@ -54,14 +54,14 @@ impl World {
     }
 
     /// What the wedge at `p` adds to the door's sturdiness; 0 where none is.
-    pub(super) fn wedge_at(&self, p: Pos) -> u8 {
+    pub(in crate::world) fn wedge_at(&self, p: Pos) -> u8 {
         self.state.current().wedged.get(&p).copied().unwrap_or(0)
     }
 
     /// Creature `id` kicks at the wedged door at `to` instead of opening it: a kick's price, and
     /// the door breaks with the chance of its Strength in the door's sturdiness and the wedge's
     /// points. Returns what it cost.
-    pub(super) fn creature_kicks_wedge(
+    pub(in crate::world) fn creature_kicks_wedge(
         &mut self,
         id: ActorId,
         to: Pos,

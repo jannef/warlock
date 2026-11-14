@@ -5,15 +5,18 @@
 //! a list of its own, so a skill added later is taken up too. Trained from then on, the skills
 //! are shown, marked by use, rollable at a level, and trained at all for every rule that asks.
 
-use super::World;
 use crate::content::TalentEffect;
 use crate::rng::Rng;
 use crate::talent::GrowthEffect;
+use crate::world::World;
 
 impl World {
     /// Every `take_up_skills` of `effects` (a talent just taken or given) trains each skill the
     /// player lacks at its dice; returns how many were taken up.
-    pub(super) fn take_up_skills(&mut self, effects: impl Iterator<Item = TalentEffect>) -> usize {
+    pub(in crate::world) fn take_up_skills(
+        &mut self,
+        effects: impl Iterator<Item = TalentEffect>,
+    ) -> usize {
         let content = self.content.clone();
         let mut taken = 0;
         for effect in effects {

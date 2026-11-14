@@ -13,11 +13,11 @@
 //! - a missile that reaches it stops there, hit or miss, and drops beside it, or is destroyed
 //!   by its `breaks` chance ([`World::dummy_catches`], called by `World::fly`).
 
-use super::{ActorId, World};
 use crate::action::AttackKind;
 use crate::content::{DummyTraining, WeaponSkillId};
 use crate::geom::{Dir, Pos};
 use crate::object::Stack;
+use crate::world::{ActorId, World};
 
 /// Said once a skill or style reaches the rank past which a dummy teaches nothing.
 pub(crate) const LEARNED_ALL: &str = "You have learned all the dummy can teach you.";

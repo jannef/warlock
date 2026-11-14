@@ -2,10 +2,10 @@
 //! whom, the initiative check, and the Surprised status, both ways round.
 //!
 //! - [`World::unaware`] is the one definition. A creature is unaware of an actor when it hunts
-//!   no one it has seen ([`super::Mind::last_seen`] unset) and its eyes, by creature sight
+//!   no one it has seen ([`crate::world::Mind::last_seen`] unset) and its eyes, by creature sight
 //!   ([`crate::sight`]), do not see the actor's cell now; asleep or disguised, whatever it sees.
 //!   The player is unaware of a creature their last perception did not see and they have not
-//!   seen within `memory_turns` turns ([`super::Mind::noticed`], set by [`World::mark_noticed`] in
+//!   seen within `memory_turns` turns ([`crate::world::Mind::noticed`], set by [`World::mark_noticed`] in
 //!   the turn pipeline, and by [`World::startle`] for an attacker that caught them unawares: its
 //!   first blow surprises, the next ones do not). It draws nothing.
 //! - [`World::startle`] is the one place anyone is surprised: by an attack that finds its target
@@ -23,7 +23,6 @@
 //! Without `data/surprise.toml` nobody is surprised: no check, no status, no strip, and the
 //! player is never unaware (a creature's half still decides the ambush dice, `ambush.rs`).
 
-use super::{ActorId, ActorKind, World, WorldState};
 use crate::action::{Caught, Event};
 use crate::check;
 use crate::combat::{Category, Target};
@@ -33,6 +32,7 @@ use crate::light::LightCache;
 use crate::sight::{self, LineOfSight};
 use crate::skills::{Effect, Use};
 use crate::stats::Stat;
+use crate::world::{ActorId, ActorKind, World, WorldState};
 
 /// What counts nothing toward a flat-footed target's Defence: the categories that react.
 const FLAT_FOOTED: [Category; 2] = [Category::Dexterity, Category::Dodge];
@@ -135,7 +135,7 @@ impl World {
     /// Whether creature `id`'s eyes see actor `other`'s cell now, by creature sight
     /// ([`crate::sight`]): within its sight radius, in its line of sight, light enough for its
     /// eyes (the Transfixing stare asks it). Never for the player.
-    pub(super) fn sees_now(&mut self, id: ActorId, other: ActorId) -> bool {
+    pub(in crate::world) fn sees_now(&mut self, id: ActorId, other: ActorId) -> bool {
         let World {
             state,
             content,
@@ -148,7 +148,7 @@ impl World {
     /// The player has just perceived the world: every creature they see now is one they have
     /// noticed this turn. Called from `perceive` in the turn pipeline only, never when the
     /// snapshot is recomputed from a saved state.
-    pub(super) fn mark_noticed(&mut self) {
+    pub(in crate::world) fn mark_noticed(&mut self) {
         if self.content.surprise().is_none() {
             return;
         }
@@ -200,14 +200,19 @@ impl World {
     /// Whether actor `id` suffers a flat-footed status now (`flat_footed` in data: Surprised,
     /// Stunned). The one read of the field: Defence ([`World::flat_footed`]), free blows
     /// (`free_blow.rs`, `weapon_ability.rs::approached`), and sneak dice (`ambush.rs::sneaks`).
-    pub(super) fn off_guard(&self, id: ActorId) -> bool {
+    pub(in crate::world) fn off_guard(&self, id: ActorId) -> bool {
         (self.state.actors.get(&id)).is_some_and(|a| a.effects.flat_footed(&self.content))
     }
 
     /// `struck`, actor `target`'s Defence against an attack, flat-footed (nothing of its
     /// Dexterity or Dodge) when it is `unaware` of the attacker or suffers a flat-footed status
     /// (Surprised, Stunned: [`World::off_guard`]).
-    pub(super) fn flat_footed(&self, target: ActorId, unaware: bool, struck: Target) -> Target {
+    pub(in crate::world) fn flat_footed(
+        &self,
+        target: ActorId,
+        unaware: bool,
+        struck: Target,
+    ) -> Target {
         let caught = (unaware && self.content.surprise().is_some()) || self.off_guard(target);
         if caught {
             struck.without(FLAT_FOOTED)
@@ -223,7 +228,7 @@ impl World {
     /// The player is told what came of it (after the fact, never the roll). A check made
     /// against an attacker beside it may be answered with Hair trigger's blow at once
     /// (`free_blow.rs`); returns whether `by` still stands to make its attack (true for a trap).
-    pub(super) fn startle(
+    pub(in crate::world) fn startle(
         &mut self,
         target: ActorId,
         by: Option<ActorId>,
@@ -289,7 +294,7 @@ impl World {
     /// it now (the check failed, or a disguised mimic); else already flat-footed (Surprised,
     /// Stunned). A check made is said by itself ("The kobold whirls to face you."), so is not
     /// told again. `None` when Hair trigger's blow cut the attacker down.
-    pub(super) fn caught_by(
+    pub(in crate::world) fn caught_by(
         &mut self,
         attacker: ActorId,
         target: ActorId,
@@ -337,7 +342,7 @@ impl World {
     /// The `cost` percent status `status` puts on actor `id`'s actions: its data's, but
     /// Surprised's extra eased by the actor's Initiative skill and talents (Cool head), and
     /// Staggered's by its Balance ([`Effect::SteadyEase`]), together at most all of it.
-    pub(super) fn status_cost(&self, id: ActorId, status: StatusId) -> u32 {
+    pub(in crate::world) fn status_cost(&self, id: ActorId, status: StatusId) -> u32 {
         let cost = self.content.status(status).cost;
         if cost <= 100 {
             return cost;
@@ -360,7 +365,7 @@ impl World {
 
 /// Marks the attack of `by` on `target` among `made` (a spell's events, the first of them its
 /// own) with how it found its target, `caught`.
-pub(super) fn mark_caught(
+pub(in crate::world) fn mark_caught(
     made: &mut [Event],
     (by, at): (ActorId, ActorId),
     caught: Option<Caught>,
@@ -382,7 +387,11 @@ pub(super) fn mark_caught(
 /// `name`, a creature's type's, as an attack that found it `caught` calls it: "sleeping
 /// kobold", "unsuspecting kobold", "stunned kobold" (by its status's `seen` word); its own
 /// name when the attack found it aware.
-pub(super) fn caught_name(content: &Content, name: &str, caught: Option<Caught>) -> String {
+pub(in crate::world) fn caught_name(
+    content: &Content,
+    name: &str,
+    caught: Option<Caught>,
+) -> String {
     let word = match caught {
         None => None,
         Some(Caught::Asleep) => Some("sleeping"),

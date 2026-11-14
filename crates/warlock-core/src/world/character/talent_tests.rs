@@ -3,8 +3,6 @@
 //! each talent changes the one rule it names, picks nothing can be spent on are dropped, and
 //! all of it survives saves and replays while runs without talents hash as before.
 
-use super::search::{Hidden, Look};
-use super::*;
 use crate::action::parse_actions;
 use crate::character::CharacterSpec;
 use crate::content::{ContentFiles, Factor};
@@ -13,9 +11,11 @@ use crate::noise::{self, Act};
 use crate::replay::Replay;
 use crate::stats::{PerStat, Stat, Stats};
 use crate::test_support::{last, run};
+use crate::world::skills::search::{Hidden, Look};
+use crate::world::*;
 use std::sync::LazyLock;
 
-/// The built-in content without the class tables (`world/class_tests.rs` has those): the
+/// The built-in content without the class tables (`world/classes/class_tests.rs` has those): the
 /// warrior's bonus picks and abilities stay out of the talents' way.
 static BUILTIN: LazyLock<Arc<Content>> = LazyLock::new(|| {
     let mut files = ContentFiles::builtin();
@@ -33,11 +33,11 @@ fn world_with(content: Arc<Content>) -> World {
     let w =
         World::with_character(content.clone(), "showcase", Some(7), Some(&spec)).expect("world");
     // Born under no sign, so the talents held are the ones picked (a sign's gifts are talents
-    // too: world/stars_tests.rs).
+    // too: world/character/stars_tests.rs).
     let mut state = w.state().clone();
     state.character.as_mut().expect("a character").sign = None;
     let mut w = World::from_state(content.clone(), state).expect("restores");
-    // Nor the race's grant (a human's Versatile, world/racial_tests.rs) until a restore.
+    // Nor the race's grant (a human's Versatile, world/character/racial_tests.rs) until a restore.
     w.player_mut().talents.regrant(&content, &[]);
     w
 }

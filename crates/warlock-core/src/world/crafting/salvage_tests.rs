@@ -1,9 +1,8 @@
-//! Salvage (docs/design/professions.md §5; `world/salvage.rs`): the owner's ruby-tipped hardwood
+//! Salvage (docs/design/professions.md §5; `world/crafting/salvage.rs`): the owner's ruby-tipped hardwood
 //! quarterstaff with both, one, and neither check made; a gem's size and cut kept, chipped, or
 //! shattered; the untrained still rolling; every refusal with no time; an interruption; the
 //! marks; a replay; and a profession's craft read for its own skill alone.
 
-use super::*;
 use crate::ability::Ability;
 use crate::action::parse_actions;
 use crate::content::{ContentFiles, Cutting, ObjectId};
@@ -14,6 +13,7 @@ use crate::replay::Replay;
 use crate::skills::{Effect, SkillId, Trained};
 use crate::stats::{PerStat, Stats};
 use crate::test_support::{builtin, said_text as said, texts};
+use crate::world::*;
 use std::sync::LazyLock;
 
 const ROOM: &str = "\

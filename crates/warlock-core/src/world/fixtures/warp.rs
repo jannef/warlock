@@ -8,15 +8,15 @@
 //! last, so a trap that already moved the stepper leaves nothing to warp. An incorporeal
 //! creature passing through presses no trap and is never warped either.
 
-use super::{ActorId, World};
 use crate::action::Event;
 use crate::geom::Pos;
 use crate::text::capitalized;
+use crate::world::{ActorId, World};
 
 impl World {
     /// Actor `who` has just stepped onto `at`: in an unstable room it may be moved elsewhere on
     /// the level (module docs).
-    pub(super) fn warp_step(&mut self, at: Pos, who: ActorId, events: &mut Vec<Event>) {
+    pub(in crate::world) fn warp_step(&mut self, at: Pos, who: ActorId, events: &mut Vec<Event>) {
         let level = self.state.current();
         let chance = level.effects_at(&self.content, at).warp();
         let standing =

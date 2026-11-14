@@ -2,13 +2,13 @@
 //! the time it takes, dropping what is worn, weight, saves and replays, and what creatures wear
 //! and wield.
 
-use super::fixture_factions::make_peace;
-use super::*;
 use crate::action::{letter, parse_actions};
 use crate::content::ContentFiles;
 use crate::equipment;
 use crate::replay::Replay;
 use crate::test_support::last_text as last_message;
+use crate::world::creatures::fixture_factions::make_peace;
+use crate::world::*;
 
 // The player stands on a pile of arms and armor in a fully lit room; a kobold with a short sword
 // stands in sight, and one with a spear and a jerkin behind a closed door.

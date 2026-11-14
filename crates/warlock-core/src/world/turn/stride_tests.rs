@@ -3,11 +3,11 @@
 //! acts turn by turn, and outside a rest nothing changes; the rest's look at who came into view
 //! sees what a perception would.
 
-use super::*;
 use crate::action::parse_actions;
 use crate::content::ContentFiles;
 use crate::replay::Replay;
 use crate::test_support::run;
+use crate::world::*;
 use std::sync::LazyLock;
 
 const TERRAIN: &str = r##"

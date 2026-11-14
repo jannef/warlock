@@ -3,7 +3,6 @@
 //! come from the class's trees, each passive changes the rule it names, and each active is used
 //! from the abilities menu with its cooldown.
 
-use super::*;
 use crate::ability::{Ability, Unavailable};
 use crate::action::parse_actions;
 use crate::character::CharacterSpec;
@@ -12,11 +11,12 @@ use crate::dump::{self, Layer};
 use crate::replay::Replay;
 use crate::stats::{PerStat, Stat, Stats};
 use crate::test_support::{CONTENT as BUILTIN, last, run, said};
+use crate::world::*;
 
 /// A human of `class` in the showcase (seed 7), with their kit, every score 14.
 /// A human of `class` in the showcase, born under no sign, so a sign's gifts (Rise from the
 /// ashes among them) leave the class's rules as the tests rig them.
-pub(super) fn world(class: &str) -> World {
+pub(in crate::world) fn world(class: &str) -> World {
     let spec: CharacterSpec = format!("human,male,{class}").parse().expect("a character");
     // Creation picks that no test here reads (a human's three: Versatile adds one).
     let spec = spec.with_talents(vec!["keen_ears".into(), "lean".into(), "pious".into()]);
@@ -39,7 +39,7 @@ pub(super) fn world(class: &str) -> World {
 }
 
 /// Grants the XP that takes the player to `level` and spends every choice it brings.
-pub(super) fn reach(world: &mut World, level: u8) {
+pub(in crate::world) fn reach(world: &mut World, level: u8) {
     let spec = world.state.character.as_ref().map(|c| &c.spec);
     let factor = Factor::of(world.content(), spec);
     let need = world.content().experience().threshold_for(level, factor);
@@ -57,7 +57,7 @@ pub(super) fn reach(world: &mut World, level: u8) {
 /// The player untrained in athletics: `levelup:auto` spends the skill rolls on the first trained
 /// skill, athletics, whose speed (#548) would quicken them, and these tests time actions at
 /// normal speed.
-pub(super) fn at_normal_speed(world: &mut World) {
+pub(in crate::world) fn at_normal_speed(world: &mut World) {
     let athletics = world.content().skill_id("athletics").expect("athletics");
     let player = world.player_mut();
     player.skills = (player.skills.iter())
@@ -69,7 +69,7 @@ fn status(world: &World, id: &str) -> StatusId {
     world.content().status_id(id).expect("a status")
 }
 
-pub(super) fn suffers(world: &World, who: ActorId, id: &str) -> bool {
+pub(in crate::world) fn suffers(world: &World, who: ActorId, id: &str) -> bool {
     world.state.actors[&who].effects.has(status(world, id))
 }
 
@@ -87,7 +87,7 @@ fn own(world: &World, active: ClassActive) -> Option<Option<Unavailable>> {
 }
 
 /// A creature of type `creature` placed east of the player, with `hp` hit points; its id.
-pub(super) fn beside(world: &mut World, creature: &str, hp: i32) -> ActorId {
+pub(in crate::world) fn beside(world: &mut World, creature: &str, hp: i32) -> ActorId {
     let content = world.content().clone();
     let at = world.player_pos().step(Dir::E);
     let template = (world.state.actors.values())
@@ -469,19 +469,34 @@ fn blood_frenzy_and_unstoppable_keep_the_rage() {
     set_rage(&mut w, 25);
     let kobold = beside(&mut w, "kobold", 5);
     let mut events = Vec::new();
-    assert!(!w.hurt(player, 999, fight::Harm::Actor(kobold), &mut events));
+    assert!(!w.hurt(
+        player,
+        999,
+        crate::world::combat::fight::Harm::Actor(kobold),
+        &mut events
+    ));
     assert_eq!(w.state.player().hp, 1);
     assert_eq!(rage(&w), Some(15));
     assert!(suffers(&w, player, "raging"), "the rage goes on");
-    assert!(!w.hurt(player, 999, fight::Harm::Actor(kobold), &mut events));
+    assert!(!w.hurt(
+        player,
+        999,
+        crate::world::combat::fight::Harm::Actor(kobold),
+        &mut events
+    ));
     assert_eq!(rage(&w), Some(5));
     // (This berserker is a Phoenix: its one rising spent, nothing more stands between.)
     w.state
         .progress
         .once
-        .insert(super::stars::RISEN.to_string());
+        .insert(crate::world::character::stars::RISEN.to_string());
     assert!(
-        w.hurt(player, 999, fight::Harm::Actor(kobold), &mut events),
+        w.hurt(
+            player,
+            999,
+            crate::world::combat::fight::Harm::Actor(kobold),
+            &mut events
+        ),
         "too little rage left to hold on"
     );
     // Spending the last of it ends the rage: exhaustion follows.
@@ -491,7 +506,12 @@ fn blood_frenzy_and_unstoppable_keep_the_rage() {
     run(&mut w, "use:rage");
     set_rage(&mut w, 10);
     let kobold = beside(&mut w, "kobold", 5);
-    assert!(!w.hurt(player, 999, fight::Harm::Actor(kobold), &mut events));
+    assert!(!w.hurt(
+        player,
+        999,
+        crate::world::combat::fight::Harm::Actor(kobold),
+        &mut events
+    ));
     assert_eq!((w.state.player().hp, rage(&w)), (1, None));
     assert!(!suffers(&w, player, "raging") && suffers(&w, player, "exhausted"));
 }

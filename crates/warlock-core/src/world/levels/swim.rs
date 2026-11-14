@@ -20,9 +20,6 @@
 //! **Creatures** stay out and close in on the shore ([`World::route_to_shore`]); allies too, and
 //! none is swapped into the water (`Refusal::Water`).
 
-use super::ai::Route;
-use super::fight::Harm;
-use super::{Actor, ActorId, Event, Spent, World};
 use crate::burden::Burden;
 use crate::content::Content;
 use crate::damage::Damage;
@@ -30,6 +27,9 @@ use crate::geom::Pos;
 use crate::object::LightMode;
 use crate::skills::{Effect, Use};
 use crate::stats::Stat;
+use crate::world::combat::fight::Harm;
+use crate::world::creatures::ai::Route;
+use crate::world::{Actor, ActorId, Event, Spent, World};
 
 /// How far from a swimmer a creature that cannot reach them looks for a place to wait.
 const SHORE_REACH: i32 = 16;
@@ -59,13 +59,13 @@ fn burden_above(burden: Burden) -> i32 {
 
 impl World {
     /// Whether the player is in deep water.
-    pub(super) fn swimming(&self) -> bool {
+    pub(in crate::world) fn swimming(&self) -> bool {
         let level = self.state.current();
         (level.terrain.get(self.player_pos())).is_some_and(|t| self.content.terrain(*t).swim)
     }
 
     /// `said`, with no time, if the player is in deep water. Whether they are.
-    pub(super) fn refused_afloat(&mut self, said: &str) -> bool {
+    pub(in crate::world) fn refused_afloat(&mut self, said: &str) -> bool {
         let swimming = self.swimming();
         if swimming {
             self.say(said);
@@ -136,7 +136,7 @@ impl World {
     }
 
     /// In deep water, the player's ready light goes out, if it is burning.
-    pub(super) fn douse_afloat(&mut self) {
+    pub(in crate::world) fn douse_afloat(&mut self) {
         if !self.swimming() {
             return;
         }
@@ -154,7 +154,7 @@ impl World {
     /// How creature `id` closes to within `reach` of `at`, as [`World::route`] does. A swimmer may
     /// have no ground that near: then it goes to the nearest there is, and waits on the shore. Only
     /// a target in deep water searches more than once.
-    pub(super) fn route_to_shore(&self, id: ActorId, at: Pos, reach: i32) -> Route {
+    pub(in crate::world) fn route_to_shore(&self, id: ActorId, at: Pos, reach: i32) -> Route {
         let route = |r: i32| self.route(id, at, r, |q| q.chebyshev(at) <= r);
         let first = route(reach);
         let level = self.state.current();

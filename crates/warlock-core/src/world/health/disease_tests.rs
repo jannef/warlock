@@ -4,7 +4,6 @@
 //! and are known by name after their first progression; stat damage mends once they are gone.
 //! All of it is saved, hashed, and replayed.
 
-use super::*;
 use crate::action::{AttackKind, DiseaseNews, parse_actions};
 use crate::check::check;
 use crate::combat::{Blow, Strike};
@@ -13,6 +12,7 @@ use crate::replay::Replay;
 use crate::stats::Stat;
 use crate::test_support::{builtin, run, said as messages};
 use crate::time::DAY;
+use crate::world::*;
 
 const TERRAIN: &str = r##"
 [[terrain]]
@@ -670,7 +670,7 @@ fn rotten_food_exposes_the_eater_to_what_it_carries() {
 
 #[test]
 fn a_creature_killed_by_a_disease_the_player_gave_it_is_their_kill() {
-    let experience = include_str!("../../../../assets/data/experience.toml");
+    let experience = include_str!("../../../../../assets/data/experience.toml");
     let rot = |by: Option<ActorId>| {
         let extra = [("data/experience.toml", experience)];
         let mut w = world_with("######\n#@..t#\n######\n", "hp = 1000", &extra, None);

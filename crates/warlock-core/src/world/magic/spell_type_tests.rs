@@ -1,14 +1,14 @@
-//! The spell types (`world/spell_type.rs`, `[types]` in `data/spells.toml`): fire's burn and the
+//! The spell types (`world/magic/spell_type.rs`, `[types]` in `data/spells.toml`): fire's burn and the
 //! fire it leaves, cold's numbing and what it freezes and puts out, and who reads them.
 
 use super::caster_tests::{kobold_at, sp};
 use super::spell::Caster;
-use super::*;
 use crate::action::{Action, Event};
 use crate::character::CharacterSpec;
 use crate::combat::Strike;
 use crate::content::{Burst, ContentFiles, Reading, StatusId};
 use crate::stats::{PerStat, Stats};
+use crate::world::*;
 use std::sync::LazyLock;
 
 /// A lit hall with a pond (x 5 to 7, y 2 to 4), the player at (2, 3), and a kobold walled up in a
@@ -20,7 +20,7 @@ const HALL: &str = "name = \"Hall\"\nambient = [255, 255, 255, 0]\nmap = '''\n\
     \"~\" = { terrain = \"water\" }\n\
     \"K\" = { terrain = \"floor\", creature = \"kobold\" }\n";
 
-pub(super) fn files() -> ContentFiles {
+pub(in crate::world) fn files() -> ContentFiles {
     let mut files = super::caster_tests::files();
     files.insert("levels/hall.toml", HALL);
     files.insert(
@@ -34,7 +34,7 @@ pub(super) fn files() -> ContentFiles {
 pub(super) static HALL_CONTENT: LazyLock<Arc<Content>> =
     LazyLock::new(|| Arc::new(Content::load(&files()).expect("content")));
 
-pub(super) fn start(content: Arc<Content>, seed: u64) -> World {
+pub(in crate::world) fn start(content: Arc<Content>, seed: u64) -> World {
     let spec: CharacterSpec = "human,female,wizard".parse().expect("a character");
     let spec = spec.with_talents(vec!["keen_ears".into(), "lean".into(), "pious".into()]);
     let w = World::start_run(content.clone(), "hall", Some(seed), Some(&spec), None, true)
@@ -60,7 +60,7 @@ pub(super) fn status(w: &World, id: &str) -> StatusId {
     w.content().status_id(id).expect("a status")
 }
 
-pub(super) fn cell(x: i32, y: i32) -> Pos {
+pub(in crate::world) fn cell(x: i32, y: i32) -> Pos {
     Pos::new(x, y)
 }
 
@@ -74,7 +74,12 @@ pub(super) fn put_back(w: &mut World, target: ActorId, at: Pos) {
 
 /// The player, whole and with mana, untrained so no rank grows the dice, casts `spell` at `at`:
 /// what the cast did to `target`.
-pub(super) fn cast(w: &mut World, spell: &str, at: Pos, target: Option<ActorId>) -> Vec<Strike> {
+pub(in crate::world) fn cast(
+    w: &mut World,
+    spell: &str,
+    at: Pos,
+    target: Option<ActorId>,
+) -> Vec<Strike> {
     let max = w.state.player().max_hp(w.content());
     w.player_mut().hp = max;
     w.player_mut().mana_base = 400;

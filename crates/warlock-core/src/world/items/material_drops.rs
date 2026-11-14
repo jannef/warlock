@@ -6,17 +6,17 @@
 //! streams, so a kill moves no other roll. Pieces of one material from several rows join one
 //! stack. Whoever made the kill: the body's, not a reward.
 
-use super::{Actor, World};
 use crate::content::{DropGoods, PER_MILLE};
 use crate::object::Stack;
 use crate::piece;
 use crate::rng::Rng;
+use crate::world::{Actor, World};
 
 impl World {
     /// What `actor`, a creature that just died leaving its body (no summoned ally, nothing
     /// turned to stone), drops of crafting stock: each of its type's rows by its chance and
     /// dice, one stack per kind of goods.
-    pub(super) fn drops_of(&self, actor: &Actor) -> Vec<Stack> {
+    pub(in crate::world) fn drops_of(&self, actor: &Actor) -> Vec<Stack> {
         let rows = &self.content.creature(actor.creature).drops;
         if rows.is_empty() {
             return Vec::new();

@@ -1,13 +1,13 @@
-//! The collapsed floor (spec §7 "Special rooms", design §9.13; `world/collapse.rs`): a step of the
+//! The collapsed floor (spec §7 "Special rooms", design §9.13; `world/fixtures/collapse.rs`): a step of the
 //! player onto its cracked floor gives way with 15 % (doubled while Burdened), and they fall to
 //! the level below, hurt (a fall can kill) and Staggered; Old delver never falls; creatures
 //! never do; no draw anywhere else. A generated one keeps a sound rim round its cracks.
 
-use super::*;
 use crate::burden::Burden;
 use crate::content::ContentFiles;
 use crate::object::Stack;
 use crate::test_support::{builtin, said_text as said};
+use crate::world::*;
 
 /// A hall with a collapsed floor over x 10 to 19 (`:` its cracked floor, `.` one plain cell of
 /// it) and a way down to the cellar.

@@ -1,10 +1,10 @@
 //! Throwing one's voice (spec §5 "Hearing"; #235): where it may go, what it costs, who hears it,
 //! and who goes to look.
 
-use super::*;
 use crate::content::ContentFiles;
 use crate::noise::SoundKind;
 use crate::test_support::last_text as last_message;
+use crate::world::*;
 
 const TERRAIN: &str = r##"
 [[terrain]]

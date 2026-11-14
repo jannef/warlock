@@ -25,13 +25,13 @@
 //! The strain is lazy: its value at a moment, less a point for every `decay` since; reading it
 //! writes nothing, so however time is cut it passes the same. Nothing trains, and no score moves.
 
-use super::{Spent, World};
 use crate::action::{DiseaseNews, Event};
 use crate::content::{ActionKind, Content, Face, PrayerRules, PrayerUse, TalentEffect};
 use crate::hunger::Hunger;
 use crate::talent::FaithEffect;
 use crate::time::GameTime;
 use crate::world::Actor;
+use crate::world::{Spent, World};
 use serde::{Deserialize, Serialize};
 
 /// The strain of the player's prayers (saved in `Progress::prayer`): its value at `at`, and
@@ -204,7 +204,7 @@ impl World {
             PrayerUse::Mana => me.mana < me.max_mana(content),
             PrayerUse::Hunger => me.hunger(content).is_some_and(|h| h <= Hunger::Hungry),
             PrayerUse::Restoration => {
-                me.damage.is_damaged() || !super::actor::undrained(&me.drained)
+                me.damage.is_damaged() || !crate::world::turn::actor::undrained(&me.drained)
             }
         }
     }

@@ -32,9 +32,6 @@
 //! rules), and nothing is learned. A potion without a `throw` table spills where it lands, uselessly: "The
 //! potion shatters; the draught soaks away." where seen, and nothing is learned.
 
-use super::cast::Cast;
-use super::spell::{Caster, burst_cells};
-use super::{ActorId, AttackSkills, Cause, Spent, World};
 use crate::action::{AttackKind, Event, MissileEnd, Positions, SpellShape};
 use crate::content::{
     ActionKind, Burst, ObjectId, Shape, SpellPurpose, SpellZone, StatusId, TrapNoise,
@@ -42,11 +39,19 @@ use crate::content::{
 use crate::geom::Pos;
 use crate::noise::{Act, SHATTER_NOISE, SoundKind};
 use crate::text::capitalized;
+use crate::world::magic::cast::Cast;
+use crate::world::magic::spell::{Caster, burst_cells};
+use crate::world::{ActorId, AttackSkills, Cause, Spent, World};
 
 impl World {
     /// The player throws one of inventory stack `item`, a potion, at cell `at` (module docs).
     /// [`World::throw`] has checked the overworld and the stack.
-    pub(super) fn throw_flask(&mut self, item: usize, at: Pos, events: &mut Vec<Event>) -> Spent {
+    pub(in crate::world) fn throw_flask(
+        &mut self,
+        item: usize,
+        at: Pos,
+        events: &mut Vec<Event>,
+    ) -> Spent {
         let content = self.content.clone();
         let player = self.state.player;
         let Some(range) = self.state.player().throw_range(item, &content) else {
@@ -77,7 +82,7 @@ impl World {
     /// A potion of kind `object`, thrown by `by` from `from` at `at` as far as `range` cells,
     /// flies and shatters (module docs): where it breaks it is heard, and a flask's splash is
     /// cast there. What the player sees is said and learned.
-    pub(super) fn shatter_flask(
+    pub(in crate::world) fn shatter_flask(
         &mut self,
         by: ActorId,
         object: ObjectId,

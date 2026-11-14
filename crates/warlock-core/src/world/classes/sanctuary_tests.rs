@@ -1,9 +1,7 @@
-//! Sanctuary (`world/sanctuary.rs`, spec §8 "Class abilities", §7 "Special rooms": hallowed
+//! Sanctuary (`world/classes/sanctuary.rs`, spec §8 "Class abilities", §7 "Special rooms": hallowed
 //! ground; the priest design §6.4, §7): the rite and its refusals, who keeps out, the pace, the
 //! break, the fade, and saves and replays.
 
-use super::caster_tests::reach;
-use super::*;
 use crate::ability::Ability;
 use crate::action::parse_actions;
 use crate::alignment::Score;
@@ -13,6 +11,8 @@ use crate::dump::{self, Layer};
 use crate::replay::Replay;
 use crate::stats::{PerStat, Stats};
 use crate::test_support::{CONTENT as BUILTIN, run, said};
+use crate::world::magic::caster_tests::reach;
+use crate::world::*;
 
 /// A human priest of `level` (every score 14), Neutral, on `scenario`'s start.
 fn priest_on(scenario: &str, level: u8) -> World {

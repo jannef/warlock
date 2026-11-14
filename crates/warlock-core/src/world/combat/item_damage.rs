@@ -23,16 +23,16 @@
 //!
 //! What is said is the source's.
 
-use super::World;
-use super::outcome::remove_stacks;
 use crate::content::{Content, Effect, ItemHarm, ObjectId};
 use crate::magic::{Mods, Worked};
 use crate::object::Stack;
+use crate::world::World;
+use crate::world::fixtures::outcome::remove_stacks;
 use std::collections::BTreeSet;
 
 /// What came of harm reaching an item.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(super) enum Harmed {
+pub(in crate::world) enum Harmed {
     /// It withstood it: nothing changed.
     Withstood,
     /// It is damaged now.
@@ -61,7 +61,7 @@ impl World {
 
     /// `harm` reaches the player's item at pack position `at`, one item: withstood, damaged, or
     /// destroyed (module docs). Its state so far is the stack's (a craft's attempt counted).
-    pub(super) fn harm_item(&mut self, at: usize, harm: ItemHarm) -> Harmed {
+    pub(in crate::world) fn harm_item(&mut self, at: usize, harm: ItemHarm) -> Harmed {
         if self.withstands(at, harm) {
             return Harmed::Withstood;
         }
@@ -79,7 +79,7 @@ impl World {
 
     /// Whether `stack` is protected from all item damage (module docs): what every source,
     /// floor ruin too, reads.
-    pub(super) fn item_protected(&self, stack: &Stack) -> bool {
+    pub(in crate::world) fn item_protected(&self, stack: &Stack) -> bool {
         protected(&self.content, &self.quest_objects(), stack)
     }
 
@@ -87,13 +87,13 @@ impl World {
     /// delivered, a fixed quest's until it is done for good (before it is given too: the
     /// chalice lies in its barrow first), a rolled quest's drawn object while it is active. A
     /// quest's reward is among them only when another quest asks for it.
-    pub(super) fn quest_objects(&self) -> BTreeSet<ObjectId> {
+    pub(in crate::world) fn quest_objects(&self) -> BTreeSet<ObjectId> {
         quest_objects(&self.content, &self.state.quests)
     }
 }
 
 /// [`World::quest_objects`] of `quests` (the item description reads it too: Eye for the make).
-fn quest_objects(content: &Content, quests: &super::Quests) -> BTreeSet<ObjectId> {
+fn quest_objects(content: &Content, quests: &crate::world::Quests) -> BTreeSet<ObjectId> {
     let done = |id: &str| quests.record(id).is_some_and(|r| r.completed > 0);
     (content.quests().iter())
         .filter_map(|def| match def.is_rolled() {
@@ -110,7 +110,11 @@ fn quest_objects(content: &Content, quests: &super::Quests) -> BTreeSet<ObjectId
 /// `quests` (the item description's Eye for the make, which reads perception, not the world):
 /// [`protected`] once its magic is identified; before, only a quest's object, so an unknown
 /// unique or Proof is not given away.
-pub(crate) fn protected_in(content: &Content, quests: &super::Quests, stack: &Stack) -> bool {
+pub(crate) fn protected_in(
+    content: &Content,
+    quests: &crate::world::Quests,
+    stack: &Stack,
+) -> bool {
     let quest = quest_objects(content, quests);
     match stack.is_identified() {
         true => protected(content, &quest, stack),
@@ -126,7 +130,11 @@ pub(crate) fn proof(content: &Content, stack: &Stack) -> bool {
 
 /// Whether `stack` is protected from item damage, `quest` the quests' objects
 /// ([`World::quest_objects`], gathered once for many stacks): a unique, of Proof, or a quest's.
-pub(super) fn protected(content: &Content, quest: &BTreeSet<ObjectId>, stack: &Stack) -> bool {
+pub(in crate::world) fn protected(
+    content: &Content,
+    quest: &BTreeSet<ObjectId>,
+    stack: &Stack,
+) -> bool {
     stack.magic().is_some_and(|m| m.unique.is_some())
         || Mods::local(stack, content).get(Effect::Proof) > 0
         || quest.contains(&stack.object)

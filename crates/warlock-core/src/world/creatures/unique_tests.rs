@@ -3,13 +3,13 @@
 //! and their powers, each read in its one place: Inflict (`World::after_blow`, through the
 //! attack's profile), Vision (the eyes), and Ward (`World::afflict`).
 
-use super::*;
 use crate::action::AttackKind;
 use crate::combat::{Blow, Strike};
 use crate::content::{Affliction, ContentFiles, OnHit, Power, StatusId};
 use crate::magic::describe::{self, LineKind};
 use crate::magic::{Affix, Rarity};
 use crate::test_support::{last as last_message, run};
+use crate::world::*;
 
 // A dark room: the player, and a giant rat three cells off (no light of its own).
 const LEVEL: &str = r##"

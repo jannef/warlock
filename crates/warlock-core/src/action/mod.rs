@@ -52,7 +52,7 @@ pub enum Action {
     Descend,
     /// Use the tool ready in the Tool slot without a direction (`u`; spec §5 "Light sources"):
     /// a light there (a lantern) turns from unlit to lit, lit to hooded, and hooded to unlit
-    /// (`world/lamp.rs`). Takes the time of `light` (lowering a hood: `hood`); refused, no time,
+    /// (`world/items/lamp.rs`). Takes the time of `light` (lowering a hood: `hood`); refused, no time,
     /// without a light ready. A digging tool is used toward a direction: [`Action::Dig`].
     UseTool,
     /// Pick up the stacks at these positions in the pile on the player's cell (0 is the top of
@@ -120,20 +120,20 @@ pub enum Action {
     /// Willpower; caught, it turns on them. Takes the time of `steal`; refused (no time) when the
     /// player sees no one there, or someone hostile.
     Steal(Dir),
-    /// Feint at the creature in a direction (spec §8 "Skills": Bluff; `world/feint.rs`): a
+    /// Feint at the creature in a direction (spec §8 "Skills": Bluff; `world/skills/feint.rs`): a
     /// hostile one the player sees, with a mind to fool, checks its Willpower against
     /// `data/rules/feint.toml`'s difficulty + the player's Presence modifier + Bluff's `feint`
     /// points, and is Surprised if it fails. Takes the time of `feint`, whatever comes of it;
     /// refused (no time) untrained, at no one seen, at one not hostile, or at one without a mind.
     Feint(Dir),
-    /// Tame the beast in a direction (spec §8 "Allies": Tame; `world/tame.rs`): `[tame] turns`
+    /// Tame the beast in a direction (spec §8 "Allies": Tame; `world/allies/tame.rs`): `[tame] turns`
     /// actions beside it (`data/companions.toml`), each the time of `tame`, then a Willpower
     /// check; made, it is the player's companion. Refused (no time) untrained, with a companion
     /// already, at no beast seen there, at one that cannot be tamed, or at one hostile that has
     /// seen them.
     Tame(Dir),
     /// Intimidate the creature on a cell the player sees within the `range` of
-    /// `data/rules/intimidate.toml` (spec §8 "Skills": Intimidate; `world/intimidate.rs`): a
+    /// `data/rules/intimidate.toml` (spec §8 "Skills": Intimidate; `world/skills/intimidate.rs`): a
     /// hostile one that hears and sees them checks its nerve, and failed, is frightened. Takes the
     /// time of `intimidate`; refused (no time) untrained, at no one seen, out of reach, at one not
     /// hostile, or at one with no vitals.
@@ -144,7 +144,7 @@ pub enum Action {
     /// at a cell they do not see, out of reach, solid, or their own.
     ThrowVoice(Pos),
     /// Give every ally of the player's on the level an order (spec §8 "Allies";
-    /// `world/ally.rs`): `order:follow` (Come to heel), `order:stay` (Hold here), `order:hunt:X,Y`
+    /// `world/allies/ally.rs`): `order:follow` (Come to heel), `order:stay` (Hold here), `order:hunt:X,Y`
     /// (Set on a cell). No time, a voice's noise where the player stands; refused (no time, no
     /// noise) with no ally on the level, and Set on at a cell the player does not see.
     Order(Command),
@@ -157,7 +157,7 @@ pub enum Action {
     /// player, with the traps' rules), the scroll of identify on the inventory stack it names.
     /// Takes the time of `read`; refused (no time, the scroll kept) without a fitting target.
     /// A grimoire (spec §8 "Spells": "Learning") is read with no target, and its reading is a
-    /// study of its spell (`world/learn.rs`): turn after turn of the `study` action, stopping
+    /// study of its spell (`world/magic/learn.rs`): turn after turn of the `study` action, stopping
     /// early like a rest; at the end, above the player's learning, a check decides whether they
     /// learn it or a mishap befalls them. The grimoire is kept either way. Refused (no time) for
     /// a spell already known, or without training in Decipher script.
@@ -191,10 +191,10 @@ pub enum Action {
     /// comes of it; refused (no time) without the skill or a known trap there.
     Disarm(Dir),
     /// Listen at the closed door in a direction (spec §5 "Hearing"; the Listen ability,
-    /// `world/listen.rs`): a turn in which the player's hearing through that door is keener.
+    /// `world/skills/listen.rs`): a turn in which the player's hearing through that door is keener.
     Listen(Dir),
     /// Wedge the closed door in a direction shut (spec §8 "Doors"; the Wedge ability,
-    /// `world/wedge.rs`): a turn, after which creatures that open doors must kick it in. Refused
+    /// `world/skills/wedge.rs`): a turn, after which creatures that open doors must kick it in. Refused
     /// (no time) without Woodcraft or a closed door that way.
     Wedge(Dir),
     /// Treat oneself, or an ally beside one, with the Heal skill (spec §8 "Skills"; the Heal
@@ -230,11 +230,11 @@ pub enum Action {
     /// fungus that way.
     Gather(Dir),
     /// Make a profession's recipe (spec §8 "Skills"; docs/design/professions.md §8;
-    /// `world/craft.rs`): `recipe` its id (`data/recipes/<skill>/<id>.toml`), `picks` the
+    /// `world/crafting/craft.rs`): `recipe` its id (`data/recipes/<skill>/<id>.toml`), `picks` the
     /// inventory positions chosen for its steps in order, `None` a skipped optional one
     /// (`craft:long_sword:c,f`, `craft:dagger:a,-`). A built-in recipe's row runs its own action
     /// (`temper:`, `whittle:`), so this is refused for it; a generic one is made by
-    /// `world/craft_make.rs` (the forge, the arrows: `craft:arrows:b,c`). Refused, it takes no
+    /// `world/crafting/craft_make.rs` (the forge, the arrows: `craft:arrows:b,c`). Refused, it takes no
     /// time.
     Craft {
         recipe: String,
@@ -242,7 +242,7 @@ pub enum Action {
     },
     /// Make out the carried stack at this position, a scroll of a type not yet identified,
     /// without reading it (spec §8 "Scrolls"; the Decipher ability, Decipher script's use;
-    /// `world/decipher.rs`): `data/rules/decipher.toml`'s time of turns of the `decipher` action,
+    /// `world/magic/decipher.rs`): `data/rules/decipher.toml`'s time of turns of the `decipher` action,
     /// then the reading's check; made, the type is learned. Interrupted, nothing comes of it.
     /// Refused (no time) with a stack that is no scroll of a type not yet known.
     Decipher {
@@ -252,7 +252,7 @@ pub enum Action {
     /// "Special rooms"; the Temper ability, the abilities menu's Here group): ten minutes of turns
     /// of the `temper` action, then a Strength check plus Metalcraft, harder for every attempt
     /// ever made on the item: an improvement or damage, or on a damaged item its repair or its
-    /// end (`world/temper.rs`). Interrupted, it gives nothing and counts for nothing. Refused (no
+    /// end (`world/crafting/temper.rs`). Interrupted, it gives nothing and counts for nothing. Refused (no
     /// time) with no anvil next to the player, a stack with all its improvements, or one that is
     /// not a metal
     /// weapon or armour.
@@ -261,14 +261,14 @@ pub enum Action {
     },
     /// Whittle the carried stack at this position with a knife, anywhere (the Whittle ability,
     /// Woodcraft's second use): `rules/temper.toml`'s rules for a weapon of wood, ten minutes of
-    /// turns of the `whittle` action, then a Dexterity check plus Woodcraft (`world/temper.rs`).
+    /// turns of the `whittle` action, then a Dexterity check plus Woodcraft (`world/crafting/temper.rs`).
     /// Refused (no time) without a knife carried, a stack with all its improvements, or one that
     /// is not a wooden weapon.
     Whittle {
         item: usize,
     },
     /// Salvage the carried stack at this position (one of it), anywhere (the Salvage ability,
-    /// the Skills group; `world/salvage.rs`): ten minutes of turns of the `salvage` action, then
+    /// the Skills group; `world/crafting/salvage.rs`): ten minutes of turns of the `salvage` action, then
     /// a check per material a profession works, each made one giving its stock; the item is
     /// destroyed either way. Interrupted, nothing happens. Refused (no time) with a stack worn or
     /// wielded, protected, unpaid, a spirit weapon, or with nothing a profession works.
@@ -276,7 +276,7 @@ pub enum Action {
         item: usize,
     },
     /// Rig a trap of rig `rig` (an id in `data/rigs.toml`) on the cell `dir` of the player (spec
-    /// §8 "Traps": "Rigging traps"; the craftsperson's Trapwright, `world/rig.rs`):
+    /// §8 "Traps": "Rigging traps"; the craftsperson's Trapwright, `world/crafting/rig.rs`):
     /// `rig:tripwire:E`. Turn after turn of the `craft` action for the rig's time, then a
     /// Dexterity check: made, the trap is placed, known, and the inputs spent. Refused (no time)
     /// without the ability, a direction (`rig:tripwire`), a cell that may hold it, or what it
@@ -287,7 +287,7 @@ pub enum Action {
     },
     /// Give the carried stack at this position (one of it) to the player's companion beside them,
     /// for its neck (spec §8 "Allies"; the Give ability, the abilities menu's Allies group;
-    /// `world/collar.rs`): priced as a `wear`, and what it wore falls on its cell. `ally` is the
+    /// `world/allies/collar.rs`): priced as a `wear`, and what it wore falls on its cell. `ally` is the
     /// way to the beast when one is named, `give:b:E`; with none, the first beside the player.
     /// Refused (no time) with none beside them or a stack that does not fit a neck.
     Give {
@@ -357,7 +357,7 @@ pub enum Action {
         choice: Option<String>,
     },
     /// Spend one of the current level's skill rolls on trained skill `skill` (spec §8 "Skills";
-    /// `world/skill_roll.rs`, `World::advance_skill`; docs/dev/skills.md): throws the skill's
+    /// `world/character/skill_roll.rs`, `World::advance_skill`; docs/dev/skills.md): throws the skill's
     /// ladder die and adds the result to the skill. A level brings rolls by class, race,
     /// Intelligence, and talents (`skill_roll::roll_count`); refused with the reason when none is left to spend or the
     /// skill is not trained. Takes no game time; recorded in replays.
@@ -375,7 +375,7 @@ pub enum Action {
     /// Refused on a level of danger 0. Takes no game time; recorded in replays.
     Spawn,
     /// Dev command: `count` allies of type `creature` beside the player, following, on their
-    /// side (spec §8 "Allies"; `world/ally.rs`), their stay ending after `lasts` if given
+    /// side (spec §8 "Allies"; `world/allies/ally.rs`), their stay ending after `lasts` if given
     /// (`ally:wolf`, `ally:wolf:2`, `ally:wolf:2:10m`). No game time; refused without
     /// `data/allies.toml`, for an unknown type, at the cap, or with no free cell beside the
     /// player. Recorded in replays.
@@ -430,11 +430,11 @@ pub enum Action {
     Reveal(String),
     /// Dev command: active lure quest `ID`'s creature (spec §8 "Quests": "Lure quests") comes
     /// beside the player, aware of them: made if it is nowhere, else taken from wherever it is
-    /// (`world/lure.rs`). For replays, tests, and captures that skip the walk. Takes no game
+    /// (`world/people/lure.rs`). For replays, tests, and captures that skip the walk. Takes no game
     /// time; recorded in replays.
     Lure(String),
     /// Dev command: the player is given profane gift `ID` (an id in `data/profane/`) as a draw
-    /// would give it, its relations applied (`world/profane.rs`); refused for one a draw would
+    /// would give it, its relations applied (`world/character/profane.rs`); refused for one a draw would
     /// not offer. For tests and captures. Takes no game time; recorded in replays.
     Profane(String),
     /// Dev command: profane gift `ID` is taken from the player (`World::rescind`). Takes no game
@@ -484,7 +484,7 @@ pub enum Action {
         at: Pos,
         radius: i32,
     },
-    /// Dev command: a zone (`world/zone.rs`) of `kind` around cell `at`, within `radius` in its
+    /// Dev command: a zone (`world/magic/zone.rs`) of `kind` around cell `at`, within `radius` in its
     /// line of sight, by the player, for ten turns. Takes no game time; recorded in replays.
     Zone {
         kind: ZoneKind,

@@ -7,11 +7,11 @@
 //! description, and the `spells` dump all say them so; built from what the caster has, never a
 //! hidden number of anyone else's.
 
-use super::Actor;
 use super::cast::Reach;
 use super::spell_rung::CastBy;
 use crate::content::{Content, DamageTypeId, Shape, SpellData};
 use crate::dice::Roll;
+use crate::world::Actor;
 
 /// The roll a spell makes as its caster would cast it now, and what it does: harm of a kind, or
 /// healing.
@@ -111,10 +111,10 @@ pub fn reroll_words(most: u32) -> Option<String> {
 
 #[cfg(test)]
 mod tests {
-    use super::super::World;
     use super::super::caster_tests::{sp, world_with};
     use super::*;
     use crate::stats::Stat;
+    use crate::world::World;
 
     use crate::test_support::CONTENT as BUILTIN;
 

@@ -3,13 +3,13 @@
 //! and a ceiling; a hidden trap, a step the player did not choose, and creatures keep the old
 //! rules; an avoided trap stays, trains Dodge, and replays.
 
-use super::*;
 use crate::action::parse_actions;
 use crate::content::{ContentFiles, TrapAvoid};
 use crate::replay::Replay;
 use crate::rng::Rng;
 use crate::skills::{SkillId, Use};
 use crate::test_support::last;
+use crate::world::*;
 
 /// A lit hall on the built-in content, the player at `@` with `stats` (a scenario's TOML, no
 /// character: no talents): `a` a known arrow trap, `h` a hidden one, `p` a known pit, `o` an

@@ -37,7 +37,7 @@ caves_size = [100, 40]
 # every ten floors (30 at 75, 20 at 80, 10 at 90) down to one draw in 5 from floor 100 on.
 dread = { steps = [[30, 80], [50, 60], [70, 40]], halves = 10, least = 5 }
 
-# The layer bosses (#1118; spec §7 "The endless branch", `world/layer_boss.rs`): every tenth
+# The layer bosses (#1118; spec §7 "The endless branch", `world/levels/layer_boss.rs`): every tenth
 # floor is kept by a unique boss of its own in its lair, a vault, and the floor's only way down is
 # in the lair, hidden until the boss dies. Each floor of that depth makes them again until the
 # boss is slain; after that, it is an ordinary floor. Past the last row, a tenth floor is an

@@ -2,7 +2,6 @@
 //! each changes the one rule it names, the two actives are used from the abilities menu with
 //! their cooldowns, and a character born under another sign keeps the rule as it was.
 
-use super::*;
 use crate::ability::{Ability, Unavailable};
 use crate::action::AttackKind;
 use crate::character::CharacterSpec;
@@ -12,6 +11,7 @@ use crate::damage::Damage;
 use crate::geom::Pos;
 use crate::stats::{PerStat, Stats};
 use crate::test_support::{CONTENT as BUILTIN, last, run};
+use crate::world::*;
 
 /// A human warrior in `scenario` (seed 7), born under the `element` `animal` (`None`: under no
 /// sign), every score 14; the run restored, so the gifts are granted as a load grants them.
@@ -303,7 +303,7 @@ fn no_one_makes_way_for_one_trusted_by_none() {
     assert_eq!(make_way(None), None, "the hermit makes way");
     assert_eq!(
         make_way(Some(("wood", "basilisk"))),
-        Some(super::talk::Refusal::Budge)
+        Some(crate::world::people::talk::Refusal::Budge)
     );
 }
 

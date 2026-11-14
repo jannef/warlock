@@ -26,8 +26,6 @@
 //! - **Cures**: [`World::cure`] ends the diseases that list the means in their `cured_by`,
 //!   showing or not; nothing applies one yet (potions and priests will).
 
-use super::fight::Harm;
-use super::{Actor, ActorId, Spent, World};
 use crate::action::{DiseaseNews, Event};
 use crate::check::check;
 use crate::content::{DiseaseId, Effect, TerrainId};
@@ -35,6 +33,8 @@ use crate::skills::Use;
 use crate::stats::Stat;
 use crate::talent::TalentMods;
 use crate::time::{DAY, GameTime};
+use crate::world::combat::fight::Harm;
+use crate::world::{Actor, ActorId, Spent, World};
 
 /// The odds of a `per_hour` chance are out of this many percent-seconds: 100 % of an hour.
 const PER_HOUR: u64 = 100 * crate::time::HOUR;
@@ -75,7 +75,7 @@ impl World {
     /// modifier in the stat (of the effective score, spec §8 "Stats"), its talents' bonus
     /// (Strong constitution, and what adds to every check of the stat: Iron will; spec §8 "Talents"), and the player's race's `disease_check`
     /// (ratfolk shrug diseases off).
-    pub(super) fn disease_modifier(&self, actor: &Actor, stat: Stat) -> i32 {
+    pub(in crate::world) fn disease_modifier(&self, actor: &Actor, stat: Stat) -> i32 {
         let race = self.state.race_of(&self.content, actor);
         let talents = actor.talent_mods(&self.content);
         (actor.check_modifier(&self.content, stat))
@@ -97,7 +97,7 @@ impl World {
 
     /// Actor `id` is exposed to every disease caught from `source` (one of
     /// [`crate::content::SOURCES`]: `rotten_food`), in disease order. Eating a rotten corpse
-    /// (`world/eat.rs`) exposes the eater here.
+    /// (`world/health/eat.rs`) exposes the eater here.
     pub(crate) fn expose_to(&mut self, id: ActorId, source: &str) {
         let caught: Vec<DiseaseId> = (self.content.disease_ids())
             .filter(|(_, def)| def.caught.iter().any(|c| c == source))
@@ -113,7 +113,7 @@ impl World {
     /// step's length; none when it is sure), then exposure. Creatures do not catch diseases
     /// from the land, nor does one with Nature's ward (no draw). A wading step may also earn Swim
     /// a mark, whoever wades ([`Use::Wade`]); deep water has marks of its own (`swim.rs`).
-    pub(super) fn wade(&mut self, terrain: TerrainId, seconds: u64) {
+    pub(in crate::world) fn wade(&mut self, terrain: TerrainId, seconds: u64) {
         let player = self.state.player;
         let content = self.content.clone();
         let def = content.terrain(terrain);
@@ -143,7 +143,7 @@ impl World {
 
     /// The turn of actor `id`'s `disease` came, at `when`: its onset, or a progression (a
     /// check; a failure costs its damage). Returns whether the actor lives on.
-    pub(super) fn disease_turn(
+    pub(in crate::world) fn disease_turn(
         &mut self,
         id: ActorId,
         disease: DiseaseId,
@@ -248,7 +248,12 @@ impl World {
 
     /// Actor `id` is rid of `disease`: shaken off or cured. The player is told if it showed;
     /// with no disease left showing, Diseased ends.
-    pub(super) fn end_disease(&mut self, id: ActorId, disease: DiseaseId, events: &mut Vec<Event>) {
+    pub(in crate::world) fn end_disease(
+        &mut self,
+        id: ActorId,
+        disease: DiseaseId,
+        events: &mut Vec<Event>,
+    ) {
         let player = self.state.player;
         let status = self.content.disease_status();
         let Some(actor) = self.state.actors.get_mut(&id) else {
@@ -280,7 +285,7 @@ impl World {
 
     /// The dev action `infect:DISEASE` ([`crate::action::Action::Infect`]): the player catches
     /// disease `id`. Refused for an unknown disease, or one they carry already. Takes no time.
-    pub(super) fn infect_dev(&mut self, id: &str) -> Spent {
+    pub(in crate::world) fn infect_dev(&mut self, id: &str) -> Spent {
         let Some(disease) = self.content.disease_id(id) else {
             self.say(format!("There is no disease `{id}`."));
             return Spent::Nothing;

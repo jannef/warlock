@@ -1,12 +1,10 @@
-//! Mimics (spec §8 "Mimics", docs/design/chests-and-treasure.md §5, §9; `world/mimic.rs`): a
+//! Mimics (spec §8 "Mimics", docs/design/chests-and-treasure.md §5, §9; `world/creatures/mimic.rs`): a
 //! disguised mimic is a chest in every snapshot; a touch reveals it with a free blow and no
 //! time; Knock reveals it without one; a blow reveals it; a search and the passive Spot find it;
 //! Chest-wise sees it; Chest-wise slips its grip; it takes no turn and no creature sets on it; it
 //! counts toward the cap; it carries the chest's loot and drops it; a sneak attack lands on an
 //! unaware one; it survives a save and a replay.
 
-use super::fight::Harm;
-use super::*;
 use crate::action::parse_actions;
 use crate::chest::{ChestLook, ChestState};
 use crate::content::ContentFiles;
@@ -14,6 +12,8 @@ use crate::dump::{self, Layer};
 use crate::replay::Replay;
 use crate::skills::{SkillId, Trained};
 use crate::test_support::{run, said_text as said};
+use crate::world::combat::fight::Harm;
+use crate::world::*;
 
 /// A lit hall: the player at the west end of row 2; on row 1 a mimic disguised as a coffer
 /// (`M`, x 3) carrying a dagger and coins, and a real coffer (`C`, x 7); a kobold (`k`) in the

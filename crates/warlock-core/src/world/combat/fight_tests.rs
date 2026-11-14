@@ -2,12 +2,12 @@
 //! carry, hit points come back with time, and the player's death ends the run.
 
 use super::fight::{End, Guard, Words, attack_message, death_message};
-use super::*;
 use crate::action::{AttackKind, parse_actions};
 use crate::combat::{Category, Health, Strike};
 use crate::content::{ContentFiles, Role};
 use crate::replay::Replay;
 use crate::test_support::{builtin, run, said as messages};
+use crate::world::*;
 
 #[test]
 fn messages_say_what_came_of_an_attack_without_numbers() {

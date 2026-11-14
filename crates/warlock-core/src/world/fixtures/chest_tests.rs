@@ -1,4 +1,4 @@
-//! Chests (spec §8 "Chests", docs/design/chests-and-treasure.md §3, §9; `world/chest.rs`): a
+//! Chests (spec §8 "Chests", docs/design/chests-and-treasure.md §3, §9; `world/fixtures/chest.rs`): a
 //! coffer opens on a bump and on `open`; a locked one refuses without a key and opens with a
 //! skeleton key, Pick lock, or Knock then Open; Knock is refused with no time where nothing is
 //! locked; kicks smash it (half the stacks, never coins or gems; Lockbreaker's quarter; a kick
@@ -6,7 +6,6 @@
 //! kist; what a shut chest holds is not in the snapshot; Chest-wise sees locks; legends place
 //! chests with their objects and levels; chests survive a save and replay exactly; the dumps.
 
-use super::*;
 use crate::action::parse_actions;
 use crate::chest::{ChestLook, ChestState};
 use crate::content::ContentFiles;
@@ -15,6 +14,7 @@ use crate::object::Stack;
 use crate::replay::Replay;
 use crate::skills::{SkillId, Trained};
 use crate::test_support::{last_text as last_message, run, said_text as said};
+use crate::world::*;
 
 /// A lit hall: the player at the west end of the walk (row 2), chests along row 1: a coffer
 /// holding a dagger and coins (`C`, x 1), a locked coffer (`L`, x 3), a locked kist (`K`, x 5,

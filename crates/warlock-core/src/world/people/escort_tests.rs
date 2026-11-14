@@ -4,13 +4,13 @@
 //! refuses what fits nothing, and home with the player completes the quest; home alone does
 //! not; her death fails it; a save and a replay.
 
-use super::fight::Harm;
-use super::*;
 use crate::ability::{Ability, Unavailable};
 use crate::action::{Command, parse_actions};
 use crate::content::{CombatStance, ContentFiles, QuestKind};
 use crate::replay::Replay;
 use crate::test_support::{run, texts};
+use crate::world::combat::fight::Harm;
+use crate::world::*;
 
 /// The wise woman and Eadgyth, added to the built-in dialogue.
 const DIALOGUE: &str = r##"

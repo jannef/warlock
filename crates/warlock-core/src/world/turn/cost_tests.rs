@@ -2,11 +2,11 @@
 //! takes, `cost / 1000 × 1000 / speed × 6 s` (an overworld step: its travel time instead of
 //! 6 s), exactly over any run of actions; resting ends exactly at its goal at any speed.
 
-use super::*;
 use crate::action::parse_actions;
 use crate::content::{ActionCosts, ContentFiles, NORMAL_COST};
 use crate::replay::Replay;
 use crate::test_support::builtin;
+use crate::world::*;
 
 const TERRAIN: &str = r##"
 [[terrain]]

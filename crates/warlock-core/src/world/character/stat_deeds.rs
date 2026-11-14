@@ -20,9 +20,9 @@
 //! words ([`warn_news`]); a drop can come only at a later check (`World::settle`), so the warning
 //! always comes first.
 
-use super::World;
 use crate::content::StatDeed;
 use crate::stats::Stat;
+use crate::world::World;
 
 /// What the player is told when a stat's pile first comes within reach of a drop.
 fn warn_news(stat: Stat) -> &'static str {
@@ -37,7 +37,7 @@ fn warn_news(stat: Stat) -> &'static str {
 }
 
 /// What a drop in `stat` says.
-pub(super) fn drop_news(stat: Stat) -> &'static str {
+pub(in crate::world) fn drop_news(stat: Stat) -> &'static str {
     match stat {
         Stat::Strength => "You feel weaker.",
         Stat::Dexterity => "You feel clumsier.",
@@ -50,14 +50,14 @@ pub(super) fn drop_news(stat: Stat) -> &'static str {
 
 impl World {
     /// The player did `deed` (module docs).
-    pub(super) fn stat_deed(&mut self, deed: StatDeed) {
+    pub(in crate::world) fn stat_deed(&mut self, deed: StatDeed) {
         self.stat_deed_times(deed, 1);
     }
 
     /// [`World::stat_deed`] `count` times over (each hit point starvation took): each rule for
     /// `deed` takes its `marks` `count` times, or a mark with its `chance` `count` times (a draw
     /// of the training stream each). A pile that comes within reach of a drop says so.
-    pub(super) fn stat_deed_times(&mut self, deed: StatDeed, count: u32) {
+    pub(in crate::world) fn stat_deed_times(&mut self, deed: StatDeed, count: u32) {
         if self.state.death.is_some() || count == 0 {
             return;
         }

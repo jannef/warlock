@@ -5,13 +5,13 @@
 //! needs it; dungeons, an outdoor level without an overworld cell, and the overworld are left as
 //! they were.
 
-use super::caster_tests::kobold_at;
 use super::quick_leave::QUICK_LEAVE_REFUSED;
-use super::*;
 use crate::action::parse_actions;
 use crate::content::{LevelKind, Stance};
 use crate::replay::Replay;
 use crate::test_support::{builtin as content, last_text as last};
+use crate::world::magic::caster_tests::kobold_at;
+use crate::world::*;
 
 /// The town's square, where the dev scenario starts, and its cell on the overworld.
 const SQUARE: Pos = Pos::new(46, 17);

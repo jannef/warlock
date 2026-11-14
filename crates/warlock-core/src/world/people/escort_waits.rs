@@ -11,15 +11,15 @@
 //!
 //! Nothing here draws from any stream.
 
-use super::WorldState;
-use super::travel::make_creature;
 use crate::content::{Content, CreatureSpawn, Goal, Speaker, Waits};
 use crate::equipment::Equipment;
 use crate::geom::Pos;
+use crate::world::WorldState;
+use crate::world::levels::travel::make_creature;
 
 /// Makes the escorts waiting on level `level` (it must exist) that are not in the run yet (the
 /// module docs).
-pub(super) fn place_waiting(state: &mut WorldState, content: &Content, level: &str) {
+pub(in crate::world) fn place_waiting(state: &mut WorldState, content: &Content, level: &str) {
     for def in content.quests() {
         let Goal::Escort {
             escort,

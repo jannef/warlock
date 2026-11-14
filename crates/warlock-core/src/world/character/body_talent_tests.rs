@@ -2,7 +2,6 @@
 //! names, Second wind is an ability with a cooldown, and the prerequisites that ask for any of
 //! several weapon skills are checked and said in words.
 
-use super::*;
 use crate::ability::{Ability, Unavailable};
 use crate::action::AttackKind;
 use crate::character::CharacterSpec;
@@ -12,6 +11,7 @@ use crate::damage::Damage;
 use crate::equipment::Equipment;
 use crate::stats::{PerStat, Stat, Stats};
 use crate::test_support::{CONTENT as BUILTIN, last, run, said};
+use crate::world::*;
 
 /// A human warrior in the showcase, every score 14.
 fn world() -> World {

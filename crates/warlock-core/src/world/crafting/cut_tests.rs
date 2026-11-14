@@ -1,9 +1,8 @@
-//! Cutting a gem (docs/design/recipes.md §5; `world/cut.rs`): the bands at their margin edges,
+//! Cutting a gem (docs/design/recipes.md §5; `world/crafting/cut.rs`): the bands at their margin edges,
 //! the natural 2 and 24, the size lost on a failure and a crude cut, a re-cut never worse and
 //! always a size smaller, the refusals with no time, an interruption, the marks, the odds the
 //! design gives, and a replay.
 
-use super::*;
 use crate::action::parse_actions;
 use crate::content::{ContentFiles, CutId, Cutting, Gems};
 use crate::item_parts::ItemPart;
@@ -12,6 +11,7 @@ use crate::replay::Replay;
 use crate::skills::{SkillId, Trained};
 use crate::stats::{PerStat, Stats};
 use crate::test_support::{said_text as said, texts};
+use crate::world::*;
 use std::sync::LazyLock;
 
 const ROOM: &str = "\

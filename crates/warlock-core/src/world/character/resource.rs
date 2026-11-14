@@ -9,10 +9,10 @@
 //!   it, called where the event happens: a kill in `fight.rs::dies`, a hit, a critical, and being
 //!   hit in `resolve`, a sneak attack that hits in `ambush.rs`.
 //! - [`World::spend_resource`]: an ability spends it (a class active's `resource` cost,
-//!   `world/class_ability.rs`); refused when the actor holds too little.
+//!   `world/classes/class_ability.rs`); refused when the actor holds too little.
 //! - [`World::end_resource`]: it ends (one that `ends_at_zero`, at 0): the actor loses it, and
 //!   its bar with it, until something grants it again.
-//! - Time: regeneration and decay are moments of `World::live`'s loop (`world/status.rs`, with a
+//! - Time: regeneration and decay are moments of `World::live`'s loop (`world/health/status.rs`, with a
 //!   hit point and a point of mana back), at [`World::resource_rate`]'s pace, so it makes no
 //!   difference how time is cut up, and an end at zero comes at its exact moment.
 //!
@@ -25,12 +25,12 @@
 //! ([`World::keep_resources_within_max`], called in `World::apply`). Mana is separate: nothing
 //! converts between them.
 
-use super::{Actor, ActorId, Spent, World};
 use crate::action::Event;
 use crate::content::Effect as ItemEffect;
 use crate::content::{Build, Content, ResourceId};
 use crate::resource::Pace;
 use crate::status::Effect;
+use crate::world::{Actor, ActorId, Spent, World};
 
 impl Actor {
     /// The most of `resource` it may hold at character `level`: its maximum by data
@@ -92,7 +92,7 @@ impl World {
     }
 
     /// The most of `resource` actor `id` may hold ([`Actor::resource_max`]).
-    pub(super) fn resource_max(&self, id: ActorId, resource: ResourceId) -> u16 {
+    pub(in crate::world) fn resource_max(&self, id: ActorId, resource: ResourceId) -> u16 {
         let level = self.holder_level(id);
         (self.state.actors.get(&id)).map_or(0, |a| a.resource_max(&self.content, resource, level))
     }
@@ -129,7 +129,7 @@ impl World {
     /// falls when it takes off what raised it (a Tireless ring): at once, as
     /// `World::keep_mana_within_max` does mana, rather than only when time next passes
     /// (`resource::pass` clamps too).
-    pub(super) fn keep_resources_within_max(&mut self, id: ActorId) {
+    pub(in crate::world) fn keep_resources_within_max(&mut self, id: ActorId) {
         let level = self.holder_level(id);
         let Some(actor) = self.state.actors.get_mut(&id) else {
             return;
@@ -148,7 +148,7 @@ impl World {
     }
 
     /// The pace of each resource actor `id` holds, in order: what `World::live` passes time at.
-    pub(super) fn resource_paces(&self, id: ActorId) -> Vec<Pace> {
+    pub(in crate::world) fn resource_paces(&self, id: ActorId) -> Vec<Pace> {
         let Some(actor) = self.state.actors.get(&id) else {
             return Vec::new();
         };
@@ -198,7 +198,7 @@ impl World {
 
     /// [`World::gain_resource`], the pools `marked` in data (Openings) built only when `marked`
     /// says they may be (the attack was at the holder's mark, or none stands: `mark.rs`).
-    pub(super) fn build_resources(&mut self, id: ActorId, on: Build, marked: bool) {
+    pub(in crate::world) fn build_resources(&mut self, id: ActorId, on: Build, marked: bool) {
         let Some(actor) = self.state.actors.get(&id) else {
             return;
         };
@@ -273,7 +273,7 @@ impl World {
 
     /// Statuses ended on actor `id` (`World::ended`): a resource whose status that was ends with
     /// it (something cured the Raging: the rage goes too).
-    pub(super) fn end_resources_of(
+    pub(in crate::world) fn end_resources_of(
         &mut self,
         id: ActorId,
         statuses: &[Effect],
@@ -302,7 +302,11 @@ impl World {
     /// The dev action `resource:ID` ([`crate::action::Action::Resource`]): the player is granted
     /// resource `id` ([`World::grant_resource`]), for trying resources out and for captures.
     /// Refused for an unknown resource. Takes no time.
-    pub(super) fn grant_resource_dev(&mut self, id: &str, events: &mut Vec<Event>) -> Spent {
+    pub(in crate::world) fn grant_resource_dev(
+        &mut self,
+        id: &str,
+        events: &mut Vec<Event>,
+    ) -> Spent {
         let Some(resource) = self.content.resource_id(id) else {
             self.say(format!("There is no resource `{id}`."));
             return Spent::Nothing;
@@ -319,7 +323,7 @@ impl World {
 /// `resource` ends for `actor` (see [`World::end_resource`]): also how `World::live` ends one
 /// that decays to 0, at its moment. Returns the status it brought, taken off the actor, for the
 /// caller to end as statuses end (`World::ended`).
-pub(super) fn ended(
+pub(in crate::world) fn ended(
     actor: &mut Actor,
     content: &Content,
     resource: ResourceId,

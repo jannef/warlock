@@ -1,7 +1,6 @@
 //! Escape artist (#1015, `hold.rs`, `trap.rs`): the automatic check when bonds stop or slow what
 //! the player tries, what it adds up to, what it costs, its marks, and a pit's shorter climb.
 
-use super::*;
 use crate::ability::Ability;
 use crate::check::check;
 use crate::content::{ContentFiles, StatusId};
@@ -9,6 +8,7 @@ use crate::geom::{Dir, Pos};
 use crate::skills::{Effect as SkillEffect, SkillId, Trained};
 use crate::stats::{PerStat, Stat, Stats};
 use crate::time::Duration;
+use crate::world::*;
 
 /// A marked status that only slows, as the data may one day hold.
 const SNARED: &str = "[[status]]\nid = \"zz_snared\"\nname = \"Snared\"\nseen = \"snared\"\n\

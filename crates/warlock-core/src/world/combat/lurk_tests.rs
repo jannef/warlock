@@ -1,11 +1,11 @@
-//! Lurking (spec §8 "Creature behavior"; `world/lurk.rs`): a lurker that sees a hostile waits
+//! Lurking (spec §8 "Creature behavior"; `world/combat/lurk.rs`): a lurker that sees a hostile waits
 //! where it stands, aware of it, attacks it once it is beside it, hunts it once hurt, and waits
 //! out a rest the same way; a creature that does not lurk closes in.
 
-use super::*;
 use crate::action::{Rest, parse_actions};
 use crate::content::ContentFiles;
 use crate::time::Duration;
+use crate::world::*;
 
 /// A lit corridor: the player at the west end, an Unseelie meenlock at `m`.
 const CORRIDOR: &str = "\
@@ -28,7 +28,7 @@ const ROOMS: &str = "\
 fn world_with(map: &str, lurks: bool) -> World {
     let mut files = ContentFiles::builtin();
     if !lurks {
-        let meenlock = include_str!("../../../../assets/data/creatures/meenlock.toml");
+        let meenlock = include_str!("../../../../../assets/data/creatures/meenlock.toml");
         files.insert(
             "data/creatures/meenlock.toml",
             &meenlock.replacen("lurks = true\n", "", 1),

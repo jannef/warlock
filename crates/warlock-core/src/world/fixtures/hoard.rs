@@ -1,7 +1,7 @@
 //! Tempting hoards (spec §7 "Special rooms", design §9.7): a tempting hoard's items lie unguarded
 //! until the player lifts one. Then the room **seals**: every door of it shuts (an open one, unless
 //! something stands in the doorway) and locks with a lock of the floor's level (no key fits it but
-//! a skeleton key; it is picked or kicked as any other, `world/lockpick.rs`, `world/door.rs`), each
+//! a skeleton key; it is picked or kicked as any other, `world/skills/lockpick.rs`, `world/fixtures/door.rs`), each
 //! with a slam as loud as a kick, and "The doors slam shut!"; and `hoard.guardians` hostiles of
 //! the level's danger + `hoard.danger` come at the room's edges, on cells the player does not see
 //! where there are any. A cave chamber has no doors: only the guardians come. A room seals once
@@ -16,12 +16,12 @@
 //! never unique, as a den's sleepers) and its cell. They are ordinary creatures from then on and
 //! roll their gear as creatures that come do.
 
-use super::{ActorId, World, travel};
 use crate::content::danger::{self, Candidate};
 use crate::content::{CreatureSpawn, SpecialRoom, Stance, TrapNoise, Treasure};
 use crate::door::Lock;
 use crate::geom::{Dir, Pos};
 use crate::noise::{KICK_NOISE, SoundKind};
+use crate::world::{ActorId, World, levels::travel};
 
 /// What the player is told when a hoard's doors slam shut.
 pub const SLAM: &str = "The doors slam shut!";
@@ -29,7 +29,7 @@ pub const SLAM: &str = "The doors slam shut!";
 impl World {
     /// The player has lifted `stacks` stacks at `at`: inside a tempting hoard not yet sealed, they
     /// count toward its sealing, and it seals once they pass the player's grace (module docs).
-    pub(super) fn lift_in_hoard(&mut self, at: Pos, stacks: usize) {
+    pub(in crate::world) fn lift_in_hoard(&mut self, at: Pos, stacks: usize) {
         let grace = self
             .state
             .player()

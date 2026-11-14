@@ -1,13 +1,13 @@
 //! Creature gear (spec §8 "Creature gear"): the tables, the rolls, where they are made, and
 //! what falls where a creature dies.
 
-use super::*;
 use crate::content::{ContentFiles, Keep, LevelTemplate, ObjectId, Rarity};
 use crate::gear;
 use crate::kit::Pack;
 use crate::magic::{LootGrade, loot};
 use crate::object::weight_of;
 use crate::rng::Rng;
+use crate::world::*;
 use std::sync::{Arc, LazyLock};
 
 /// Fixture creature types: a raider with a racial spear and lines of every kind, one that never
@@ -275,7 +275,7 @@ fn gear_names_known_objects_and_draws_from_a_list() {
 
 /// `text` without its gear: the `racial_weapon` line and each `[[creature.gear]]` block (up to
 /// the next blank line).
-pub(super) fn without_gear(text: &str) -> String {
+pub(in crate::world) fn without_gear(text: &str) -> String {
     let mut out = String::new();
     let mut in_gear = false;
     for line in text.lines() {

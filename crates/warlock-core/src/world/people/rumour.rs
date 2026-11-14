@@ -3,15 +3,15 @@
 //! she speaks of. Asking about it marks on the player's overworld map what they would have seen
 //! walking that way by day: every cell in line of sight within [`daylight::SIGHT_DAY`] of a cell
 //! of the route goes into the overworld's memory as the terrain it shows. Only the terrain grid
-//! is read, which holds a hidden location's plain terrain (`world/reveal.rs`), so a rumour never
+//! is read, which holds a hidden location's plain terrain (`world/levels/reveal.rs`), so a rumour never
 //! gives a hidden location away; a visible one (Cealdhlāw) is remembered as seeing it would.
 //! Asking again marks nothing new. No time, no stream; the memory is the overworld's own, saved
-//! as it always is. `world/talk.rs` has the one call.
+//! as it always is. `world/people/talk.rs` has the one call.
 
-use super::World;
 use crate::content::DialogueId;
 use crate::daylight::SIGHT_DAY;
 use crate::fov::compute_fov;
+use crate::world::World;
 
 /// What the player is told when a rumour marks something new on their map.
 pub const MARKED: &str = "You mark the way on your map.";

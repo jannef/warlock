@@ -3,11 +3,11 @@
 //! roll moves it; and a run that is given it, hunts Black Wystan down through Wulfeshol, finds
 //! High Toby where he fell, and hands the quest in is made an Iron, the same every time.
 
-use super::*;
 use crate::action::{Action, parse_actions};
 use crate::content::{ContentFiles, StairsDir};
 use crate::grid::Grid;
 use crate::test_support::{run as act, texts};
+use crate::world::*;
 use std::collections::{BTreeSet, VecDeque};
 use std::sync::LazyLock;
 

@@ -1,16 +1,16 @@
 //! Gathering herbs from the glowing fungus (spec §8 "Skills": Herbalism; #1340,
-//! `world/gather.rs`): Gather is listed only beside fungus, refused untrained in Herbalism
+//! `world/skills/gather.rs`): Gather is listed only beside fungus, refused untrained in Herbalism
 //! (#1400), a gather takes its five minutes and finds herbs by the level's depth (`1d2` +
 //! Herbalism ÷ 50), a broken one finds nothing, a refusal takes no time, the fungus never
 //! changes, Herbalism is marked, and replays verify.
 
-use super::*;
 use crate::ability::{Ability, Source, Unavailable};
 use crate::action::parse_actions;
 use crate::content::ContentFiles;
 use crate::replay::Replay;
 use crate::skills::{SkillId, Trained};
 use crate::test_support::{last_text as last_message, said_text as said};
+use crate::world::*;
 
 /// A cave with fungus at (5, 2), the player beside it at (4, 3), and at `k` a kobold (also
 /// beside it), when asked for; `f` is a second fungus, there only with `two`.

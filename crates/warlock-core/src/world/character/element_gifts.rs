@@ -6,7 +6,7 @@
 //! lives: `WorldState::lantern_light`, `OffenceMods::marks`, `World::mana_rate`.
 //!
 //! Blaze is a burst of flame around the player, cast with the scrolls' shared burst code
-//! ([`super::spell::burst_cells`], [`World::spell_hurts`], [`World::shock`]): one gameplay roll
+//! ([`crate::world::magic::spell::burst_cells`], [`World::spell_hurts`], [`World::shock`]): one gameplay roll
 //! of its damage for every creature it reaches but the player (each takes it whole: a burst of
 //! radius 1 is all edge), the ice it reaches melted, a fire on every walkable cell it reaches
 //! but the player's (as a burning missile's where it lands: light for a while, then gone), then
@@ -15,13 +15,13 @@
 //!
 //! [`Action::Gift`]: crate::action::Action::Gift
 
-use super::spell::{Caster, burst_cells};
-use super::{ActorId, Spent, World};
 use crate::action::{Event, SpellShape};
 use crate::content::SignActive;
 use crate::damage::Damage;
 use crate::geom::Pos;
 use crate::ice::Shock;
+use crate::world::magic::spell::{Caster, burst_cells};
+use crate::world::{ActorId, Spent, World};
 use std::collections::BTreeSet;
 
 impl World {

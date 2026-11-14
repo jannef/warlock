@@ -2,7 +2,7 @@
 # carried made magic with one affix of the crystal's families, by Willpower and Enchanting against
 # `difficulty` + one per `level_step` item levels of the roll (rules/enchanting.toml). Failed, the
 # crystal is spent and the item is as it was; a natural 2 warps it. The rules are
-# `world/enchant.rs`.
+# `world/crafting/enchant.rs`.
 [[recipe]]
 id = "kindle"
 use = "enchant"

@@ -16,7 +16,7 @@
 //! holding another fast (Held). So a status may be a harm (bleeding), a buff (raging), a hex
 //! on a creature, or a cooldown (a status with `eases` and no tick, during which an ability
 //! cannot be used: Exhausted). The rules that apply them live in `crate::status`,
-//! `world/status.rs`, and `world/buff.rs`.
+//! `world/health/status.rs`, and `world/health/buff.rs`.
 //!
 //! Without the file there are no status effects, and resting heals at the default rate
 //! ([`Healing::default`]).
@@ -35,7 +35,7 @@ pub const MAX_SEVERITY: u16 = 100;
 
 /// What makes a status a **hold** (`hold` in data; Held, spec §8 "Status effects"): the actor
 /// that caused it (its effect's `by`) holds the sufferer, and the hold ends when the holder dies,
-/// leaves its side, or is held or slowed itself (`world/hold.rs`); the player breaks free by a
+/// leaves its side, or is held or slowed itself (`world/health/hold.rs`); the player breaks free by a
 /// check of `check` against the holder's grip as they try to step.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -57,7 +57,7 @@ fn strength() -> Stat {
 }
 
 /// How the Heal skill treats a status (`treat` in data; spec §8 "Skills": the Heal ability,
-/// `world/heal.rs`): an Intelligence check plus Heal against `difficulty` and `per_degree` for
+/// `world/health/heal.rs`): an Intelligence check plus Heal against `difficulty` and `per_degree` for
 /// each of its degrees. A status that `stops` (bleeding) ends when the check is made, and a
 /// failed try may be made again at once; any other (poison) eases a degree when it is made, and
 /// may be tried once only, whatever comes of it, until it ends.
@@ -584,11 +584,11 @@ pub struct StatusDef {
     pub flees: bool,
     /// A creature suffering it sleeps (Asleep, a teeming den's; spec §7 "Special rooms"): it
     /// takes no turn and is unaware of everyone until noise, a blow, or a cry wakes it, which
-    /// ends the status (`world/den.rs`).
+    /// ends the status (`world/creatures/den.rs`).
     pub sleeps: bool,
     /// A creature suffering it hides as something else (Disguised, a mimic's; spec §8
     /// "Mimics"): it takes no turn, is unaware of everyone, no creature sets on it, and the
-    /// perception snapshot shows a shut chest in its place, never it (`world/mimic.rs`). Nothing
+    /// perception snapshot shows a shut chest in its place, never it (`world/creatures/mimic.rs`). Nothing
     /// ends it but being found out.
     pub hides: bool,
     /// Its sufferer is unseen by the player whatever the light (Invisible; docs/dev/creatures.md
@@ -598,10 +598,10 @@ pub struct StatusDef {
     pub sees_unseen: bool,
     /// Its sufferer is flat-footed while it lasts (Surprised, Stunned; spec §8 "Surprise and
     /// sneak attacks"): its Dexterity and Dodge count nothing toward its Defence, it makes no
-    /// free blow out of its turn, and sneak dice land on it (`world/surprise.rs`).
+    /// free blow out of its turn, and sneak dice land on it (`world/combat/surprise.rs`).
     pub flat_footed: bool,
     /// Its sufferer's blows that hit are criticals without the confirmation roll, and each such
-    /// hit spends a degree (Savage, Sic 'em's; `world/sic.rs`).
+    /// hit spends a degree (Savage, Sic 'em's; `world/allies/sic.rs`).
     pub auto_critical: bool,
     /// It eases a degree with each action its sufferer takes, instead of with time (Staggered,
     /// Pinned, Light-footed; the combat progression design §6): at one degree it is the next
@@ -635,12 +635,12 @@ pub struct StatusDef {
     /// step): of it, by whoever gave the last degree.
     pub kills_at_max: bool,
     /// A creature it kills leaves no corpse but a statue holding what it carried (Stiffening's;
-    /// `world/statue.rs`). Only with `kills_at_max`.
+    /// `world/creatures/statue.rs`). Only with `kills_at_max`.
     pub statue: bool,
     /// What makes it a hold (Held), if it is one.
     pub hold: Option<Hold>,
     /// Bonds a trained Escape artist may slip (`escape` in data): the difficulty of the check
-    /// (`world/hold.rs`). A status with a `hold` counts as bonds too, with its grip.
+    /// (`world/health/hold.rs`). A status with a `hold` counts as bonds too, with its grip.
     pub escape: Option<i32>,
     /// How the Heal skill treats it, if it can (bleeding, poison).
     pub treat: Option<Treat>,

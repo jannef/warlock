@@ -7,11 +7,11 @@
 //! it chars and in what colours. Where and how much comes from [`crate::scorch::seed`], never the
 //! gameplay random stream, and no rule reads char. Not on the overworld, a map of the land.
 
-use super::World;
 use crate::content::{CharColors, DamageTypeId, LevelKind};
 use crate::fov::radius2;
 use crate::geom::Pos;
 use crate::scorch::{self, AREA};
+use crate::world::World;
 
 impl World {
     /// The char colours of damage type `kind`, if it chars.
@@ -21,7 +21,7 @@ impl World {
 
     /// A burst of `kind` of `radius` around `center` reached `cells` of the current level: each
     /// takes [`AREA`] char, half beyond radius − 1, as its damage falls.
-    pub(super) fn sear_burst(
+    pub(in crate::world) fn sear_burst(
         &mut self,
         kind: Option<DamageTypeId>,
         (center, radius): (Pos, i32),
@@ -41,7 +41,7 @@ impl World {
 
     /// A fire of `kind` centred on `center` reached `cells` of the current level, each taking
     /// `share` char.
-    pub(super) fn sear_area(
+    pub(in crate::world) fn sear_area(
         &mut self,
         kind: Option<DamageTypeId>,
         center: Pos,

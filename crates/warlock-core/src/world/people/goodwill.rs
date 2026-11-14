@@ -6,8 +6,8 @@
 //! so nothing new is saved. [`World::complete_saying`] tells the player, in the town's `told`
 //! words, as it rises; [`World::service_price`] takes the discount off.
 
-use super::World;
 use crate::content::{DialogueId, TownDef};
+use crate::world::World;
 
 /// The most a town's goodwill takes off, in percent: everything.
 const MOST: u32 = 100;

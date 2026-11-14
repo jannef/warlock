@@ -5,9 +5,9 @@ use super::backfire::fallback_dice;
 use super::cast::Cast;
 use super::caster_tests::{kobold, world_with};
 use super::miscast::Aim;
-use super::*;
 use crate::content::{Miscast, Stance};
 use crate::test_support::{builtin, said};
+use crate::world::*;
 
 /// The built-in entry `id`.
 fn entry(c: &Content, id: &str) -> Miscast {

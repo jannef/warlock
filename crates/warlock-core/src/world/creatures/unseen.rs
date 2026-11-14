@@ -14,7 +14,7 @@
 //! Either is **shown** after all ([`unseen_by_player`]) to the player who is Seeing (a status
 //! that `sees_unseen`), by Blood scent (a status it suffers, within the talent's reach), to the
 //! player's companion's nose (within its `nose`, through the dark and closed doors), and for the
-//! turn a blow of the player's found it ([`super::Mind::glimpsed`]). Quick-sensed feels its
+//! turn a blow of the player's found it ([`crate::world::Mind::glimpsed`]). Quick-sensed feels its
 //! heartbeat, if it has one: a concealed actor's cell counts as hidden to the player's hearing,
 //! so what it makes is heard there as any sound (its footsteps, its fighting: the `sound`
 //! layer's `x` where an unseen blow came from), and the heartbeat with it. Hearing is untouched:
@@ -37,13 +37,13 @@
 //! **Hunting** ([`World::hunted`]): a type that `hunts` (the invisible stalker), seeing no
 //! hostile, goes to where the player is on its level, as to a noise: it never idles.
 
-use super::{Actor, ActorId, World, WorldState, smelt_within};
 use crate::action::{AttackKind, Event};
 use crate::combat::Profile;
 use crate::content::{ActionKind, Content, Invisible, Stance};
 use crate::geom::Pos;
 use crate::noise::Act;
 use crate::status::Effect;
+use crate::world::{Actor, ActorId, World, WorldState, smelt_within};
 
 /// What the player feels as an unseen shadowy creature comes near.
 pub(crate) const DRAUGHT_LINE: &str = "You feel a cold draught.";
@@ -148,7 +148,7 @@ impl World {
 
     /// Statuses `ended` on actor `id`: one that left it unseen, where the player sees its cell
     /// and nothing else hides it, is told ("You can see the duergar again.").
-    pub(super) fn unveiled(&mut self, id: ActorId, ended: &[Effect]) {
+    pub(in crate::world) fn unveiled(&mut self, id: ActorId, ended: &[Effect]) {
         if id == self.state.player || !ended.iter().any(|e| self.content.status(e.status).unseen) {
             return;
         }
@@ -164,7 +164,7 @@ impl World {
 
     /// `profile`, a blow by `attacker` at `target`, at the `[unseen]` `to_hit` when it is the
     /// player's at one they do not see for its being unseen.
-    pub(super) fn at_the_unseen(
+    pub(in crate::world) fn at_the_unseen(
         &self,
         attacker: ActorId,
         target: ActorId,
@@ -178,7 +178,7 @@ impl World {
 
     /// A blow by `attacker` at `target` that `hit`: the player's at one unseen shows it for
     /// the turn.
-    pub(super) fn glimpse(&mut self, attacker: ActorId, target: ActorId, hit: bool) {
+    pub(in crate::world) fn glimpse(&mut self, attacker: ActorId, target: ActorId, hit: bool) {
         if !hit || attacker != self.state.player || !self.perception.conceals(target) {
             return;
         }
@@ -190,7 +190,7 @@ impl World {
 
     /// The player moves against `target`: one they do not see for its being unseen is struck
     /// at, and they are told so.
-    pub(super) fn strike_at_unseen(&mut self, target: ActorId) {
+    pub(in crate::world) fn strike_at_unseen(&mut self, target: ActorId) {
         if self.perception.conceals(target) {
             self.say("You strike at something.");
         }
@@ -198,7 +198,7 @@ impl World {
 
     /// Where creature `id` goes, seeing no hostile, if its type hunts (the module docs): the
     /// player's cell, on its level and hostile to it.
-    pub(super) fn hunted(&self, id: ActorId) -> Option<Pos> {
+    pub(in crate::world) fn hunted(&self, id: ActorId) -> Option<Pos> {
         let me = self.state.actors.get(&id)?;
         if !self.content.creature(me.creature).hunts {
             return None;

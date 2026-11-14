@@ -1,12 +1,12 @@
 //! The disarming blow (#1166): `knock_away.rs`, with the bearers' rows.
 
-use super::*;
 use crate::action::AttackKind;
 use crate::character::CharacterSpec;
 use crate::content::CreatureSpawn;
 use crate::geom::{Dir, Pos};
 use crate::object::Stack;
 use crate::test_support::CONTENT as BUILTIN;
+use crate::world::*;
 
 /// A kitted human warrior in the showcase (seed `seed`), alone on the level, in an open room of
 /// floor walled round, its west end at the player's cell, wielding a long sword and nothing
@@ -79,7 +79,7 @@ fn put(w: &mut World, kind: &str, p: Pos) -> ActorId {
         status: Vec::new(),
     };
     let (content, level) = (w.content.clone(), w.state.current_level.clone());
-    travel::make_creature(&mut w.state, &content, &level, &spawn)
+    crate::world::levels::travel::make_creature(&mut w.state, &content, &level, &spawn)
 }
 
 fn main_hand(w: &World) -> Option<usize> {

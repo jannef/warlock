@@ -3,7 +3,6 @@
 //! once, building from events, spending, abilities' costs, what the player is shown, saves,
 //! and replays.
 
-use super::*;
 use crate::ability::{Ability, Unavailable};
 use crate::action::{Rest, parse_actions};
 use crate::character::CharacterSpec;
@@ -12,6 +11,7 @@ use crate::content::{Build, ClassActive, ContentFiles, ResourceId};
 use crate::replay::Replay;
 use crate::test_support::{last, run};
 use crate::time::Duration;
+use crate::world::*;
 
 // A lit hall without creatures; a den with a kobold east of the player.
 const HALL: &str = r##"
@@ -48,7 +48,7 @@ const GRIT: &str = "\n[[resource]]\nid = \"grit\"\nname = \"Grit\"\nshort = \"Gr
 /// when `costly`.
 fn content(costly: bool) -> Arc<Content> {
     let mut files = ContentFiles::builtin();
-    let resources = include_str!("../../../../assets/data/resources.toml");
+    let resources = include_str!("../../../../../assets/data/resources.toml");
     files.insert("data/resources.toml", &format!("{resources}{GRIT}"));
     files.insert("levels/hall.toml", HALL);
     files.insert("levels/den.toml", DEN);
@@ -62,7 +62,7 @@ fn content(costly: bool) -> Arc<Content> {
     );
     files.remove("data/hunger.toml");
     if costly {
-        let rage = include_str!("../../../../assets/data/talents/rage.toml");
+        let rage = include_str!("../../../../../assets/data/talents/rage.toml");
         let costly = rage.replace(
             "systems = [",
             "resource = { id = \"focus\", cost = 6 }\nsystems = [",
@@ -409,7 +409,7 @@ fn a_class_active_that_costs_a_resource_is_unavailable_without_it_and_spends_it(
 #[test]
 fn a_cost_must_name_a_resource() {
     let mut files = ContentFiles::builtin();
-    let rage = include_str!("../../../../assets/data/talents/rage.toml");
+    let rage = include_str!("../../../../../assets/data/talents/rage.toml");
     let bad = rage.replace("systems = [", "resource = { id = \"mirth\" }\nsystems = [");
     files.insert("data/talents/rage.toml", &bad);
     let err = Content::load(&files)

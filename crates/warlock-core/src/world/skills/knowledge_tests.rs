@@ -3,12 +3,12 @@
 //! and capped; it earns marks from discovery experience and from every such check; creatures
 //! get nothing of it.
 
-use super::*;
 use crate::check::check;
 use crate::content::{Affliction, Drain};
 use crate::skills::SkillId;
 use crate::stats::{PerStat, Stat, Stats};
 use crate::test_support::CONTENT as BUILTIN;
+use crate::world::*;
 
 fn knowledge() -> SkillId {
     BUILTIN.skill_id("knowledge").expect("knowledge")

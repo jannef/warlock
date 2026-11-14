@@ -4,12 +4,12 @@
 //! stranger's stone the same under any graveyard), out of the state hash and kept by a save, and
 //! a replay.
 
-use super::*;
 use crate::action::parse_actions;
 use crate::content::{ContentFiles, Stance};
 use crate::dump::{self, Layer};
 use crate::replay::Replay;
 use crate::test_support::{run as act, texts};
+use crate::world::*;
 use std::sync::LazyLock;
 
 /// Cēaptūn's cell, where the south road starts.
@@ -216,7 +216,7 @@ fn the_graveyard_given_late_cuts_the_same_and_a_save_keeps_it() {
 fn the_yard_on_arrival() {
     let w = yard(Vec::new());
     let rows = dump::layer_rows(&w, Layer::View).join("\n");
-    insta::with_settings!({ snapshot_path => "../snapshots" }, {
+    insta::with_settings!({ snapshot_path => "../../snapshots" }, {
         insta::assert_snapshot!("lictun_arrival", rows);
     });
 }

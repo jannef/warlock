@@ -1,9 +1,9 @@
 //! First-sight lines (`first_sight.rs`): said once a run per type, the first time one is seen,
 //! and remembered in the save.
 
-use super::*;
 use crate::action::parse_actions;
 use crate::content::ContentFiles;
+use crate::world::*;
 
 // A lit hall split by a door: the player, a pixie in sight, and a second pixie and a nymph
 // beyond the door.

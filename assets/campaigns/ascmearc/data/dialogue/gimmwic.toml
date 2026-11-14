@@ -245,7 +245,7 @@ mutter = { chance = 3, verb = "hums", lines = [
 ] }
 
 # Old Tregear, master jeweller of the cutting floor. He teaches Jewelcraft for gold
-# (`train_skill`, world/service.rs), as Cēaptūn's smith Eadric teaches Metalcraft: offered only
+# (`train_skill`, world/people/service.rs), as Cēaptūn's smith Eadric teaches Metalcraft: offered only
 # while the player is untrained in it, and cheaper with the town's goodwill (none yet: Gimmwīc
 # gives no quests).
 [[dialogue]]

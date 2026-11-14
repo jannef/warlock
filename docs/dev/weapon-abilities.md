@@ -92,7 +92,7 @@ for the one attacked). Where each is raised (a line that already marks the event
 | `parried` | `second_blow(Cue::Attacked { parried: true })`, before the cleave or riposte | the target's held |
 | `both_hands_hit` | `World::both_hands`, from `World::attack` and `player_attacks` after the second blow: both `Strike::Hit`, the second made with a weapon (not a shield: a bash is no second hand; not a flurry's fist), the target alive; once an attack | the attack's |
 | `approaches` | `World::approached`, from `World::step_up` (the creature's step in `ai.rs` and now the player's in `travel.rs`) | the approached's missile weapon (`Ranged`), else what it has ready to throw (`Thrown`) |
-| `hit`, `critical` (spells) | `world/cast.rs::spell_practised` → `World::resolve_triggers` with `AttackKind::Spell`, before `spell_strikes` (a spell that rolls to hit, an own cast; #571; of the caster styles only Battle caster's Spell guard is raised here, Sniper and Toucher teaching none since #1251) | the caster style the cast was made in (`Cast::skills`, `Actor::spell_skills`; `world/cast_style.rs`) |
+| `hit`, `critical` (spells) | `world/magic/cast.rs::spell_practised` → `World::resolve_triggers` with `AttackKind::Spell`, before `spell_strikes` (a spell that rolls to hit, an own cast; #571; of the caster styles only Battle caster's Spell guard is raised here, Sniper and Toucher teaching none since #1251) | the caster style the cast was made in (`Cast::skills`, `Actor::spell_skills`; `world/magic/cast_style.rs`) |
 | `spell_blocked` | `cast.rs::cast_single` → `World::spell_blocked` (`reflect.rs`), on an attack or touch spell's miss by the target's Shield (a bolt, a ray, a touch; a scroll's or a wand's too); never for a reflected flight | the target's held |
 
 Effects (`WeaponDoes`, closed; a kind with no catalogue entry is not written): `Status` (on the
@@ -128,7 +128,7 @@ time-based stagger eased away before its next action.
 
 ## Actives: used for stamina and time (#564)
 
-`world/weapon_active.rs`. **The action**: `use:lunge:E` is `Action::Act(id, dir)` (the parser
+`world/combat/weapon_active.rs`. **The action**: `use:lunge:E` is `Action::Act(id, dir)` (the parser
 reads the direction as typed, in upper case, since a lower-case letter is a stack for
 `use:identify:e`; `ne`, `se`, `sw`, `nw`, no letters, in either case); `use:shield_wall` and
 `use:piercing_shot:12,5` are `Action::Cast`, which `player_acts` sends to `World::use_weapon`
@@ -207,10 +207,10 @@ warrior's class ability Drillmaster (level 25: `weapon_stamina` 1, read in
 ## Tests
 
 `content/weapon_ability.rs` (the shipped catalogue, its systems, no "aimed" names, every
-refusal, the actives' too), `world/weapon_ability_tests.rs` (each triggered ability on a
+refusal, the actives' too), `world/combat/weapon_ability_tests.rs` (each triggered ability on a
 hand-made fight, the abuse rules, Spell reflection's cap, mark, shapes, Parry, mana, lifted dice,
 wand, and draws, creatures' Brace and Point-blank, no draws without a rank, the three talents,
-the menu and the news), `world/weapon_active_tests.rs` (each active, its costs and refusals, the
+the menu and the news), `world/combat/weapon_active_tests.rs` (each active, its costs and refusals, the
 greyed rows, Practised technique, Drillmaster, Armour-breaker, the pool granted, the action
 text), `ability.rs` (the menu's order), the screen snapshots `abilities-menu-weapon-skills`,
 `abilities-menu-weapon-actives`, `-short`, the wiki test (`xtask/src/wiki/mod.rs`).

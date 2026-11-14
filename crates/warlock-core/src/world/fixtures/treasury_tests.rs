@@ -1,10 +1,10 @@
-//! Treasure rooms in play (spec §7 "Special rooms"; `world/treasury.rs`): the hint on every
+//! Treasure rooms in play (spec §7 "Special rooms"; `world/fixtures/treasury.rs`): the hint on every
 //! arrival until the room is entered, the enter line, one line however many rooms, and saving.
 
-use super::*;
 use crate::action::parse_actions;
 use crate::content::ContentFiles;
 use crate::test_support::run;
+use crate::world::*;
 
 /// A lit hall, its east part (x 9 on, walls included) a treasure room behind a closed door at
 /// (9, 2).

@@ -2,7 +2,7 @@
 # of the crystal's families and of the kind it lacks, on a magic item carried with one affix and
 # room for another (its capacity). A rare with room takes a heart-crystal carried
 # too and gains an affix of a kind with room. The check and its failure are Kindle's; the rules are
-# `world/enchant.rs`.
+# `world/crafting/enchant.rs`.
 [[recipe]]
 id = "quicken"
 use = "enchant"

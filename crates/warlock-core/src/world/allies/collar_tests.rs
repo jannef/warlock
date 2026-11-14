@@ -2,8 +2,6 @@
 //! one on the floor, the refusals, the amulet's magic on the beast, the pile on its death, what
 //! the player is shown, and a save and a replay.
 
-use super::fight::Harm;
-use super::*;
 use crate::ability::{Ability, Unavailable};
 use crate::action::{Action, parse_actions};
 use crate::content::Content;
@@ -12,6 +10,8 @@ use crate::magic::{Affix, Magic, Rarity};
 use crate::object::Stack;
 use crate::replay::Replay;
 use crate::test_support::{CONTENT as BUILTIN, run, said};
+use crate::world::combat::fight::Harm;
+use crate::world::*;
 use std::sync::Arc;
 
 /// A kitted run of `spec` in the courtyard.
@@ -249,7 +249,7 @@ fn a_familiar_wears_a_collar_as_a_companion_does() {
 fn tamer() -> World {
     let mut files = crate::content::ContentFiles::builtin();
     let class = "data/classes/10-witch.toml";
-    let witch = include_str!("../../../../assets/data/classes/10-witch.toml");
+    let witch = include_str!("../../../../../assets/data/classes/10-witch.toml");
     let trained = witch
         .replacen("handle_animal = { chance = 25, dice = \"2d4\" }, ", "", 1)
         .replacen(

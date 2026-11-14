@@ -1,13 +1,13 @@
-//! How electricity spreads (`world/spell_arc.rs`): the arc's draw, its jump back at the caster
+//! How electricity spreads (`world/magic/spell_arc.rs`): the arc's draw, its jump back at the caster
 //! and an ally, Chain lightning's certain jumps and their end, the pond, Conductor, and ice.
 
 use super::caster_tests::kobold_at;
-use super::*;
 use crate::action::{Action, AttackKind, Event, parse_actions};
 use crate::character::CharacterSpec;
 use crate::content::ContentFiles;
 use crate::stats::{PerStat, Stats};
-use crate::world::cast::Reach;
+use crate::world::magic::cast::Reach;
+use crate::world::*;
 
 /// A lit hall with a pond (x 8 to 10, y 2 to 4), the player at (2, 3), and a kobold walled up in a
 /// closet (`kobold_at` copies one).

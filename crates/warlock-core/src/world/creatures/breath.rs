@@ -24,13 +24,13 @@
 //! fire!"); each blow on someone they see is said as a spell's ("The fire burns you."). Unseen,
 //! the roar is heard.
 
-use super::spell::{Caster, cone_cells};
-use super::{ActorId, World};
 use crate::action::{AttackKind, Event};
 use crate::combat::Strike;
 use crate::content::{ActionKind, Breath, the_start};
 use crate::geom::Pos;
 use crate::noise::Act;
+use crate::world::magic::spell::{Caster, cone_cells};
+use crate::world::{ActorId, World};
 
 impl World {
     /// Whether creature `id` breathes now at `target`, a hostile it sees at `at` (module docs).

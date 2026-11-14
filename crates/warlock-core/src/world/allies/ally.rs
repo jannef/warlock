@@ -46,9 +46,7 @@
 //!
 //! Nothing here draws from any stream, and a run with no allies calls none of it.
 
-use super::ai::{Plan, Route};
 use super::companion::CompanionData;
-use super::{Actor, ActorId, Mind, Spent, World, WorldState, stance_between};
 use crate::action::{Command, Event};
 use crate::combat::Profile;
 use crate::content::{
@@ -60,6 +58,8 @@ use crate::noise::Act;
 use crate::skills::Use;
 use crate::text::{and_list, capitalized};
 use crate::time::{Duration, GameTime};
+use crate::world::creatures::ai::{Plan, Route};
+use crate::world::{Actor, ActorId, Mind, Spent, World, WorldState, stance_between};
 use serde::{Deserialize, Serialize};
 
 /// The most allies the dev `ally:` action makes at once.
@@ -213,7 +213,7 @@ impl World {
     }
 
     /// The allies of `master` on the current level and acting (not the retinue), in id order.
-    pub(super) fn allies_here(&self, master: ActorId) -> Vec<ActorId> {
+    pub(in crate::world) fn allies_here(&self, master: ActorId) -> Vec<ActorId> {
         let level = &self.state.current_level;
         (self.state.actors.on_level(level))
             .filter(|a| a.master() == Some(master) && !a.in_retinue())
@@ -222,7 +222,7 @@ impl World {
     }
 
     /// Whose ally actor `id` is, if anyone's.
-    pub(super) fn master_of(&self, id: ActorId) -> Option<ActorId> {
+    pub(in crate::world) fn master_of(&self, id: ActorId) -> Option<ActorId> {
         self.state.actors.get(&id).and_then(Actor::master)
     }
 
@@ -230,7 +230,7 @@ impl World {
     /// design ranger-companion.md §9): their class's `ally_share` (the pet classes' 100), else
     /// `[xp] ally_percent` (50), else, with no allies data, in full. The rule is the master's
     /// class, whatever the ally's source.
-    pub(super) fn ally_share(&self) -> u8 {
+    pub(in crate::world) fn ally_share(&self) -> u8 {
         let class = (self.state.character.as_ref()).and_then(|c| self.content.class(&c.spec.class));
         (class.and_then(|c| c.ally_share))
             .or_else(|| self.content.allies().map(|r| r.ally_percent))
@@ -240,7 +240,7 @@ impl World {
     /// Makes an ally of type `creature` for the player at `at` on the current level, following,
     /// with no gear (a beast carries nothing), on the player's side; `until` is when its stay
     /// ends, if it does. Returns its id. The caller saw to the cell and the cap.
-    pub(super) fn make_ally(
+    pub(in crate::world) fn make_ally(
         &mut self,
         creature: CreatureId,
         at: Pos,
@@ -263,7 +263,8 @@ impl World {
             status: Vec::new(),
         };
         let level = self.state.current_level.clone();
-        let id = super::travel::make_creature(&mut self.state, &content, &level, &spawn);
+        let id =
+            crate::world::levels::travel::make_creature(&mut self.state, &content, &level, &spawn);
         if let Some(actor) = self.state.actors.get_mut(&id) {
             actor.ally = Some(Ally {
                 master: player,
@@ -289,7 +290,12 @@ impl World {
     /// player, following, for `lasts` if given, no time. Refused without `data/allies.toml`,
     /// for an unknown type or the player's, at the cap (`[allies] most`), and without a free
     /// cell beside the player.
-    pub(super) fn ally_dev(&mut self, creature: &str, count: u8, lasts: Option<Duration>) -> Spent {
+    pub(in crate::world) fn ally_dev(
+        &mut self,
+        creature: &str,
+        count: u8,
+        lasts: Option<Duration>,
+    ) -> Spent {
         if self.content.allies().is_none() {
             self.say("This world knows no allies.");
             return Spent::Nothing;
@@ -350,7 +356,7 @@ impl World {
 
     /// `profile` with what an ally's master gives its blows (Beast-bond's to-hit); as it was for
     /// anyone else. One of `fight.rs::resolve`'s hooks.
-    pub(super) fn ally_blow(&self, attacker: ActorId, mut profile: Profile) -> Profile {
+    pub(in crate::world) fn ally_blow(&self, attacker: ActorId, mut profile: Profile) -> Profile {
         if let Some(mods) = self.ally_mods(attacker) {
             profile.to_hit += mods.to_hit;
         }
@@ -359,12 +365,12 @@ impl World {
 
     /// The Protection an ally's master gives it (Beast-bond's); 0 for anyone else. Read by
     /// `World::protection_of`.
-    pub(super) fn ally_protection(&self, id: ActorId) -> i32 {
+    pub(in crate::world) fn ally_protection(&self, id: ActorId) -> i32 {
         self.ally_mods(id).map_or(0, |m| m.protection)
     }
 
     /// The one arm of `ai.rs::decide` for an ally (the module docs): what ally `id` does now.
-    pub(super) fn ally_plan(&mut self, id: ActorId) -> Plan {
+    pub(in crate::world) fn ally_plan(&mut self, id: ActorId) -> Plan {
         let Some((master, order, pos)) = (self.state.actors.get(&id))
             .and_then(|a| a.ally.as_ref().map(|ally| (ally.master, ally.order, a.pos)))
         else {
@@ -469,7 +475,7 @@ impl World {
     /// The player gives `command` to every ally of theirs on the level (the module docs): no
     /// time, a voice's noise, a Handle animal mark. Refused, with no time and no noise, with no
     /// ally on the level, and Set on at a cell the player does not see.
-    pub(super) fn order(&mut self, command: Command, events: &mut Vec<Event>) -> Spent {
+    pub(in crate::world) fn order(&mut self, command: Command, events: &mut Vec<Event>) -> Spent {
         let player = self.state.player;
         let mut allies = self.allies_here(player);
         if allies.is_empty() {
@@ -530,7 +536,7 @@ impl World {
     /// The allies `ids` as the player's words name them: "your wolf", "your wolves", "your
     /// wolves and bear" (by type, in the order the ids run; a possessive takes no count), a
     /// companion by its name first ("Snel", "Snel and your wolves"; `companion.rs`).
-    pub(super) fn pack_phrase(&self, ids: &[ActorId]) -> String {
+    pub(in crate::world) fn pack_phrase(&self, ids: &[ActorId]) -> String {
         let mut names: Vec<String> = Vec::new();
         let mut kinds: Vec<(CreatureId, u32)> = Vec::new();
         for id in ids {
@@ -575,7 +581,7 @@ impl World {
     /// rest stay. A summon whose time ran out on the way is removed silently, and so is one
     /// left on `to` earlier whose time has passed. Called by `World::travel` once the player
     /// stands on `to`.
-    pub(super) fn follow_along(&mut self, from: &str, to: &str, old: Pos, arrival: Pos) {
+    pub(in crate::world) fn follow_along(&mut self, from: &str, to: &str, old: Pos, arrival: Pos) {
         let Some(rules) = self.content.allies().cloned() else {
             return;
         };
@@ -682,7 +688,7 @@ impl World {
     /// The end of a turn (`run_turn`): every ally on the current level whose time has passed
     /// departs, said if the player sees it ("The wolf fades away."), and every berserk risen
     /// whose time has (`corpse_spell.rs`). Nothing is left behind.
-    pub(super) fn allies_lapse(&mut self, events: &mut Vec<Event>) {
+    pub(in crate::world) fn allies_lapse(&mut self, events: &mut Vec<Event>) {
         let now = self.state.time;
         let level = self.state.current_level.clone();
         let lapsed: Vec<ActorId> = (self.state.actors.values())
@@ -701,7 +707,7 @@ impl World {
 
     /// Ally `id` departs (its time is up): [`World::departs`]; a charmed one is itself again
     /// where it stands instead (`charm.rs`).
-    pub(super) fn ally_departs(&mut self, id: ActorId, events: &mut Vec<Event>) {
+    pub(in crate::world) fn ally_departs(&mut self, id: ActorId, events: &mut Vec<Event>) {
         let charmed = (self.state.actors.get(&id))
             .and_then(|a| a.ally.as_ref())
             .is_some_and(|a| matches!(a.source, AllySource::Charmed { .. }));
@@ -716,7 +722,7 @@ impl World {
     /// pile, no experience, no kill judged), said when the player sees its cell (its type's
     /// `depart`, else "fades away"). An ally whose time is up, a speaker a calling's topic sends
     /// away (`calling.rs`).
-    pub(super) fn departs(&mut self, id: ActorId, events: &mut Vec<Event>) {
+    pub(in crate::world) fn departs(&mut self, id: ActorId, events: &mut Vec<Event>) {
         let Some(actor) = self.state.actors.remove(&id) else {
             return;
         };
@@ -736,7 +742,7 @@ impl World {
 
 /// `count` of a thing in words, as the player is told it: "a wolf", "two wolves", "thirteen
 /// wolves" (the counts of a pack are small; a bigger one is a numeral).
-pub(super) fn few(name: &str, plural: &str, count: u32) -> String {
+pub(in crate::world) fn few(name: &str, plural: &str, count: u32) -> String {
     const WORDS: [&str; 13] = [
         "no", "a", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten",
         "eleven", "twelve",

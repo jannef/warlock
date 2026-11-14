@@ -1,10 +1,10 @@
 //! Travel through generated dungeon branches (`depths:N`): linking, persistence, determinism,
 //! replays, and saves.
 
-use super::*;
 use crate::grid::Grid;
 use crate::replay::Replay;
 use crate::test_support::CONTENT;
+use crate::world::*;
 use std::collections::VecDeque;
 
 fn depths(seed: u64) -> World {

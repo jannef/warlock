@@ -2,9 +2,9 @@
 //! endless branch's are, made the same again from their id, paid once per Pit, and leaving the
 //! endless branches' own count of floors made alone.
 
-use super::*;
 use crate::action::{Action, parse_actions};
 use crate::test_support::CONTENT;
+use crate::world::*;
 
 fn start(seed: u64) -> World {
     World::new(CONTENT.clone(), "grundleas", Some(seed)).expect("world")

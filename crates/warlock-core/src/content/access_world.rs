@@ -176,7 +176,7 @@ impl Content {
         (self.spawning(id)).map_or(0, |(rule, depth, _)| rule.at(depth, player_level).into())
     }
 
-    /// Whether `id` is a floor that is gone when it is left (`world/endless.rs`): an endless
+    /// Whether `id` is a floor that is gone when it is left (`world/levels/endless.rs`): an endless
     /// branch's, made anew from a stream of its own on every arrival, or a Pit's, made the same
     /// again from its id (spec §7 "The Pits").
     pub fn is_endless_floor(&self, id: &str) -> bool {

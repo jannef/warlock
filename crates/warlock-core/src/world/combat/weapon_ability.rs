@@ -28,7 +28,6 @@
 use super::fight::{End, death_message};
 use super::free_blow::FreeBlows;
 use super::shoot::Loose;
-use super::{Actor, ActorId, AttackSkills, Spent, World};
 use crate::action::{AttackKind, Event};
 use crate::combat::{self, Blow, Category, Strike};
 use crate::content::{
@@ -40,15 +39,16 @@ use crate::dice::{Dice, Roll};
 use crate::geom::Pos;
 use crate::talent::TalentMods;
 use crate::text::capitalized;
+use crate::world::{Actor, ActorId, AttackSkills, Spent, World};
 
 /// What an event a trigger fires on was ([`World::weapon_trigger`]): the other end of it (the
 /// one struck, or the attacker), the kind of attack, the skills concerned, and the blow, if one.
 #[derive(Clone, Copy, Debug)]
-pub(super) struct Fired {
-    pub(super) other: ActorId,
-    pub(super) kind: AttackKind,
-    pub(super) skills: AttackSkills,
-    pub(super) blow: Option<Blow>,
+pub(in crate::world) struct Fired {
+    pub(in crate::world) other: ActorId,
+    pub(in crate::world) kind: AttackKind,
+    pub(in crate::world) skills: AttackSkills,
+    pub(in crate::world) blow: Option<Blow>,
 }
 
 /// The switches an actor's weapon abilities turn on, with what it fights with now.
@@ -161,7 +161,7 @@ impl World {
     /// Triggered abilities fire (the design §4.3): actor `by`'s that the attack's (or what it
     /// holds') skills bring and `trigger` fires, each effect in path order. The one place they
     /// fire. No draw to decide; an effect draws as it lands.
-    pub(super) fn weapon_trigger(
+    pub(in crate::world) fn weapon_trigger(
         &mut self,
         by: ActorId,
         trigger: Trigger,
@@ -484,7 +484,7 @@ impl World {
     /// (`fight.rs::resolve`, beside the resources' builds): a hit and a critical for the
     /// attacker, being struck for the target; a melee attack's miss by the target's Shield, or
     /// by its Dexterity or Dodge, for the target.
-    pub(super) fn resolve_triggers(
+    pub(in crate::world) fn resolve_triggers(
         &mut self,
         (attacker, target): (ActorId, ActorId),
         (kind, skills): (AttackKind, AttackSkills),
@@ -554,7 +554,7 @@ impl World {
     /// Actor `id`'s action is taken (its price paid): each of its statuses with `per_action`
     /// eases a degree (gone at none, an [`Event::Status`] end: "You recover your wits."), but
     /// those given during that action.
-    pub(super) fn spend_actions(&mut self, id: ActorId, events: &mut Vec<Event>) {
+    pub(in crate::world) fn spend_actions(&mut self, id: ActorId, events: &mut Vec<Event>) {
         let fresh: Vec<StatusId> = (self.fresh.iter())
             .filter(|(a, _)| *a == id)
             .map(|&(_, s)| s)
@@ -618,7 +618,7 @@ impl World {
     /// The dev action `rank:SKILL:N` ([`crate::action::Action::SetRank`]): the player's rank in
     /// weapon skill or style `skill` becomes `rank`, said as a rank risen is, with what the ranks
     /// teach. Takes no time.
-    pub(super) fn set_rank_dev(&mut self, skill: &str, rank: u8) -> Spent {
+    pub(in crate::world) fn set_rank_dev(&mut self, skill: &str, rank: u8) -> Spent {
         let content = self.content.clone();
         let table = content.weapon_skills();
         let Some(id) = table.id(skill) else {

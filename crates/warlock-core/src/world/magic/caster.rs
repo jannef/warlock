@@ -1,18 +1,18 @@
 //! The casters' passives that need a rule of their own (spec §8 "Class abilities", design
 //! §4.9–4.12): the once-in-a-life reprieves (Miracle, Hag's bargain) and the blows that hurt a
 //! suffering creature more (Poison lore). Their spells are cast by the one cast path
-//! (`world/cast.rs`).
+//! (`world/magic/cast.rs`).
 
-use super::World;
 use crate::action::Event;
 use crate::combat::Blow;
 use crate::world::ActorId;
+use crate::world::World;
 
 impl World {
     /// Miracle, Hag's bargain (spec §8 "Class abilities"): once in a life, what would kill the
     /// player does not. They are left at 1 hit point, suffer the reprieve's status, and lose its
     /// stat for good; its words are said. Returns whether it saved them (never twice).
-    pub(super) fn reprieve(&mut self, events: &mut Vec<Event>) -> bool {
+    pub(in crate::world) fn reprieve(&mut self, events: &mut Vec<Event>) -> bool {
         let player = self.state.player;
         let Some(reprieve) = self
             .state
@@ -40,7 +40,12 @@ impl World {
 
     /// `blow`, struck by `attacker` at `target`, with what Poison lore adds against a creature
     /// suffering its status: its damage more on a hit. No draw.
-    pub(super) fn lore_blow(&self, attacker: ActorId, target: ActorId, blow: Blow) -> Blow {
+    pub(in crate::world) fn lore_blow(
+        &self,
+        attacker: ActorId,
+        target: ActorId,
+        blow: Blow,
+    ) -> Blow {
         if !blow.strike.is_hit() {
             return blow;
         }

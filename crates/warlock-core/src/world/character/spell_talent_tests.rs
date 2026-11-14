@@ -5,12 +5,13 @@
 //! Empower's and Archmage's rungs, Keen mind's dice, Sure hand's reroll, Brimming's die and
 //! cost, Scroll adept's scroll rung.
 
-use super::caster_tests::{kobold, reach, sp, world_with};
-use super::*;
 use crate::content::Choice;
+use crate::world::magic::caster_tests::{kobold, reach, sp, world_with};
+use crate::world::*;
 use std::sync::LazyLock;
 
-static BUILTIN: LazyLock<Arc<Content>> = LazyLock::new(|| Arc::new(super::caster_tests::quiet()));
+static BUILTIN: LazyLock<Arc<Content>> =
+    LazyLock::new(|| Arc::new(crate::world::magic::caster_tests::quiet()));
 
 /// What the player's `spell` costs them now, and how far it reaches.
 fn cost_and_range(w: &World, spell: &str) -> (i32, Option<i32>) {
@@ -170,7 +171,7 @@ fn roll(w: &World, spell: &str) -> String {
 /// A wizard of level 1 with every score 10 (no rung by stats), holding `talents`.
 fn plain_wizard(talents: &[(&str, Option<&str>)]) -> World {
     let mut w = world_with(BUILTIN.clone(), "wizard");
-    super::cast_tests::scores(&mut w, &[]);
+    crate::world::magic::cast_tests::scores(&mut w, &[]);
     for (id, choice) in talents {
         w.player_mut().talents.take(id, *choice);
     }
@@ -256,7 +257,7 @@ fn scroll_adept_reads_a_spell_scroll_a_rung_higher() {
     // The scroll of lightning casts at rung 2 (8d6, 48 at most); Scroll adept, the wizard's at
     // level 1, takes it a rung higher (10d6), whatever the reader's Intelligence.
     let mut w = world_with(BUILTIN.clone(), "wizard");
-    super::cast_tests::scores(&mut w, &[]);
+    crate::world::magic::cast_tests::scores(&mut w, &[]);
     let def = BUILTIN.spell(sp("lightning_bolt"));
     let at = |w: &World| {
         let me = w.state.player();

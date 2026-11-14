@@ -3,13 +3,13 @@
 mod appraise;
 mod disarm;
 mod feint;
-mod forage;
-mod gather;
+pub(in crate::world) mod forage;
+pub(in crate::world) mod gather;
 mod intimidate;
 mod knowledge;
 mod listen;
 mod lockpick;
-mod search;
+pub(in crate::world) mod search;
 mod sidestep;
 mod steal;
 mod wedge;
@@ -20,7 +20,7 @@ cfg_if! {
         mod feint_tests;
         mod forage_tests;
         mod gather_tests;
-        mod intimidate_tests;
+        pub(in crate::world) mod intimidate_tests;
         mod knowledge_tests;
         mod lockpick_tests;
         mod search_tests;

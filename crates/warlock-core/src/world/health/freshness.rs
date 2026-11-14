@@ -13,13 +13,13 @@
 //! view method. Eating food the check told trains Appraise ([`Use::Judged`], in
 //! [`World::train_judged`]).
 
-use super::{Actor, World};
 use crate::content::Content;
 use crate::object::Stack;
 use crate::rng::Rng;
 use crate::rot::{self, Stage};
 use crate::skills::{Effect, Use};
 use crate::time::{GameTime, HOUR};
+use crate::world::{Actor, World};
 
 /// The stage of `stack` at `now` if `actor` can tell it by looking (see the module docs); `None`
 /// for what is no food, an eye untrained, and a check failed. `Stage::Gone` is told as rotten.

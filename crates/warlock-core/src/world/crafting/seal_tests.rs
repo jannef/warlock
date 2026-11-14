@@ -1,10 +1,9 @@
-//! Seals and the rare materials (docs/design/enchanting.md §9; `world/seal.rs`): a seal shuts its
+//! Seals and the rare materials (docs/design/enchanting.md §9; `world/crafting/seal.rs`): a seal shuts its
 //! family out of the roll and costs a crystal of the colour and half an hour; its refusals; the
 //! wizard's seal steps narrowed by the crystal and the item; the heart-crystal on a rare's
 //! Quicken; the soul-fetter on Recast with the affix kept; the dialog's words; and a replay.
 
 use super::super::enchant::{EnchantBand, enchant_out_for_test};
-use super::super::*;
 use crate::action::parse_actions;
 use crate::content::{ContentFiles, Rarity};
 use crate::magic::{Affix, Magic, Quality};
@@ -13,6 +12,7 @@ use crate::replay::Replay;
 use crate::skills::Trained;
 use crate::stats::{PerStat, Stats};
 use crate::test_support::{last_text as last, run as apply, said_text as said};
+use crate::world::*;
 use std::sync::LazyLock;
 
 const ROOM: &str = "\

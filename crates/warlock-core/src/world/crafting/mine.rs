@@ -22,9 +22,8 @@
 //!   check is made all the same, and sets only the count, one lump failed, else as above.
 //!
 //! Every draw is the gameplay stream's, in that order. Mining's mark is the wall's own
-//! ([`crate::skills::Use::Dug`], `world/dig.rs`): no mark of its own.
+//! ([`crate::skills::Use::Dug`], `world/crafting/dig.rs`): no mark of its own.
 
-use super::World;
 use crate::combat;
 use crate::content::{Content, MaterialId, Mined, MiningRules, TerrainId};
 use crate::geom::Pos;
@@ -32,6 +31,7 @@ use crate::item_parts::ItemPart;
 use crate::magic::loot::pick_weighted;
 use crate::object::{self, Stack};
 use crate::skills::Effect;
+use crate::world::World;
 
 /// `count` lumps of `metal`'s ore: the ore object, made of it.
 pub(crate) fn ore(content: &Content, rules: &MiningRules, metal: MaterialId, count: u32) -> Stack {

@@ -20,7 +20,6 @@
 //! Refused, taking no time and spending nothing, with no companion on the level, or at a cell
 //! with no creature the player sees, out of reach, or not hostile to them. Nothing is drawn.
 
-use super::{ActorId, Spent, World};
 use crate::action::Event;
 use crate::combat::Profile;
 use crate::content::{ActionKind, ClassActive, Content, Stance};
@@ -28,10 +27,11 @@ use crate::geom::Pos;
 use crate::noise::Act;
 use crate::skills::Use;
 use crate::world::{Actor, Order, WorldState, stance_between};
+use crate::world::{ActorId, Spent, World};
 
 impl World {
     /// Sic 'em at `at` (the module docs); `use_class_at` has checked the ability and its focus.
-    pub(super) fn sic(&mut self, at: Pos, events: &mut Vec<Event>) -> Spent {
+    pub(in crate::world) fn sic(&mut self, at: Pos, events: &mut Vec<Event>) -> Spent {
         let content = self.content.clone();
         let player = self.state.player;
         let Some(sic) = self.state.player().talent_mods(&content).ally.sic else {
@@ -104,7 +104,7 @@ impl World {
 
     /// `profile` of a blow by `attacker`, a sure critical while it suffers a status with
     /// `auto_critical` (Savage). One of `fight.rs::resolve`'s hooks.
-    pub(super) fn savage_blow(&self, attacker: ActorId, mut profile: Profile) -> Profile {
+    pub(in crate::world) fn savage_blow(&self, attacker: ActorId, mut profile: Profile) -> Profile {
         if self.savage_status(attacker).is_some() {
             profile.sure_critical = true;
         }
@@ -112,7 +112,7 @@ impl World {
     }
 
     /// `attacker`'s blow hit: its Savage eases a degree, gone at none.
-    pub(super) fn savage_spent(&mut self, attacker: ActorId, events: &mut Vec<Event>) {
+    pub(in crate::world) fn savage_spent(&mut self, attacker: ActorId, events: &mut Vec<Event>) {
         let Some(status) = self.savage_status(attacker) else {
             return;
         };

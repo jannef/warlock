@@ -5,13 +5,13 @@
 //! `quest_roll`; a named monster's death counts at any hand and any time; the load checks of
 //! picks, variants, and placeholders; Quarry sense and Sworn foe.
 
-use super::fight::Harm;
-use super::*;
 use crate::action::parse_actions;
 use crate::content::{ContentFiles, TrapId};
 use crate::dump::{self, Layer};
 use crate::replay::Replay;
 use crate::test_support::{builtin, run as act, texts};
+use crate::world::combat::fight::Harm;
+use crate::world::*;
 
 /// Godgifu, in the Gæsthūs: she gives the test quests.
 const GODGIFU: Pos = Pos::new(46, 26);

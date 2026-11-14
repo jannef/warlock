@@ -29,10 +29,9 @@
 //! - **The partner's death** ([`World::partner_dies`], one line in `fight.rs::dies`): the stake
 //!   is lost with them.
 //!
-//! Saved and hashed: [`WorldState::fund`](super::WorldState), left out while nothing was ever
+//! Saved and hashed: [`WorldState::fund`](crate::world::WorldState), left out while nothing was ever
 //! put in, so other runs hash as before.
 
-use super::{ActorId, Spent, TopicView, World};
 use crate::action::Event;
 use crate::content::{
     ActionKind, DialogueId, InvestRules, StatUse, TalentEffect, TownDef, TownServant,
@@ -41,6 +40,7 @@ use crate::object::Stack;
 use crate::rng::Rng;
 use crate::talent::FortuneEffect;
 use crate::time::DAY;
+use crate::world::{ActorId, Spent, TopicView, World};
 use serde::{Deserialize, Serialize};
 
 /// A game week in seconds.
@@ -170,7 +170,7 @@ impl World {
     }
 
     /// Every week begun since the stake last took its return takes it now (the module docs).
-    pub(super) fn tick_fund(&mut self) {
+    pub(in crate::world) fn tick_fund(&mut self) {
         let now = self.state.time.seconds() / WEEK;
         if self.state.fund.cents == 0 || self.state.fund.week >= now {
             return;
@@ -189,7 +189,7 @@ impl World {
     }
 
     /// The partner's topics (the module docs); none for anyone else.
-    pub(super) fn invest_topics(&self, dialogue: DialogueId) -> Vec<TopicView> {
+    pub(in crate::world) fn invest_topics(&self, dialogue: DialogueId) -> Vec<TopicView> {
         let (Some(_), Some(rules)) = (self.partner_words(dialogue), self.content.invest()) else {
             return Vec::new();
         };
@@ -232,13 +232,13 @@ impl World {
     /// The gold coins the player carries.
     fn gold_carried(&self) -> u32 {
         crate::chest::currency(&self.content).map_or(0, |c| {
-            super::shop::count_of(&self.state.player().inventory, c)
+            crate::world::people::shop::count_of(&self.state.player().inventory, c)
         })
     }
 
     /// Chats with creature `id`, who speaks `dialogue`, if it is a business partner: a
     /// one-liner and what the stake is worth (the module docs). `None` for anyone else.
-    pub(super) fn partner_chat(
+    pub(in crate::world) fn partner_chat(
         &mut self,
         id: ActorId,
         dialogue: DialogueId,
@@ -266,7 +266,7 @@ impl World {
 
     /// Asks creature `id`, whose dialogue is `dialogue`, for deal `topic`: puts gold in or takes
     /// it out (the module docs). `None` when it is no partner's deal.
-    pub(super) fn ask_invest(
+    pub(in crate::world) fn ask_invest(
         &mut self,
         id: ActorId,
         dialogue: DialogueId,
@@ -327,7 +327,7 @@ impl World {
             return;
         };
         let player = self.player_mut();
-        let gone = super::shop::take(&mut player.inventory, coin, gold);
+        let gone = crate::world::people::shop::take(&mut player.inventory, coin, gold);
         player.equipment.after_removal(&gone);
         let now = self.state.time.seconds() / WEEK;
         let fund = &mut self.state.fund;
@@ -348,7 +348,7 @@ impl World {
     }
 
     /// Creature `id` dies: a business partner takes the stake with them (the module docs).
-    pub(super) fn partner_dies(&mut self, id: ActorId) {
+    pub(in crate::world) fn partner_dies(&mut self, id: ActorId) {
         let partner = (self.state.actors.get(&id))
             .and_then(|a| self.dialogue_of(a))
             .is_some_and(|d| self.partner_words(d).is_some());

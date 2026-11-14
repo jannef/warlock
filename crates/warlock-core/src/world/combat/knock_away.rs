@@ -27,20 +27,20 @@
 //! as a seen creature is said; "Something" for one the player does not see), then where it went:
 //! "It lands beside you." The equipment screen shows the hand empty.
 
-use super::{ActorId, World};
 use crate::action::{AttackKind, Positions};
 use crate::check;
 use crate::content::{Content, Grip};
 use crate::geom::Pos;
 use crate::object;
 use crate::stats::Stat;
+use crate::world::{ActorId, World};
 
 /// The modifier `who` holds on to its main-hand weapon `weapon` with (module docs): its
 /// Dexterity modifier and its talents' Dexterity checks, its rank in the weapon's skill, and
 /// its grip: the `[knock_away]` numbers of `data/rules/tuning.toml` for a two-handed weapon and
 /// with a shield, its
 /// rank in the style of one weapon alone (Duelist) when the other hand is empty.
-pub fn hold(content: &Content, who: &super::Actor, weapon: crate::content::ObjectId) -> i32 {
+pub fn hold(content: &Content, who: &crate::world::Actor, weapon: crate::content::ObjectId) -> i32 {
     let dexterity = who.check_modifier(content, Stat::Dexterity);
     let skill = (content.object(weapon).skill).map_or(0, |s| i32::from(who.weapon_skills.rank(s)));
     let grip = match who.grip(content) {

@@ -1,12 +1,12 @@
-//! Retribution (`world/smite.rs::retribution`; spec §8 "Class abilities", "Free blows"; the
+//! Retribution (`world/classes/smite.rs::retribution`; spec §8 "Class abilities", "Free blows"; the
 //! paladin design P3, #912): a hostile's blow that lands is answered by the paladin's smite for
 //! four zeal, never as well as a riposte, not outside the bands, and deterministically.
 
-use super::class_active_tests::{beside, reach, world};
-use super::free_blow::{Cue, Free};
-use super::*;
 use crate::action::AttackKind;
 use crate::content::ResourceId;
+use crate::world::classes::class_active_tests::{beside, reach, world};
+use crate::world::combat::free_blow::{Cue, Free};
+use crate::world::*;
 
 fn zeal(w: &World) -> ResourceId {
     w.content().resource_id("zeal").expect("zeal")

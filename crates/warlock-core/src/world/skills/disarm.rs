@@ -19,7 +19,6 @@
 //! time and no draw.
 
 use super::search::Hidden;
-use super::{Spent, World};
 use crate::ability::Ability;
 use crate::action::Event;
 use crate::check::{self, Checked};
@@ -27,12 +26,13 @@ use crate::content::ActionKind;
 use crate::geom::Dir;
 use crate::skills::{Effect, Use};
 use crate::stats::Stat;
+use crate::world::{Spent, World};
 
 impl World {
     /// The player tries to disarm the trap they know of in `dir` (module docs). Returns what it
     /// cost: the `disarm` action, priced before the trap may go off (it may kill them), and a
     /// pit's climb on top.
-    pub(super) fn disarm(&mut self, dir: Dir, events: &mut Vec<Event>) -> Spent {
+    pub(in crate::world) fn disarm(&mut self, dir: Dir, events: &mut Vec<Event>) -> Spent {
         let player = self.state.player;
         if !Ability::Disarm.had_by(self.state.player(), &self.content) {
             self.say("You do not know how to disarm traps.");
@@ -75,7 +75,7 @@ impl World {
 
     /// What the player adds to a try at disarming a trap: the Dexterity modifier (of the
     /// effective score) and what Disable device gives.
-    pub(super) fn disarm_modifier(&self) -> i32 {
+    pub(in crate::world) fn disarm_modifier(&self) -> i32 {
         let content = &self.content;
         let player = self.state.player();
         let dexterity = player.check_modifier(content, Stat::Dexterity);

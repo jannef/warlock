@@ -3,7 +3,6 @@
 //! carries the pool, with an opening more for the thief's own kill; a departure, a level change,
 //! and the pool's decay to 0 clear it.
 
-use super::*;
 use crate::action::parse_actions;
 use crate::character::CharacterSpec;
 use crate::combat::{Blow, Strike};
@@ -13,6 +12,7 @@ use crate::object::Stack;
 use crate::replay::Replay;
 use crate::stats::{PerStat, Stats};
 use crate::test_support::{CONTENT as BUILTIN, run};
+use crate::world::*;
 
 /// A human thief in the showcase (seed 7), with their kit, every score 14, hit points to spare.
 fn thief() -> World {

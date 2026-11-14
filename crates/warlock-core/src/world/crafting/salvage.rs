@@ -23,7 +23,7 @@
 //!   material is lost, but a failed gem only drops a cut (while above the roughest true cut) or
 //!   else a size (while above the smallest) ([`chipped`]); a natural 2, or a gem with nothing to
 //!   lose, shatters it. A material no profession works gives nothing and is not mentioned.
-//! - **Magic** (docs/design/enchanting.md §10; `world/crystal.rs`, [`World::catch_magic`]):
+//! - **Magic** (docs/design/enchanting.md §10; `world/crafting/crystal.rs`, [`World::catch_magic`]):
 //!   before the material checks, a magic or rare item, identified or not, makes one Enchanting
 //!   check per affix, each made a crystal of the affix's colour among what is saved, and a rare
 //!   of item level 10 or more a small chance of a rare material.
@@ -32,10 +32,9 @@
 //!   made. No noise, no alignment.
 //!
 //! [`Action::Salvage`]: crate::action::Action::Salvage
-//! [`Actor::skill_effect_of`]: super::Actor::skill_effect_of
+//! [`Actor::skill_effect_of`]: crate::world::Actor::skill_effect_of
 
 use super::work::{Job, Task};
-use super::{Spent, World};
 use crate::action::Event;
 use crate::combat;
 use crate::content::{ActionKind, Content, Cutting, Gems, MaterialId};
@@ -43,6 +42,7 @@ use crate::item_parts::ItemPart;
 use crate::object::{self, Stack};
 use crate::skills::{Effect, SkillId, Use};
 use crate::stats::Stat;
+use crate::world::{Spent, World};
 
 /// Whether `stack` has anything to salvage: not a spirit weapon, with a part of a material some
 /// profession works, and not money (coins are never melted down: gold ingots come from salvaged
@@ -59,7 +59,7 @@ pub fn salvageable(content: &Content, stack: &Stack) -> bool {
 /// The percent of a made material's grams salvage gives `actor` back: `data/rules/salvage.toml`'s
 /// `yield`, or the holder's Waste not where that is more (`CraftMods::salvage_percent`; the
 /// craftsperson design §7.3). The one read, for the work and for Eye for the make's line.
-pub fn salvage_percent(content: &Content, actor: &super::Actor) -> u8 {
+pub fn salvage_percent(content: &Content, actor: &crate::world::Actor) -> u8 {
     let percent = content.salvage().map_or(0, |s| s.percent);
     percent.max(actor.talent_mods(content).craft.salvage_percent)
 }
@@ -83,7 +83,7 @@ pub fn chipped(gems: &Gems, cutting: Cutting) -> Option<Cutting> {
 
 /// An attempt under way: the stack taken apart.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(super) struct Salvaging {
+pub(in crate::world) struct Salvaging {
     item: usize,
 }
 
@@ -120,7 +120,7 @@ struct Check {
 
 impl World {
     /// The player begins to take the stack at `item` apart; refused, taking no time (module docs).
-    pub(super) fn start_salvage(&mut self, item: usize) -> Spent {
+    pub(in crate::world) fn start_salvage(&mut self, item: usize) -> Spent {
         let Some(rules) = self.content.salvage().copied() else {
             return Spent::Nothing;
         };
@@ -195,7 +195,7 @@ impl World {
         let percent = salvage_percent(&content, self.state.player());
         let at = self.set_apart(item);
         let one = self.state.player().inventory[at].clone();
-        super::outcome::remove_stacks(self.player_mut(), &[at]);
+        crate::world::fixtures::outcome::remove_stacks(self.player_mut(), &[at]);
         let name = self.lore().title(&one);
         self.say(format!("You take the {name} apart."));
         for line in caught.lines {

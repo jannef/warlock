@@ -2,14 +2,14 @@
 //! that eats all ten keepers and the pools after each meal, Twice-born's rising beside the
 //! Phoenix's, and the new relations at work.
 
-use super::super::fight::Harm;
-use super::super::*;
 use crate::action::Meal;
 use crate::character::CharacterSpec;
 use crate::content::{ContentFiles, GiftTier, Sign};
 use crate::dump::{self, Layer};
 use crate::stats::{PerStat, Stat, Stats};
 use crate::test_support::{CONTENT as BUILTIN, said_text as said};
+use crate::world::combat::fight::Harm;
+use crate::world::*;
 
 /// Food underfoot, nothing else about.
 const PANTRY: &str = r##"
@@ -103,7 +103,7 @@ fn the_pools_after_each_of_ten_meals() {
     rows.push(format!("held: {}", held.join(", ")));
     // Every signature is held, and between ten and twenty draws took (an undoer takes none).
     assert!(KEEPERS.len() <= held.len() && held.len() <= 30, "{held:?}");
-    insta::with_settings!({ snapshot_path => "../snapshots" }, {
+    insta::with_settings!({ snapshot_path => "../../snapshots" }, {
         insta::assert_snapshot!("profane_ten_meals", rows.join("\n"));
     });
 }

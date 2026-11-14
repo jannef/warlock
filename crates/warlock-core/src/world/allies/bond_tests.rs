@@ -4,12 +4,12 @@
 //! retinue, no echo). The witch's Familiar's sight (#932): the same viewpoint on the familiar, a
 //! nose of its own for her, no buffs.
 
-use super::*;
 use crate::content::{Content, ContentFiles};
 use crate::geom::Pos;
 use crate::perception::Perception;
 use crate::sight::{self, LineOfSight};
 use crate::test_support::{CONTENT as BUILTIN, run};
+use crate::world::*;
 use std::sync::Arc;
 
 /// Two dim rooms, a wall between them and a closed door in it: the player in the west room
@@ -284,7 +284,7 @@ fn a_witch_comes_into_her_familiars_sight_at_25() {
     let spec = "human,female,witch".parse().expect("a character");
     let mut w = World::start_run(content, "showcase", Some(7), Some(&spec), None, true).unwrap();
     assert!(w.familiar().is_some());
-    crate::world::caster_tests::reach(&mut w, 24);
+    crate::world::magic::caster_tests::reach(&mut w, 24);
     assert!(
         !w.state
             .player()
@@ -292,7 +292,7 @@ fn a_witch_comes_into_her_familiars_sight_at_25() {
             .beast
             .familiar_sight
     );
-    crate::world::caster_tests::reach(&mut w, 25);
+    crate::world::magic::caster_tests::reach(&mut w, 25);
     let mods = w.state.player().talent_mods(&w.content);
     assert!(mods.beast.familiar_sight);
     assert!(

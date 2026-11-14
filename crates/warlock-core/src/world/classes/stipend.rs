@@ -25,7 +25,6 @@
 //! If the servant dies, no one else brings the stipend: it still grows, and is never handed
 //! over.
 
-use super::{ActorId, Spent, World, WorldState};
 use crate::action::Event;
 use crate::content::{
     ActionKind, Content, CreatureSpawn, Dialogue, DialogueId, MAX_ITEM_LEVEL, Rarity, StatUse,
@@ -37,6 +36,7 @@ use crate::magic::loot::{self, LootGrade, Luck};
 use crate::object::{self, Stack};
 use crate::rng::Rng;
 use crate::variant::Source;
+use crate::world::{ActorId, Spent, World, WorldState};
 use serde::{Deserialize, Serialize};
 
 /// What the family has put by and the servant holds.
@@ -107,7 +107,7 @@ pub(crate) fn of_level(
 /// Places every town's class helper that waits on level `level` (just made) whose class ability
 /// the character holds: an aristocrat's servant, a merchant's business partner (`invest.rs`), a
 /// craftsperson's patron (`patron.rs`). The module docs.
-pub(super) fn place_servant(state: &mut WorldState, content: &Content, level: &str) {
+pub(in crate::world) fn place_servant(state: &mut WorldState, content: &Content, level: &str) {
     let helpers = content.towns().iter().flat_map(|t| &t.servants);
     for servant in helpers.filter(|s| s.level == level) {
         place(state, content, servant);
@@ -157,13 +157,13 @@ fn place(state: &mut WorldState, content: &Content, servant: &TownServant) {
         asleep: false,
         status: Vec::new(),
     };
-    super::travel::make_creature(state, content, &servant.level, &spawn);
+    crate::world::levels::travel::make_creature(state, content, &servant.level, &spawn);
 }
 
 impl World {
     /// The player rose from level `before` to their level now: each level reached adds to the
     /// stipend, if they have the ability (the module docs).
-    pub(super) fn grow_stipend(&mut self, before: u8, after: u8) {
+    pub(in crate::world) fn grow_stipend(&mut self, before: u8, after: u8) {
         let content = self.content.clone();
         let mods = self.state.player().talent_mods(&content).into_owned();
         if !mods.fortune.stipend || content.stipend().is_none() {
@@ -208,7 +208,7 @@ impl World {
 
     /// Chats with creature `id`, who speaks `dialogue`, if it is a family servant: hands over
     /// the stipend, or says a one-liner (the module docs). `None` for anyone else.
-    pub(super) fn servant_chat(
+    pub(in crate::world) fn servant_chat(
         &mut self,
         id: ActorId,
         dialogue: DialogueId,
@@ -253,7 +253,7 @@ impl World {
 
     /// `all` into the player's pack, or at their feet each stack that would overload them, and
     /// says so: a servant's handover, a partner's withdrawal (`invest.rs`).
-    pub(super) fn receive(&mut self, all: Vec<Stack>) {
+    pub(in crate::world) fn receive(&mut self, all: Vec<Stack>) {
         let content = self.content.clone();
         let (mut taken, mut left) = (Vec::new(), Vec::new());
         for stack in all {
@@ -281,7 +281,7 @@ impl World {
     }
 
     /// Every stack of `stacks` named, however many: "412 gold coins, a potion, and a ruby".
-    pub(super) fn listed(&self, stacks: &[Stack]) -> String {
+    pub(in crate::world) fn listed(&self, stacks: &[Stack]) -> String {
         let names: Vec<String> = stacks.iter().map(|s| self.lore().describe(s)).collect();
         if names.is_empty() {
             return "nothing".into();

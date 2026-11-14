@@ -15,23 +15,23 @@
 //!   highest);
 //! - **alignment**: the starting score moved, the start's fourth term (never `shift_alignment`:
 //!   nothing has happened yet);
-//! - **talent** and **flaw**: `World::bestow` (`world/boons.rs`, the forgotten altar's Chosen
+//! - **talent** and **flaw**: `World::bestow` (`world/fixtures/boons.rs`, the forgotten altar's Chosen
 //!   and Forsaken with the id fixed): with what it hands out, kept in `Actor::boons` so
 //!   a restored run puts it back (the roll never draws a line giving what is held).
 //!
 //! Then hit points and mana to their maxima. A run that nobody chose (no kit) has no story.
 
-use super::World;
 use crate::action::Positions;
 use crate::alignment::Score;
 use crate::background::{self, Rolled, Witness};
 use crate::content::{Content, GOLD, Keep, Marks, WeaponSkillId};
 use crate::kit::Pack;
 use crate::object::Stack;
+use crate::world::World;
 
 impl World {
     /// Tells the player's background story and applies it (see the module docs).
-    pub(super) fn tell_background(&mut self) {
+    pub(in crate::world) fn tell_background(&mut self) {
         let content = self.content.clone();
         let Some(character) = self.state.character.clone() else {
             return;
@@ -132,7 +132,7 @@ impl World {
     }
 
     /// An item into the pack as a kit line puts it: worn or wielded in a free slot, else carried.
-    pub(super) fn story_item(&mut self, content: &Content, mut stack: Stack, keep: Keep) {
+    pub(in crate::world) fn story_item(&mut self, content: &Content, mut stack: Stack, keep: Keep) {
         let date = self.state.time;
         crate::rot::made_at(std::iter::once(&mut stack), content, date);
         if crate::kit::is_labelled(content, stack.object) {

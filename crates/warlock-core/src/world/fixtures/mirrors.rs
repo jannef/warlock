@@ -11,11 +11,11 @@
 //! the hall aims at the player or one of their images, a gameplay draw ([`World::aim_at`]).
 //! Creatures inside know the hall and are not fooled; creatures never see images at all.
 
-use super::{ActorId, ActorKind, LevelState, World, WorldState, fnv1a};
 use crate::action::AttackKind;
 use crate::content::ActionKind;
 use crate::content::Content;
 use crate::geom::Pos;
+use crate::world::{ActorId, ActorKind, LevelState, World, WorldState, fnv1a};
 use std::collections::BTreeSet;
 
 /// Where images' ids begin: above every real actor's.
@@ -94,7 +94,7 @@ impl World {
 
     /// The player steps or strikes into `to`, where no one stands: if they see an image there,
     /// their blow meets only glass, and it takes a blow's time.
-    pub(super) fn meets_glass(&mut self, to: Pos) -> Option<i64> {
+    pub(in crate::world) fn meets_glass(&mut self, to: Pos) -> Option<i64> {
         if !self.perception.shows_image_at(to) {
             return None;
         }
@@ -110,7 +110,7 @@ impl World {
     /// Whether `at`, where `shooter` aims, holds an image to them: one the player sees, for the
     /// player; any, for a creature (which aimed at it, [`World::aim_at`]). A missile flies on
     /// through it.
-    pub(super) fn reflected(&self, shooter: ActorId, at: Pos) -> bool {
+    pub(in crate::world) fn reflected(&self, shooter: ActorId, at: Pos) -> bool {
         if shooter == self.state.player {
             return self.perception.shows_image_at(at);
         }
@@ -120,7 +120,7 @@ impl World {
     /// Where creature `shooter` aims a missile at `target`, which stands at `at`: at the player
     /// in a hall of mirrors, from outside it, at the player or one of their images (a gameplay
     /// draw, each alike); anywhere else at `at`.
-    pub(super) fn aim_at(&mut self, shooter: ActorId, target: ActorId, at: Pos) -> Pos {
+    pub(in crate::world) fn aim_at(&mut self, shooter: ActorId, target: ActorId, at: Pos) -> Pos {
         let level = self.state.current();
         let is_player =
             (self.state.actors.get(&target)).is_some_and(|a| a.kind == ActorKind::Player);

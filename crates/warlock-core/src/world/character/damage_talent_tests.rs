@@ -4,13 +4,13 @@
 //! screen in words; Crusher drives bludgeoning blows through Protection; and the damage-types
 //! system is held to the coverage bar.
 
-use super::*;
 use crate::character::CharacterSpec;
 use crate::damage::{Damage, ResistanceWord};
 use crate::equipment::{free_slot, slots_taken};
 use crate::object::Stack;
 use crate::stats::{PerStat, Stats};
 use crate::test_support::{CONTENT as BUILTIN, last, run};
+use crate::world::*;
 
 /// A human warrior in the showcase, every score 14, holding nothing.
 fn world() -> World {
@@ -18,7 +18,7 @@ fn world() -> World {
     let w =
         World::with_character(BUILTIN.clone(), "showcase", Some(7), Some(&spec)).expect("world");
     // Born under no sign, so the talents held are the ones picked (a sign's gifts are talents
-    // too: world/stars_tests.rs).
+    // too: world/character/stars_tests.rs).
     let mut state = w.state().clone();
     state.character.as_mut().expect("a character").sign = None;
     let mut w = World::from_state(BUILTIN.clone(), state).expect("restores");

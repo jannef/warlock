@@ -33,13 +33,13 @@
 //!
 //! Nothing is drawn deciding; the trap and the blows draw as theirs always do.
 
-use super::enter::Entry;
-use super::free_blow::{Free, FreeBlow};
-use super::ice::Footing;
-use super::{ActorId, Spent, World};
 use crate::action::Event;
 use crate::content::{ActionKind, ClassActive, LevelKind, Stance};
 use crate::geom::{Dir, Pos};
+use crate::world::combat::free_blow::{Free, FreeBlow};
+use crate::world::levels::enter::Entry;
+use crate::world::levels::ice::Footing;
+use crate::world::{ActorId, Spent, World};
 
 impl World {
     /// Charge at `at` (the module docs); `use_class_at` has checked the ability.

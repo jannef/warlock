@@ -4,17 +4,17 @@
 //! the meal that gives them ([`World::profane_meal`], §4): a profane corpse's signature, its
 //! draws on the table (§7.2, [`World::draw_gift`]), and the pull toward evil.
 //!
-//! A gift held is a talent in [`Actor::talents`](super::Actor) and [`Actor::boons`](super::Actor),
+//! A gift held is a talent in [`Actor::talents`](crate::world::Actor) and [`Actor::boons`](crate::world::Actor),
 //! so a restored run puts it back (`stars::grant`) and the state hash covers it. Its `stat`
 //! effects are handed out as it takes and taken back as it goes; every other effect is read at its
 //! hook and is simply there or not, but for what is worn in a slot it bars or opened, which falls
 //! as it takes or goes (`body_slots.rs`).
 
 use super::alignment::Deed;
-use super::{Spent, World};
 use crate::content::{GiftDef, GiftTier, OnEat, TalentEffect, TalentId};
 use crate::stats::DRAIN_FLOOR;
 use crate::talent::{Taken, VigourEffect};
+use crate::world::{Spent, World};
 
 impl World {
     /// Whether a draw may give the player `gift` (§7.2's pool): not held, not excluded by a gift
@@ -43,7 +43,7 @@ impl World {
     /// before it feeds): its signature (`gives`), sure; then each of its `profane` rolls, a gift
     /// drawn ([`World::draw_gift`]) and given, each complete before the next draw; then the
     /// deed, [`Deed::EatProfane`], its notes said. Nothing for a corpse that is not profane.
-    pub(super) fn profane_meal(&mut self, on_eat: &OnEat) {
+    pub(in crate::world) fn profane_meal(&mut self, on_eat: &OnEat) {
         let (Some(gives), Some(rolls)) = (&on_eat.gives, &on_eat.profane) else {
             return;
         };
@@ -69,7 +69,10 @@ impl World {
     /// gifts the player may take by weight (another); an empty tier gives way to the next up,
     /// then down (lesser → greater → dire; dire → greater → lesser). `None` when all three are
     /// empty.
-    pub(super) fn draw_gift(&mut self, rolls: &crate::content::ProfaneRolls) -> Option<TalentId> {
+    pub(in crate::world) fn draw_gift(
+        &mut self,
+        rolls: &crate::content::ProfaneRolls,
+    ) -> Option<TalentId> {
         let tier = *(self.state.rng).weighted(&GiftTier::ALL, |&t| u32::from(rolls.weight(t)))?;
         let order = match tier {
             GiftTier::Lesser => [GiftTier::Lesser, GiftTier::Greater, GiftTier::Dire],
@@ -93,7 +96,7 @@ impl World {
     /// `replaces` names is taken away (each one's `undone` line), and it is taken with its `stat`
     /// handed out (its `line`, then "You are <name>."). Whether it was taken. Excludes and races
     /// are the pool's business ([`World::may_take_gift`]), not this.
-    pub(super) fn bestow_gift(&mut self, gift: TalentId) -> bool {
+    pub(in crate::world) fn bestow_gift(&mut self, gift: TalentId) -> bool {
         let content = self.content.clone();
         let Some(def) = content.profane().gift(gift) else {
             return false;
@@ -136,7 +139,7 @@ impl World {
     /// Takes gift `gift` away from the player (§7.4), saying its `undone` line: out of their
     /// talents and boons, its `stat` effects given back in the negative (never below
     /// [`DRAIN_FLOOR`]), hit points and mana kept within their maxima. Whether it was held.
-    pub(super) fn rescind(&mut self, gift: TalentId) -> bool {
+    pub(in crate::world) fn rescind(&mut self, gift: TalentId) -> bool {
         let content = self.content.clone();
         let Some(def) = content.profane().gift(gift) else {
             return false;
@@ -201,7 +204,7 @@ impl World {
 
     /// The dev action `gift:ID`: the player is given gift `id` as a draw would give it, refused
     /// (no time) for no gift, one held, or one a draw would not offer them. Takes no time.
-    pub(super) fn gift_dev(&mut self, id: &str) -> Spent {
+    pub(in crate::world) fn gift_dev(&mut self, id: &str) -> Spent {
         let content = self.content.clone();
         let gift = (content.talents().id(id)).and_then(|t| content.profane().gift(t));
         let Some(gift) = gift else {
@@ -218,7 +221,7 @@ impl World {
 
     /// The dev action `rescind:ID`: gift `id` is taken from the player, refused (no time) for one
     /// not held. Takes no time.
-    pub(super) fn rescind_dev(&mut self, id: &str) -> Spent {
+    pub(in crate::world) fn rescind_dev(&mut self, id: &str) -> Spent {
         let content = self.content.clone();
         let gift = (content.talents().id(id)).filter(|&t| content.profane().gift(t).is_some());
         match gift {

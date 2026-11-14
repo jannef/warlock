@@ -1,11 +1,11 @@
-//! Elixirs (spec §8 "Potions"; `world/elixir.rs`): drunk through the Consume action (`eat:`),
+//! Elixirs (spec §8 "Potions"; `world/health/elixir.rs`): drunk through the Consume action (`eat:`),
 //! the stat +1 for good and its potential +1d2, the hit points and mana that follow, the marks
 //! of the `elixir` use, Quick study of the body, and where elixirs come from.
 
-use super::*;
 use crate::content::ContentFiles;
 use crate::stats::{PerStat, Stat, Stats};
 use crate::test_support::{run, said};
+use crate::world::*;
 
 /// The six elixirs, by id, with the stat each raises.
 const ELIXIRS: &[(&str, Stat)] = &[

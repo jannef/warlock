@@ -16,14 +16,14 @@
 //! level (checked by `Content::validate`), so it arrives on that staircase coming back up.
 //!
 //! A branch with `endless` instead of `depth` has no last floor (spec §7 "The endless branch",
-//! `world/endless.rs`): every staircase makes a new floor, only the current one exists, and each
+//! `world/levels/endless.rs`): every staircase makes a new floor, only the current one exists, and each
 //! floor is drawn rooms or caves as it is made. It has one row of per-depth tables, read at every
 //! depth, and so no `[[dungeon.levels]]`, and with them no pinned vault.
 //!
 //! A branch with `[dungeon.portal]` (Hellegeat, spec §7 "The Pits") exists only as instances: a
 //! Pit `S` (a positive integer) has the levels `id@S:1` … `id@S:depth`, each a pure function of
 //! the run seed and its id, forgotten when left as an endless branch's floors are
-//! (`world/endless.rs`). No stairs, hidden location, or quest names its levels: only a `portal`
+//! (`world/levels/endless.rs`). No stairs, hidden location, or quest names its levels: only a `portal`
 //! miscast opens one. Its floors' stairs lead to their own Pit's ([`sibling`]).
 //!
 //! ```toml
@@ -75,7 +75,7 @@
 //! boss = { depth = 5, creature = "gatewarden", vault = "wardens_hall" }
 //!                               # optional: every Pit's boss and its lair, as a layer boss's row
 //!                               # but of any type, its lair with no `>` on a floor that leads
-//!                               # nowhere; its death seals its own Pit (`world/pit.rs`)
+//!                               # nowhere; its death seals its own Pit (`world/levels/pit.rs`)
 //!
 //! [[dungeon.endless.boss]]      # optional, one per layer: a layer boss and its lair
 //! depth = 10                    # the floor (each depth once)
@@ -231,7 +231,7 @@ struct BossSpec {
     vault: String,
 }
 
-/// A layer boss of an endless branch (spec §7 "The endless branch", `world/layer_boss.rs`): the
+/// A layer boss of an endless branch (spec §7 "The endless branch", `world/levels/layer_boss.rs`): the
 /// unique creature whose lair, a vault, floor `depth` stamps until it is slain, with the floor's
 /// only way down hidden in it.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -498,7 +498,7 @@ struct LevelsSpec {
 #[serde(deny_unknown_fields)]
 struct PortalSpec {
     /// Each Pit's boss and its lair (spec §7 "The Pits", #1298): a layer boss's row, but its
-    /// type need not be unique, and its death seals only its own Pit (`world/pit.rs`).
+    /// type need not be unique, and its death seals only its own Pit (`world/levels/pit.rs`).
     boss: Option<BossSpec>,
 }
 
@@ -562,7 +562,7 @@ pub struct DungeonDef {
     /// How much harder the locks on a level are to pick for each level below the first (spec §8
     /// "Doors"; [`DungeonDef::locks_at`]).
     pub locks_per_depth: u8,
-    /// The only ores (metal ids) its walls give a miner (spec §8 "Digging", `world/mine.rs`;
+    /// The only ores (metal ids) its walls give a miner (spec §8 "Digging", `world/crafting/mine.rs`;
     /// checked against `data/mining.toml`'s ore rows); `None`: every ore of the table.
     pub ores: Option<Vec<String>>,
     /// How many items of loot lie on the floor of each level, fewest and most (spec §8 "Magic

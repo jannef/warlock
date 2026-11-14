@@ -23,10 +23,10 @@
 //! wall (`spell.rs`, `read.rs`) and so do not reach one inside it. Noise needs nothing: a sound
 //! made inside a wall spreads from its cell into the open (`noise::propagate`).
 
-use super::{ActorId, LevelState, World};
 use crate::combat::{Category, Defence};
 use crate::content::{Content, CreatureId, Incorporeal};
 use crate::geom::Pos;
+use crate::world::{ActorId, LevelState, World};
 
 /// What a path through a solid cell costs an incorporeal creature on top of a step: it keeps to
 /// open ground when the way round is no longer, and cuts through stone when it is.
@@ -63,7 +63,7 @@ impl World {
 
     /// `defence` with what the wall around actor `id` adds: its type's `wall_defence` in the
     /// Wall category while it stands inside solid terrain; else `defence` as it is.
-    pub(super) fn wall_defence(&self, id: ActorId, defence: Defence) -> Defence {
+    pub(in crate::world) fn wall_defence(&self, id: ActorId, defence: Defence) -> Defence {
         let Some(actor) = self.state.actors.get(&id) else {
             return defence;
         };
@@ -77,7 +77,7 @@ impl World {
 
     /// Where what falls from cell `p` of level `level` comes to lie: `p` itself if it is
     /// walkable, else the nearest walkable cell (by Chebyshev rings, each in row order), else `p`.
-    pub(super) fn landing(&self, level: &str, p: Pos) -> Pos {
+    pub(in crate::world) fn landing(&self, level: &str, p: Pos) -> Pos {
         let Some(level) = self.state.levels.get(level) else {
             return p;
         };

@@ -4,10 +4,10 @@
 //! or identified, its charges until identified, its rung with its type; a wand and a launcher
 //! compete for the slot; charges and rungs are saved.
 
-use super::*;
 use crate::action::AttackKind;
 use crate::content::ContentFiles;
 use crate::test_support::{builtin, run, said};
+use crate::world::*;
 
 /// The pack: a, a wand of magic missile; b, a wand of scorching ray; c, a crossbow; d, a
 /// scroll of identify; e, a wand of fireball.
@@ -146,7 +146,7 @@ fn identifying_a_wand_tells_its_spell_and_charges() {
         .collect();
     let content = w.content.clone();
     let wand = content.object(stack.object).wand.expect("a wand");
-    let by = super::CastBy::Wand(stack.known_wand_rung(w.lore()).expect("its rung"));
+    let by = crate::world::CastBy::Wand(stack.known_wand_rung(w.lore()).expect("its rung"));
     let roll = (w.state.player())
         .spell_roll_words(&content, content.spell(wand.spell), by)
         .expect("it rolls");
@@ -229,7 +229,7 @@ fn a_wand_casts_at_its_own_rung_and_wand_mastery_raises_it() {
     let def = content.spell(wand.spell);
     let roll = |w: &World| {
         let stack = &w.state.player().inventory[4];
-        let by = super::CastBy::Wand(stack.wand_rung(&content).expect("a wand"));
+        let by = crate::world::CastBy::Wand(stack.wand_rung(&content).expect("a wand"));
         let r = w.state.player().spell_roll(&content, def, by);
         r.map(|r| r.to_string()).unwrap_or_default()
     };

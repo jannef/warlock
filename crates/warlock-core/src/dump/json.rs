@@ -53,7 +53,7 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
             if a.unaware {
                 seen["unaware"] = json!(true);
             }
-            // The player's mark (`world/mark.rs`).
+            // The player's mark (`world/classes/mark.rs`).
             if a.marked {
                 seen["marked"] = json!(true);
             }
@@ -321,9 +321,9 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
                 "here": a.here,
             }))
             .collect::<Vec<_>>(),
-        // The player's companion (spec §8 "Allies"; `world/companion.rs`), or null.
+        // The player's companion (spec §8 "Allies"; `world/allies/companion.rs`), or null.
         "companion": kept_json(&view, Kept::Companion),
-        // The player's familiar (`world/familiar.rs`), or null.
+        // The player's familiar (`world/allies/familiar.rs`), or null.
         "familiar": kept_json(&view, Kept::Familiar),
         // The overworld encounter to answer (spec §7 "Overworld encounters"), or null.
         "encounter": view.encounter().map(|e| {

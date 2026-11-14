@@ -3,10 +3,10 @@
 //! Cauldron-wise; the content checks of `vision` and `resist` on statuses; the helpful draughts
 //! of kind `status` (the potions wave 2 design §4.1) and their checks.
 
-use super::*;
 use crate::content::ContentFiles;
 use crate::stats::Stat;
 use crate::test_support::{run, said};
+use crate::world::*;
 
 /// The test content: a dark hall (no light at all), the player at `@` carrying `pack`; `more`
 /// adds or replaces files.

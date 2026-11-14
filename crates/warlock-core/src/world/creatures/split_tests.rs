@@ -4,9 +4,9 @@
 //! up to its cap, and the engulfing statuses hold, hurt, and block as data says.
 
 use super::split::Split;
-use super::*;
 use crate::content::{ActionKind, Affliction, ContentFiles, StatusId};
 use crate::test_support::{run, said};
+use crate::world::*;
 
 /// A breeder of its own kind at no cost, for the self-pool.
 const BREEDER: &str = r##"
@@ -166,11 +166,21 @@ fn a_halfs_kill_pays_a_quarter_and_counts_for_no_quest() {
     // Killed: a quarter of what the whole pays, and the quest log's count unmoved.
     let xp = w.state.experience;
     let player = w.state.player;
-    w.hurt(half, 1000, fight::Harm::Actor(player), &mut Vec::new());
+    w.hurt(
+        half,
+        1000,
+        crate::world::combat::fight::Harm::Actor(player),
+        &mut Vec::new(),
+    );
     let half_paid = w.state.experience - xp;
     assert_eq!(w.state.quests.killed("charnel_heap"), 0);
     let xp = w.state.experience;
-    w.hurt(heap, 1000, fight::Harm::Actor(player), &mut Vec::new());
+    w.hurt(
+        heap,
+        1000,
+        crate::world::combat::fight::Harm::Actor(player),
+        &mut Vec::new(),
+    );
     let whole_paid = w.state.experience - xp;
     assert_eq!(w.state.quests.killed("charnel_heap"), 1);
     // The half was the first kill, with the bonus; the whole is paid without one.
@@ -191,7 +201,12 @@ fn worms_crawl_out_of_a_dead_wormhost_on_its_side_paying_a_tenth() {
     let undead = w.state.actors[&host].faction(w.content());
     let at = w.state.actors[&host].pos;
     let player = w.state.player;
-    w.hurt(host, 1000, fight::Harm::Actor(player), &mut Vec::new());
+    w.hurt(
+        host,
+        1000,
+        crate::world::combat::fight::Harm::Actor(player),
+        &mut Vec::new(),
+    );
     flush(&mut w);
     let worms = of_kind(&w, "grave_worm");
     assert!((2..=8).contains(&worms.len()), "{} worms", worms.len());
@@ -215,7 +230,12 @@ fn dying_into_is_deterministic() {
         let mut w = world_with("wormhost", "long_sword");
         let host = first(&w, "wormhost");
         let player = w.state.player;
-        w.hurt(host, 1000, fight::Harm::Actor(player), &mut Vec::new());
+        w.hurt(
+            host,
+            1000,
+            crate::world::combat::fight::Harm::Actor(player),
+            &mut Vec::new(),
+        );
         w.state_hash()
     };
     assert_eq!(worms(), worms());
@@ -289,7 +309,12 @@ fn engulfed_holds_hurts_blocks_and_ends_with_its_holder() {
     assert!(w.state.player().hp < hp, "it hurt");
     // The holder dies: it lets go.
     w.afflict(player, engulfed, 1, Some(heap), &mut Vec::new());
-    w.hurt(heap, 1000, fight::Harm::Actor(player), &mut Vec::new());
+    w.hurt(
+        heap,
+        1000,
+        crate::world::combat::fight::Harm::Actor(player),
+        &mut Vec::new(),
+    );
     run(&mut w, "wait");
     assert!(!w.state.player().effects.has(engulfed), "free once it died");
 }
@@ -391,7 +416,12 @@ fn heads_crawl_out_of_a_dead_hydra() {
     let hydra = first(&w, "hydra");
     let marsh = w.state.actors[&hydra].faction(w.content());
     let player = w.state.player;
-    w.hurt(hydra, 1000, fight::Harm::Actor(player), &mut Vec::new());
+    w.hurt(
+        hydra,
+        1000,
+        crate::world::combat::fight::Harm::Actor(player),
+        &mut Vec::new(),
+    );
     let heads = of_kind(&w, "hydra_head");
     assert!((1..=4).contains(&heads.len()), "{} heads", heads.len());
     for head in &heads {

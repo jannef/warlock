@@ -2,7 +2,6 @@
 //! druid's, wizard's, and witch's level tables, their spells (migrated onto the one cast path,
 //! #395: paid in mana by the spell level), and the passives with rules of their own.
 
-use super::*;
 use crate::ability::{Ability, Unavailable};
 use crate::action::parse_actions;
 use crate::character::CharacterSpec;
@@ -11,20 +10,21 @@ use crate::dump::{self, Layer};
 use crate::replay::Replay;
 use crate::stats::{PerStat, Stat, Stats};
 use crate::test_support::{last, run, said};
+use crate::world::*;
 use std::sync::LazyLock;
 
 static BUILTIN: LazyLock<Arc<Content>> = LazyLock::new(|| Arc::new(quiet()));
 
 /// The built-in files without `data/miscast.toml`: no Spellcraft check after a cast, so the tests
 /// of a cast's own draws and effects read the cast alone (miscasts are `miscast_tests.rs`').
-pub(super) fn files() -> crate::content::ContentFiles {
+pub(in crate::world) fn files() -> crate::content::ContentFiles {
     let mut files = crate::content::ContentFiles::builtin();
     files.remove("data/miscast.toml");
     files
 }
 
 /// The built-in content as [`files`] has it: no miscasts.
-pub(super) fn quiet() -> Content {
+pub(in crate::world) fn quiet() -> Content {
     Content::load(&files()).expect("content")
 }
 
@@ -35,7 +35,7 @@ fn world(class: &str) -> World {
 }
 
 /// [`world`] with `content`.
-pub(super) fn world_with(content: Arc<Content>, class: &str) -> World {
+pub(in crate::world) fn world_with(content: Arc<Content>, class: &str) -> World {
     let spec: CharacterSpec = format!("human,female,{class}")
         .parse()
         .expect("a character");
@@ -63,7 +63,7 @@ pub(super) fn world_with(content: Arc<Content>, class: &str) -> World {
 
 /// Grants the XP that takes the player to `level` and spends every choice it brings, mana
 /// topped up again.
-pub(super) fn reach(world: &mut World, level: u8) {
+pub(in crate::world) fn reach(world: &mut World, level: u8) {
     let spec = world.state.character.as_ref().map(|c| &c.spec);
     let factor = Factor::of(world.content(), spec);
     let need = world.content().experience().threshold_for(level, factor);
@@ -92,7 +92,7 @@ fn class_rows(world: &World) -> Vec<String> {
 }
 
 /// The spell of id `name` in the shipped content.
-pub(super) fn sp(name: &str) -> SpellId {
+pub(in crate::world) fn sp(name: &str) -> SpellId {
     BUILTIN.spell_id(name).expect("a spell")
 }
 
@@ -103,12 +103,12 @@ fn own(world: &World, spell: SpellId) -> Option<Option<Unavailable>> {
 }
 
 /// A kobold `dx` cells east of the player with `hp` hit points; its id.
-pub(super) fn kobold(world: &mut World, dx: i32, hp: i32) -> ActorId {
+pub(in crate::world) fn kobold(world: &mut World, dx: i32, hp: i32) -> ActorId {
     kobold_at(world, (dx, 0), hp)
 }
 
 /// A kobold `(dx, dy)` from the player with `hp` hit points; its id.
-pub(super) fn kobold_at(world: &mut World, (dx, dy): (i32, i32), hp: i32) -> ActorId {
+pub(in crate::world) fn kobold_at(world: &mut World, (dx, dy): (i32, i32), hp: i32) -> ActorId {
     let content = world.content().clone();
     let here = world.player_pos();
     let at = Pos::new(here.x + dx, here.y + dy);
@@ -818,7 +818,12 @@ fn the_hags_bargain_costs_presence_for_good() {
     let player = w.state.player;
     let presence = w.state.player().stats.score(Stat::Presence);
     let mut events = Vec::new();
-    assert!(!w.hurt(player, 999, fight::Harm::Barbs, &mut events));
+    assert!(!w.hurt(
+        player,
+        999,
+        crate::world::combat::fight::Harm::Barbs,
+        &mut events
+    ));
     assert_eq!(w.state.player().hp, 1);
     assert_eq!(w.state.player().stats.score(Stat::Presence), presence - 2);
 }

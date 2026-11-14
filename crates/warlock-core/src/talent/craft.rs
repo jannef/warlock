@@ -22,7 +22,7 @@ pub enum CraftEffect {
         count_times: i32,
         time_percent: u32,
     },
-    /// Handed out once, as it is taken (a Crafts trade: Smith, Wright, ...; `world/trade.rs`):
+    /// Handed out once, as it is taken (a Crafts trade: Smith, Wright, ...; `world/crafting/trade.rs`):
     /// `skill` trained at `dice` plus the holder's `trade_bonus`, rolled from the stream
     /// `character/trade/<race>,<gender>,<class>/<skill>`, and the tools of the trade, kit lines
     /// (`content/kit.rs`) made from the same stream and carried, worn, or wielded as they say.
@@ -43,32 +43,32 @@ pub enum CraftEffect {
     /// Nothing is wasted in its hands (Waste not): salvage gives back `salvage` % of each made
     /// material's grams, and a failed recipe `failed` % of its stock and object inputs, each
     /// where it is more than everyone's (`data/rules/salvage.toml`'s, `data/recipes.toml`'s
-    /// `yield`; `world/salvage.rs::salvage_percent`, `world/craft_make.rs::failed_percent`).
+    /// `yield`; `world/crafting/salvage.rs::salvage_percent`, `world/crafting/craft_make.rs::failed_percent`).
     WasteNot { salvage: u8, failed: u32 },
     /// A failed Temper or Whittle damages nothing: the item is as it was, the attempt counted
-    /// (Waste not; `world/temper.rs`).
+    /// (Waste not; `world/crafting/temper.rs`).
     TemperSafe,
     /// Every craft it works takes `value` % of its time: recipes, Temper and Whittle, Cut and
     /// Set, Salvage, and the craftsperson's actives (Quick hands; the least held;
-    /// `world/mastery.rs::craft_seconds`).
+    /// `world/crafting/mastery.rs::craft_seconds`).
     CraftTimePercent { value: u32 },
     /// Added to a made check's margin as its grade or cut is read, never to whether it is made
-    /// (Master's hand; summed; `world/mastery.rs::graded_margin`).
+    /// (Master's hand; summed; `world/crafting/mastery.rs::graded_margin`).
     GradeEase { value: i32 },
     /// Its graded work bears its mark (Maker's mark): an item made with a `kind` is built marked
-    /// (`world/craft_make.rs::make_out`, the one read), and a marked item is worth
+    /// (`world/crafting/craft_make.rs::make_out`, the one read), and a marked item is worth
     /// `worth_percent` % more ([`TalentBook::mark_percent`], `Worked::value`), the patron pays
     /// more for it, and it holds one enchantment more (`magic/capacity.rs`).
     MakersMark { worth_percent: u32 },
     /// The class active Field forge: an ingot carried set on a heap of stones beside the player
-    /// in `seconds`, a makeshift anvil for good (`world/field_forge.rs`; the craftsperson's).
+    /// in `seconds`, a makeshift anvil for good (`world/crafting/field_forge.rs`; the craftsperson's).
     FieldForge { seconds: u32 },
     /// The class active Make do and mend: a damaged thing the player carries mended in the field,
     /// with no anvil, in `seconds`, by a check against `difficulty` plus its main material's
-    /// `work` that destroys nothing (`world/make_do.rs`; the craftsperson design §7.5).
+    /// `work` that destroys nothing (`world/crafting/make_do.rs`; the craftsperson design §7.5).
     MakeDo { seconds: u32, difficulty: i32 },
     /// The class active Trapwright: a trap rigged on a cell beside the player from what the rig
-    /// list (`data/rigs.toml`) asks (`world/rig.rs`; spec §8 "Traps": "Rigging traps").
+    /// list (`data/rigs.toml`) asks (`world/crafting/rig.rs`; spec §8 "Traps": "Rigging traps").
     Rigs,
 }
 
@@ -96,35 +96,35 @@ impl CraftEffect {
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct CraftMods {
     /// Its trades (the Crafts talents): a level-up roll on one throws the die one step up, as a
-    /// class's known-for skill does (`world/skill_roll.rs`).
+    /// class's known-for skill does (`world/character/skill_roll.rs`).
     pub trades: Vec<SkillId>,
-    /// Added to a trade's dice as the trade is handed down (Time served; `world/trade.rs`).
+    /// Added to a trade's dice as the trade is handed down (Time served; `world/crafting/trade.rs`).
     pub trade_bonus: i32,
     /// Item descriptions read an item's make (Eye for the make; `PerceptionView::describe_item`).
     pub eye_for_make: bool,
     /// Salvage's yield in percent, where more than `data/rules/salvage.toml`'s (Waste not; the most
-    /// held; `world/salvage.rs::salvage_percent`).
+    /// held; `world/crafting/salvage.rs::salvage_percent`).
     pub salvage_percent: u8,
     /// What a failed recipe gives back in percent, where more than `data/recipes.toml`'s `yield`
-    /// (Waste not; the most held; `world/craft_make.rs::failed_percent`).
+    /// (Waste not; the most held; `world/crafting/craft_make.rs::failed_percent`).
     pub failed_percent: u32,
-    /// A failed Temper or Whittle damages nothing (Waste not; `world/temper.rs::work_out`).
+    /// A failed Temper or Whittle damages nothing (Waste not; `world/crafting/temper.rs::work_out`).
     pub temper_safe: bool,
     /// The percent of its time every craft takes, where held (Quick hands; the least held;
-    /// `world/mastery.rs::craft_seconds`).
+    /// `world/crafting/mastery.rs::craft_seconds`).
     pub craft_time_percent: Option<u32>,
     /// Added to a made check's margin as it is graded, never to the check (Master's hand;
-    /// `world/mastery.rs::graded_margin`).
+    /// `world/crafting/mastery.rs::graded_margin`).
     pub grade_ease: i32,
-    /// Its graded work is built bearing its mark (Maker's mark; `world/craft_make.rs::make_out`).
+    /// Its graded work is built bearing its mark (Maker's mark; `world/crafting/craft_make.rs::make_out`).
     pub makers_mark: bool,
-    /// It fletches far better (Fletcher, the ranger's; `world/fletch.rs`).
+    /// It fletches far better (Fletcher, the ranger's; `world/crafting/fletch.rs`).
     pub fletcher: Option<Fletcher>,
     /// The active Field forge: the seconds it takes to set a makeshift anvil, if it has it.
     pub field_forge: Option<u32>,
-    /// The active Make do and mend, if it has it (`world/make_do.rs`).
+    /// The active Make do and mend, if it has it (`world/crafting/make_do.rs`).
     pub make_do: Option<MakeDo>,
-    /// The active Trapwright: traps rigged on a cell beside it (`world/rig.rs`).
+    /// The active Trapwright: traps rigged on a cell beside it (`world/crafting/rig.rs`).
     pub rigs: bool,
 }
 
@@ -143,7 +143,7 @@ impl CraftMods {
                     time_percent,
                 });
             }
-            // Its skill and tools are handed out as it is taken (`world/trade.rs`); the skill
+            // Its skill and tools are handed out as it is taken (`world/crafting/trade.rs`); the skill
             // stays a trade of the holder's.
             CraftEffect::Trade { skill, .. } => self.trades.extend(content.skill_id(&skill)),
             CraftEffect::TradeBonus { value } => self.trade_bonus += value,
@@ -174,7 +174,7 @@ impl CraftMods {
     }
 }
 
-/// The active Make do and mend (spec §8 "Class abilities"; `world/make_do.rs`): how long a mend
+/// The active Make do and mend (spec §8 "Class abilities"; `world/crafting/make_do.rs`): how long a mend
 /// takes, in seconds, and its check's difficulty before the material's `work`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct MakeDo {

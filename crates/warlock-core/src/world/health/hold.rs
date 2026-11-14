@@ -38,7 +38,6 @@
 //! Drowning grip (`lucky.rs`) is a hold too: the player's hit holds a creature, and a miss,
 //! another target, or a step lets go, as before; the rules here end it too.
 
-use super::{ActorId, Spent, World};
 use crate::action::{Action, Event};
 use crate::check::check;
 use crate::content::{ActionKind, Affliction, Content, StatusId};
@@ -46,6 +45,7 @@ use crate::skills::{Effect as SkillEffect, Use};
 use crate::stats::Stat;
 use crate::status::Effect;
 use crate::world::Actor;
+use crate::world::{ActorId, Spent, World};
 
 impl World {
     /// The degrees a dose of hold `status` lasts: its `turns` drawn (within 1 and its `max`),
@@ -60,7 +60,7 @@ impl World {
     }
 
     /// Ends every hold on the current level whose holder no longer holds (module docs).
-    pub(super) fn loosen_holds(&mut self, events: &mut Vec<Event>) {
+    pub(in crate::world) fn loosen_holds(&mut self, events: &mut Vec<Event>) {
         let level = &self.state.current_level;
         let mut loose: Vec<(ActorId, Effect)> = Vec::new();
         for actor in self.state.actors.on_level(level) {
@@ -99,7 +99,11 @@ impl World {
     /// The player's `action`, if a status of theirs they can fix stops or slows it, is a struggle
     /// (module docs): failed, the turn it cost when it stops it, and `None` when it only slows it;
     /// made, the status ends and `None` lets the action go ahead. `None` too for any other action.
-    pub(super) fn struggle(&mut self, action: &Action, events: &mut Vec<Event>) -> Option<Spent> {
+    pub(in crate::world) fn struggle(
+        &mut self,
+        action: &Action,
+        events: &mut Vec<Event>,
+    ) -> Option<Spent> {
         let kind = self.kind_of(action)?;
         let content = self.content.clone();
         let me = self.state.player();
@@ -190,7 +194,7 @@ impl World {
     /// What a trained player adds to a check against bonds (the owner: "better of the two with
     /// the skill"): the better of `stat` and Dexterity, each with what talents add to that
     /// stat's checks, plus Escape artist.
-    pub(super) fn slipping(&self, stat: Stat) -> i32 {
+    pub(in crate::world) fn slipping(&self, stat: Stat) -> i32 {
         let content = &self.content;
         let me = self.state.player();
         let of = |s: Stat| me.check_modifier(content, s);
@@ -201,7 +205,7 @@ impl World {
     /// The harm a tick of each hold on actor `id` costs where its holder's attack names its own
     /// (`on_hit`'s `damage`): `(status, damage)`, in the order of its effects. A hold not listed
     /// costs its status's `damage`.
-    pub(super) fn hold_harms(&self, id: ActorId) -> Vec<(StatusId, u16)> {
+    pub(in crate::world) fn hold_harms(&self, id: ActorId) -> Vec<(StatusId, u16)> {
         let Some(me) = self.state.actors.get(&id) else {
             return Vec::new();
         };

@@ -1,8 +1,6 @@
 //! Sic 'em (`sic.rs`; spec §8 "Allies"): the ranger's level 40, the hunt that follows its quarry,
 //! Savage's critical hits and speed, the refusals, and that it never crosses Hunter's bond.
 
-use super::ai::Plan;
-use super::*;
 use crate::action::{Event, parse_actions};
 use crate::character::CharacterSpec;
 use crate::combat::Strike;
@@ -11,6 +9,8 @@ use crate::geom::Pos;
 use crate::perception::Perception;
 use crate::replay::Replay;
 use crate::test_support::{CONTENT as BUILTIN, last, run};
+use crate::world::creatures::ai::Plan;
+use crate::world::*;
 
 const ME: Pos = Pos::new(7, 15);
 
@@ -76,7 +76,7 @@ fn creature_at(w: &mut World, id: &str, p: Pos) -> ActorId {
         status: Vec::new(),
     };
     let (content, level) = (w.content.clone(), w.state.current_level.clone());
-    let foe = travel::make_creature(&mut w.state, &content, &level, &spawn);
+    let foe = crate::world::levels::travel::make_creature(&mut w.state, &content, &level, &spawn);
     w.state.actors.get_mut(&foe).unwrap().hp = 100_000;
     foe
 }

@@ -1,11 +1,11 @@
-//! Charmed allies (`world/charm.rs`; the spell types design §7 entry 34): Beguile on the shipped
+//! Charmed allies (`world/allies/charm.rs`; the spell types design §7 entry 34): Beguile on the shipped
 //! content, a kobold turned on its band, its end where it stands, its end as the player leaves,
 //! the refusals, the kill credit, the dumps, saves, and a replay.
 
-use super::*;
 use crate::action::parse_actions;
 use crate::content::Stance;
 use crate::test_support::run;
+use crate::world::*;
 
 /// A lit hall: the player at the west end, a kobold a few cells east, its fellow farther on, a
 /// skeleton in the corner, and stairs down beside the player's start.
@@ -43,7 +43,7 @@ map = '''
 "##;
 
 fn content() -> Arc<Content> {
-    let mut files = super::caster_tests::files();
+    let mut files = crate::world::magic::caster_tests::files();
     files.insert("levels/hall.toml", HALL);
     files.insert("levels/below.toml", BELOW);
     files.insert(

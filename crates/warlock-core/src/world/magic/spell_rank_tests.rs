@@ -8,12 +8,12 @@ use super::caster_tests::{kobold_at, sp};
 use super::learn_tests::{
     HALL, count, given, identified, kitted, seeded, set_decipher, world_with,
 };
-use super::*;
 use crate::character::CharacterSpec;
 use crate::content::MAX_SPELL_RANK;
 use crate::replay::Replay;
 use crate::test_support::{last, run};
 use crate::time::Duration;
+use crate::world::*;
 
 /// A hall with the learning pack, Decipher script at `decipher`, Frost known at `rank`.
 fn knowing_frost(decipher: u16, rank: u8) -> World {

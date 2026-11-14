@@ -2,26 +2,26 @@
 //! surprise.md).
 
 mod ambush;
-mod attacks;
+pub(in crate::world) mod attacks;
 mod bleed;
 mod corrode;
 mod dummy;
-mod fight;
-mod free_blow;
+pub(in crate::world) mod fight;
+pub(in crate::world) mod free_blow;
 mod frenzy;
-mod hurl;
-mod item_damage;
+pub(in crate::world) mod hurl;
+pub(in crate::world) mod item_damage;
 mod knock_away;
 mod lurk;
 mod natural;
-mod reflect;
+pub(in crate::world) mod reflect;
 mod sear;
-mod shoot;
-mod slip;
+pub(in crate::world) mod shoot;
+pub(in crate::world) mod slip;
 pub(crate) mod surprise;
 mod two_shields;
-mod weapon_ability;
-mod weapon_active;
+pub(in crate::world) mod weapon_ability;
+pub(in crate::world) mod weapon_active;
 cfg_if! {
     if #[cfg(test)] {
         mod ambush_tests;
@@ -50,7 +50,7 @@ cfg_if! {
         mod surprise_words_tests;
         mod thrown_exploit_tests;
         mod two_shield_tests;
-        mod vitals_tests;
+        pub(in crate::world) mod vitals_tests;
         mod weapon_ability_tests;
         mod weapon_active_tests;
         mod weapon_skill_tests;

@@ -49,7 +49,7 @@ object, trap, light, lock, chest, shop, or kept-clear room, and off what vaults 
 for torn cloth, so a vault's map stays as drawn; a statue only with open ground all
 eight ways round, `LevelTemplate::statues` holding a nobody of the branch's population, not
 unique or dread, holding nothing (named, as the level is made, from the run's petrified dead in
-the graveyard: `world/graveyard.rs::name_statues`, one name a statue, the most recent first,
+the graveyard: `world/fixtures/graveyard.rs::name_statues`, one name a statue, the most recent first,
 never twice on a floor, which statue drawn from stream `statue-names/<level id>`; decoration,
 out of the state hash, `docs/dev/saves.md` "The graveyard"); webs and acid pits change the terrain, torn cloth joins the
 pile), then what its vaults' empty chests hold (`chest::fill_vaults`, stream
@@ -109,7 +109,7 @@ whose `>` leads there (`down_to`). No stairs are placed: the hand-made level car
 naming the deepest level (`Content::validate` refuses a bottom without one or of another
 campaign), so `World::travel` arrives on it, and back up on the deepest level's `>`. Dēopgang's
 bottom is Gimmwīc, the deep gnomes' town. Tests: `content/dungeon.rs` (parse and exclusions),
-`content/validate.rs` (the validate checks), `world/deep_gnome_tests.rs` (down to the town and back).
+`content/validate.rs` (the validate checks), `world/campaigns/deep_gnome_tests.rs` (down to the town and back).
 
 **Meyn Bew** (#1446; `campaigns/ascmearc/data/dungeons/meynbew.toml`): a pocket of the plane of
 earth under Gimmwīc, entered only through the crystal portal Ysella the Binder's quest reveals
@@ -120,7 +120,7 @@ stone troll), a violet `ambient`, no shop, no special room, no ore (`ores = []`)
 crystal comes from vaults (the generators have no palette of their own): `crystal_garden` (crystal
 clusters lit red, amber, and green round an uncut amethyst) is pinned on floors 1 to 3, and
 `crystal_hollow` on floor 4, with the named place "the crystal hollow" the lure quest's `waits`
-names. Tests: `world/crystal_guardian_tests.rs` (the portal, the floors, the hollow).
+names. Tests: `world/campaigns/crystal_guardian_tests.rs` (the portal, the floors, the hollow).
 
 Special rooms (spec §7 "Special rooms") have their own topic file, `docs/dev/special-rooms.md`:
 the effects' data, the draw (`mapgen/special.rs`, last, from the level's map stream), the whole-level
@@ -204,7 +204,7 @@ turn holds. A new shared vault joins the test by being in `assets/vaults/`. Its
 both ways, since a faction's `hostile` list binds both sides, so no `demon` line on `devil` is
 needed. The shallow test level's depths have no danger, so a vault with a `danger` never stamps
 there (`vaults_are_stamped_whole_some_way_round_with_their_lights_and_creatures` checks that). Test fixtures at peace
-(`world/fixture_factions.rs::make_peace`) leave the shared vaults out: a tag pool holds only
+(`world/creatures/fixture_factions.rs::make_peace`) leave the shared vaults out: a tag pool holds only
 types hostile to the player.
 
 How often, and how rarely the same one (#960): rooms floors roll `VAULT_CHANCE` 20 %
@@ -224,7 +224,7 @@ An endless branch (`DungeonDef::endless`, spec §7 "The endless branch", #1010; 
 depth (`DungeonDef::row`), and `depth` 1 for what loops over them; `leads_down` is always true.
 `generate_for` draws the floor's generator and size from stream `floor_kind/<level id>`
 (`endless_plan`), and its first floor's `<` is `Content::way_into`, not `entered_from`. The whole
-generation runs under the floor's own seed (`world/endless.rs::floor_seed`) with the usual stream
+generation runs under the floor's own seed (`world/levels/endless.rs::floor_seed`) with the usual stream
 labels, so `warlock-cli gen --level grundleas:3 --seed S` shows what that seed makes, not what the
 run of seed S makes on its third floor (that depends on how many floors it has made). Spaced
 vaults (`spaced_vaults`) deal anew for every floor under that seed: a random vault may come on two
@@ -254,7 +254,7 @@ everything that reads `(def, depth)` (spawning, danger, item level, names, arriv
 `def.level_id(depth)`, `hellegeat:5`) works unasked. `generate_for` builds the neighbours from the
 floor's own id (`content::sibling`: `up_to` past the first floor, and `DungeonDef::down_to(id,
 depth)`), so a Pit's stairs stay in it; its first floor's `<` is `entered_from`, which
-`World::visit` sets to the Pit's record's `from` (its mouth's level, `world/pit.rs`, #1297) however
+`World::visit` sets to the Pit's record's `from` (its mouth's level, `world/levels/pit.rs`, #1297) however
 the floor is reached, a climb from the second included. Every stream is
 labelled by the id, and `floor_seed` gives a Pit's floor the run seed (not `endless/<n>`), so a
 floor is a pure function of the run seed, `S`, and the depth: `warlock-cli gen --level
@@ -267,7 +267,7 @@ floors. The loader refuses stairs and hidden locations naming a Pit's floor (`Co
 quests naming one or the branch (`quest.rs::names_level`, a kill quest's `level`, a pick's
 `creatures`), and `below` naming one; `fill_generic` leaves a portal branch's population out of
 every other area's lists, and `branches_of` (rolled quests) leaves the branch out. Tests:
-`mapgen/hellegeat_tests.rs`, `content/hellegeat_tests.rs`, `world/hellegeat_tests.rs`; the seeds
+`mapgen/hellegeat_tests.rs`, `content/hellegeat_tests.rs`, `world/campaigns/hellegeat_tests.rs`; the seeds
 and deep-water tests generate Pit 1's floors for the branch.
 
 **Layer bosses** (#1118; spec §7 "The endless branch"): `[[dungeon.endless.boss]]` rows resolve to
@@ -280,7 +280,7 @@ in `gen` and tests: the lair): for a boss not slain, `Needs::vaults` is the lair
 `Needs::down` false, `vault::stamp` lays the `>` as `pal.floor` and records `Canvas::lair`, and the
 template's `hidden` holds it as a `HiddenLocation` (id the boss's type, terrain the stairs, `to`
 the next floor, name the boss's), which `connect::validate` reaches as it does stairs and
-`hide_traps` keeps clear. `world/layer_boss.rs::open_lair` (one line in `fight.rs::creature_dies`)
+`hide_traps` keeps clear. `world/levels/layer_boss.rs::open_lair` (one line in `fight.rs::creature_dies`)
 turns it into stairs. `warlock-cli gen --level grundleas:10` prints `hidden stairs at ...`.
 
 **A Pit's warden** (#1298; spec §7 "The Pits"): `[dungeon.portal] boss = { depth, creature,
@@ -293,9 +293,9 @@ that leads down). For a portal branch the lair is stamped whether the warden liv
 `Visit::slain` (from `WorldState::pit_slain`, the warden's id once the Pit is sealed, else empty;
 never `Quests::slain`) only takes the warden out of the creatures after the build, so a sealed
 Pit's fifth floor is the same map with the hall and a re-rolled hoard. The sealing and the mouth's
-closing are `world/pit.rs` (`seal_pit`, one line in `fight.rs::creature_dies`; `close_mouth` in
+closing are `world/levels/pit.rs` (`seal_pit`, one line in `fight.rs::creature_dies`; `close_mouth` in
 `drop_orphan_pits`). Fixtures that drop the shared vaults keep the hall
-(`ContentFiles::remove_shared_vaults`, test-only). Tests: `world/pit_warden_tests.rs`.
+(`ContentFiles::remove_shared_vaults`, test-only). Tests: `world/campaigns/pit_warden_tests.rs`.
 
 The Ascmearc's branches (campaign design §7): Cealdhlāw (`cealdhlaw`, #337;
 `campaigns/ascmearc/data/dungeons/cealdhlaw.toml`), six floors of danger 1 to 6, rooms 80×21 on

@@ -4,13 +4,13 @@
 //! holes refreezing, objects sinking, creatures falling in, the instant frost and heat bursts,
 //! blasts, saves, replays, and catching up after a long absence.
 
-use super::*;
 use crate::content::{ContentFiles, TerrainId};
 use crate::ice::{self, Shock};
 use crate::perception::CellView;
 use crate::replay::Replay;
 use crate::temperature::{self, Temperature};
 use crate::test_support::{run, texts};
+use crate::world::*;
 use std::sync::LazyLock;
 
 /// A lit pond below freezing: thin ice (t, 20 mm), ice (i, 50 mm), thick ice (T, 200 mm), open

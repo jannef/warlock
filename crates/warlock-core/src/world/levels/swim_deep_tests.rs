@@ -1,10 +1,10 @@
-//! Deep water (spec §8 "Skills": Swim; `world/swim.rs`, #1019).
+//! Deep water (spec §8 "Skills": Swim; `world/levels/swim.rs`, #1019).
 
-use super::*;
 use crate::burden::Burden;
 use crate::content::ContentFiles;
 use crate::object::{LightMode, Stack};
 use crate::skills::{SkillId, Trained};
+use crate::world::*;
 use std::sync::{Arc, LazyLock};
 
 const POOL: &str = r#"

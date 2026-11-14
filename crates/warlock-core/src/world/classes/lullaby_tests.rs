@@ -1,12 +1,10 @@
-//! The Lullaby (spec §8 "Class abilities", the bard's songs; #873; `world/song.rs`): the bard's
+//! The Lullaby (spec §8 "Class abilities", the bard's songs; #873; `world/classes/song.rs`): the bard's
 //! song at 20, for 6 mana and a song's time; every hostile that hears it, seen or not, checks
 //! Willpower against 13 plus Music's craft, and the failed are Drowsy; friends and the peaceful
 //! draw nothing; sung to an empty room all the same.
 
 use super::class_active_tests::{reach, suffers};
-use super::vitals_tests::train;
 use super::war_cry_tests::foe_at;
-use super::*;
 use crate::ability::{Ability, Unavailable};
 use crate::action::parse_actions;
 use crate::character::CharacterSpec;
@@ -17,6 +15,8 @@ use crate::replay::Replay;
 use crate::skills::Effect;
 use crate::stats::{PerStat, Stats};
 use crate::test_support::{builtin, last, run};
+use crate::world::combat::vitals_tests::train;
+use crate::world::*;
 
 const LULLABY: Ability = Ability::Class(ClassActive::Lullaby);
 

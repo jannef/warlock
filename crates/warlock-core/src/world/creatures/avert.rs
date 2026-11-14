@@ -12,8 +12,8 @@
 //! (`free_blow.rs::free_blows_of`). The gaze itself takes at its `glance` share of its chance.
 //! [`World::avert_news`] says when it begins and ends.
 
-use super::{ActorId, World};
 use crate::combat::{Category, Defence, Profile};
+use crate::world::{ActorId, World};
 
 /// Said as the player averts their eyes.
 const AVERTS: &str = "You avert your eyes.";
@@ -23,12 +23,16 @@ const LOOKS: &str = "You raise your eyes again.";
 impl World {
     /// Whether actor `id` is Averted now: the player, while their last perception sees a
     /// hostile whose gaze is marked `averted`.
-    pub(super) fn averted(&self, id: ActorId) -> bool {
+    pub(in crate::world) fn averted(&self, id: ActorId) -> bool {
         id == self.state.player && self.perception.averted()
     }
 
     /// `profile`, an attack actor `attacker` makes, as averted eyes leave it.
-    pub(super) fn averted_blow(&self, attacker: ActorId, mut profile: Profile) -> Profile {
+    pub(in crate::world) fn averted_blow(
+        &self,
+        attacker: ActorId,
+        mut profile: Profile,
+    ) -> Profile {
         if self.averted(attacker) {
             profile.to_hit += self.content.tuning().averted.to_hit;
         }
@@ -37,7 +41,7 @@ impl World {
 
     /// `defence`, actor `id`'s, with its Dodge halved (a positive Dodge, rounded toward none)
     /// while it is Averted.
-    pub(super) fn averted_defence(&self, id: ActorId, defence: Defence) -> Defence {
+    pub(in crate::world) fn averted_defence(&self, id: ActorId, defence: Defence) -> Defence {
         let dodge = defence.bonus(Category::Dodge);
         if dodge > 0 && self.averted(id) {
             defence.plus(Category::Dodge, -(dodge - dodge / 2))
@@ -48,7 +52,7 @@ impl World {
 
     /// Tells the player they averted their eyes, or raised them, if they did since the
     /// perception before (`before`); a note that does not stop a rest.
-    pub(super) fn avert_news(&mut self, before: bool) {
+    pub(in crate::world) fn avert_news(&mut self, before: bool) {
         match (before, self.perception.averted()) {
             (false, true) => self.note(AVERTS),
             (true, false) => self.note(LOOKS),

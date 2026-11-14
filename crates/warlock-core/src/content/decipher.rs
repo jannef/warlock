@@ -1,5 +1,5 @@
 //! Reading a scroll by a check (`assets/data/rules/decipher.toml`, spec §8 "Scrolls"; #1024): its
-//! numbers. The rule itself lives in `world/decipher.rs`.
+//! numbers. The rule itself lives in `world/magic/decipher.rs`.
 //!
 //! The file is optional: without it every scroll simply reads.
 

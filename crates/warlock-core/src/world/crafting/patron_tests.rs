@@ -1,12 +1,12 @@
-//! The craftsperson's patron (#1421; `world/patron.rs`, the craftsperson design §7.4): placed in
+//! The craftsperson's patron (#1421; `world/crafting/patron.rs`, the craftsperson design §7.4): placed in
 //! Cēaptūn as the ability comes at level 12, of the player's race; the pool; the offer and the
 //! stock advanced; the log; the hand-in, plain and waiting; the next at once; the death; a save.
 
 use super::patron::{self, Patron};
-use super::*;
 use crate::character::CharacterSpec;
 use crate::magic::worked::Quality;
 use crate::test_support::{CONTENT, run as act, texts};
+use crate::world::*;
 
 /// The patron's corner of the Gæsthūs, and the cell west of it.
 const CORNER: Pos = Pos::new(50, 23);

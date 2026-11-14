@@ -5,17 +5,17 @@
 //! cannot be stood on (a statue) when they arrive beside it, and not again while they move about
 //! beside it.
 
-use super::{World, WorldState};
 use crate::Pos;
 use crate::content::Content;
 use crate::geom::Dir;
+use crate::world::{World, WorldState};
 
 /// Where the player last stood when the world perceived (not saved: a loaded world stands where
 /// it was, its arrival already told).
-pub(super) type StoodOn = (String, Pos);
+pub(in crate::world) type StoodOn = (String, Pos);
 
 /// Where the player stands now.
-pub(super) fn standing(state: &WorldState) -> StoodOn {
+pub(in crate::world) fn standing(state: &WorldState) -> StoodOn {
     (state.current_level.clone(), state.player().pos)
 }
 
@@ -45,7 +45,7 @@ fn feature_at(state: &WorldState, content: &Content, p: Pos) -> Option<String> {
 /// What the player is told of the features at their arrival from `from` (the cell they last
 /// stood on, on this level; `None` from elsewhere): the walkable one under them, then each one
 /// beside them that cannot be stood on and was not beside `from`, in [`Dir::ALL`]'s order.
-pub(super) fn feature_lines(
+pub(in crate::world) fn feature_lines(
     state: &WorldState,
     content: &Content,
     from: Option<Pos>,
@@ -72,7 +72,7 @@ impl World {
     /// If the player has come to another cell (or level) since it was last called, names the
     /// features they arrive at. A step calls it before saying what lies there (`travel.rs`);
     /// `perceive` calls it after every action for every other way of arriving.
-    pub(super) fn announce_feature(&mut self) {
+    pub(in crate::world) fn announce_feature(&mut self) {
         let here = standing(&self.state);
         if self.stood_on == here {
             return;

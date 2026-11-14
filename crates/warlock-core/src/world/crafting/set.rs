@@ -25,7 +25,6 @@
 use super::craft::RecipeLack;
 use super::craft_make::{CraftOption, CraftPlan, CraftStep, CraftStepKind, cut_gem};
 use super::work::{Job, Task};
-use super::{Actor, Spent, World};
 use crate::action::Event;
 use crate::combat;
 use crate::content::{Content, Cutting, MaterialId, PartId, RecipeDef, RecipeId};
@@ -36,6 +35,7 @@ use crate::scroll_label::Lore;
 use crate::skills::{Effect, Use};
 use crate::stats::Stat;
 use crate::time::Duration;
+use crate::world::{Actor, Spent, World};
 
 /// What the check comes to.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -201,7 +201,7 @@ pub(super) fn plan(
 
 /// A setting under way: the recipe, the item's and the gem's positions.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(super) struct Setting {
+pub(in crate::world) struct Setting {
     recipe: RecipeId,
     item: usize,
     gem: usize,
@@ -309,7 +309,7 @@ impl World {
         }
         // One gem is spent, set or not; a chipped one comes back.
         let stone = self.set_apart(work.gem);
-        super::outcome::remove_stacks(self.player_mut(), &[stone]);
+        crate::world::fixtures::outcome::remove_stacks(self.player_mut(), &[stone]);
         if band == SetBand::Set {
             return;
         }

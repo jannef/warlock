@@ -4,8 +4,6 @@
 //! hit leaves the foe Stunned: flat-footed by the status's `flat_footed` field (as Surprised
 //! is), no free blows, sneak dice land, and its next action is slowed and ends it.
 
-use super::class_active_tests::{at_normal_speed, beside, reach, suffers, world};
-use super::*;
 use crate::ability::{Ability, Unavailable};
 use crate::action::parse_actions;
 use crate::character::CharacterSpec;
@@ -15,6 +13,8 @@ use crate::equipment::{free_slot, slots_taken};
 use crate::object::Stack;
 use crate::replay::Replay;
 use crate::test_support::{builtin, last, run};
+use crate::world::classes::class_active_tests::{at_normal_speed, beside, reach, suffers, world};
+use crate::world::*;
 
 const STRIKE: Ability = Ability::Class(ClassActive::StunningStrike);
 

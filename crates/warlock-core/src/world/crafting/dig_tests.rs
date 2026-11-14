@@ -3,13 +3,13 @@
 //! walls that never break; light, sight, and memory after a wall gives way; solid rock showing
 //! its face; explosions and their blast; noise; saves and replays mid-dig.
 
-use super::*;
 use crate::action::{Breach, parse_actions};
 use crate::content::ContentFiles;
 use crate::noise::{self, Act, SoundKind};
 use crate::perception::CellView;
 use crate::replay::Replay;
 use crate::test_support::last_text as last_message;
+use crate::world::*;
 
 // A lit cellar. The player starts by a pick-axe and a mattock; north of the corridor stand packed
 // earth (E), a stone wall, and granite (G); a closed door leads south; below the corridor's south
@@ -490,7 +490,7 @@ fn digging_survives_saves_and_replays() {
 #[test]
 fn breaking_terrain_and_digging_tools_are_validated() {
     let terrain = ContentFiles::builtin().table_text("terrain");
-    const PICK_AXE: &str = include_str!("../../../../assets/data/objects/pick_axe.toml");
+    const PICK_AXE: &str = include_str!("../../../../../assets/data/objects/pick_axe.toml");
     let load = |path: &str, text: String| {
         let mut files = ContentFiles::builtin();
         files.insert(path, &text);

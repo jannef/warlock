@@ -1,7 +1,7 @@
 //! Surprise (`assets/data/surprise.toml`, spec §8 "Surprise and sneak attacks"): the numbers of
 //! being caught unawares.
 //!
-//! The rule itself lives in `world/surprise.rs`: who is unaware of whom, the initiative check,
+//! The rule itself lives in `world/combat/surprise.rs`: who is unaware of whom, the initiative check,
 //! and the status a failed check brings. The file is optional: without it nobody is surprised
 //! (fixtures).
 
@@ -24,7 +24,7 @@ pub struct SurpriseRules {
     /// The tags of what has no vitals to find: immune to criticals and sneak attacks
     /// ([`Content::has_vitals`]).
     pub no_vitals: Vec<String>,
-    /// Slipping past (`[slip]`, `world/slip.rs`): how many turns a creature the player slipped
+    /// Slipping past (`[slip]`, `world/combat/slip.rs`): how many turns a creature the player slipped
     /// past stays blind to them; `None` when nobody slips past anyone (no table, or `enabled =
     /// false`).
     pub slip_turns: Option<u64>,

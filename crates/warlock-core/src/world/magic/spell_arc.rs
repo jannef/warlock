@@ -20,12 +20,12 @@
 //! Determinism: one `below(100)` per creature harmed with someone to jump to, only for a chance
 //! below 100 and past the certain jumps, in event order. Saves: nothing is stored.
 
-use super::{ActorId, World};
 use crate::action::{AttackKind, Event};
 use crate::combat::Strike;
 use crate::content::{ARC_REACH, DamageTypeId, Shape, SpellData};
 use crate::damage::Damage;
 use crate::geom::Pos;
+use crate::world::{ActorId, World};
 use std::collections::BTreeSet;
 
 /// One cast's spreading so far.
@@ -50,7 +50,7 @@ impl World {
     /// `by`'s spell `def`, with `jumps` certain jumps ([`crate::world::Reach`]), rolled `rolled`
     /// and made the events `made`: it spreads from everyone it harmed (module docs), each new
     /// strike's events added to `made`.
-    pub(super) fn spell_type_spreads(
+    pub(in crate::world) fn spell_type_spreads(
         &mut self,
         by: ActorId,
         (def, jumps): (&SpellData, Option<i32>),

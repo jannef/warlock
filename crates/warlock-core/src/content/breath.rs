@@ -1,8 +1,8 @@
 //! A dragon's breath (spec §8 "Creature behavior": "Dragons", #1099): `[creature.breath]`, the
 //! enemy-only cone of its element that a `combat = "dragon"` type breathes whenever it is ready.
-//! The rules are `world/breath.rs`.
+//! The rules are `world/creatures/breath.rs`.
 //!
-//! The cone is the spells' shared cone (`world/spell.rs::cone_cells`: a quarter turn wide, as
+//! The cone is the spells' shared cone (`world/magic/spell.rs::cone_cells`: a quarter turn wide, as
 //! Burning hands'), `length` cells long. The cooldown is a status (the house rule for ability
 //! limits, `ability.rs`): [`STATUS`], given `ceil(cooldown / eases)` degrees, as a summoning's
 //! (`summon.rs`).

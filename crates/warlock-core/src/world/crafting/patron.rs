@@ -29,11 +29,9 @@
 //! - **The patron's death** ([`World::patron_dies`], one line in `fight.rs::dies`): the open
 //!   commission is dropped; no one takes their place.
 //!
-//! Saved and hashed: [`WorldState::patron`](super::WorldState), left out while no commission
+//! Saved and hashed: [`WorldState::patron`](crate::world::WorldState), left out while no commission
 //! was ever taken, so other runs hash as before.
 
-use super::quest::QuestView;
-use super::{ActorId, Spent, World};
 use crate::action::Event;
 use crate::content::{
     ActionKind, Content, DialogueId, InputKind, MaterialId, ObjectId, PartSource, PatronWords,
@@ -46,6 +44,8 @@ use crate::perception::PerceptionView;
 use crate::rng::Rng;
 use crate::skills::Use;
 use crate::text::article;
+use crate::world::people::quest::QuestView;
+use crate::world::{ActorId, Spent, World};
 use serde::{Deserialize, Serialize};
 
 /// The player's commissions from their patron.
@@ -81,7 +81,7 @@ pub(crate) struct Commission {
 }
 
 /// The recipes a patron may commission of `player` (the module docs), in recipe order.
-pub(crate) fn pool(content: &Content, player: &super::Actor) -> Vec<RecipeId> {
+pub(crate) fn pool(content: &Content, player: &crate::world::Actor) -> Vec<RecipeId> {
     let one = RecipeCount::Dice(Dice::fixed(1));
     (content.recipes().list.iter().enumerate())
         .filter(|(_, r)| r.uses.is_none())
@@ -225,7 +225,7 @@ impl World {
 
     /// Chats with creature `id`, who speaks `dialogue`, if it is a patron: offers a commission,
     /// or takes the work and pays for it (the module docs). `None` for anyone else.
-    pub(super) fn patron_chat(
+    pub(in crate::world) fn patron_chat(
         &mut self,
         id: ActorId,
         dialogue: DialogueId,
@@ -325,7 +325,7 @@ impl World {
     }
 
     /// Creature `id` dies: a patron's open commission is dropped (the module docs).
-    pub(super) fn patron_dies(&mut self, id: ActorId) {
+    pub(in crate::world) fn patron_dies(&mut self, id: ActorId) {
         let patron = (self.state.actors.get(&id))
             .and_then(|a| self.dialogue_of(a))
             .is_some_and(|d| self.patron_words(d).is_some());

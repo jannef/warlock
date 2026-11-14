@@ -1,6 +1,6 @@
 # A Crafts trade (the craftsperson design §3): a craftsperson's creation pick, never one the race
 # teaches everyone; trains Jewelcraft at 3d6 and hands down the tools of the trade
-# (world/trade.rs). One uncut small garnet or zircon, the roughest cut.
+# (world/crafting/trade.rs). One uncut small garnet or zircon, the roughest cut.
 [[talent]]
 id = "gemcutter"
 name = "Gemcutter"

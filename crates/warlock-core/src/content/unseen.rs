@@ -2,7 +2,7 @@
 //! how a creature type keeps out of the player's sight. `shadowy = true` is a plain flag on the
 //! type (unseen in the dark); `invisible` is either `invisible = true`, never seen (the
 //! invisible stalker), or `[creature.invisible]`, a fading it gives itself on a cooldown (the
-//! duergar, the imp, the quasit, the will-o'-wisp). The rules are `world/unseen.rs`.
+//! duergar, the imp, the quasit, the will-o'-wisp). The rules are `world/creatures/unseen.rs`.
 //!
 //! The fading's cooldown is a status (the house rule for ability limits, `ability.rs`):
 //! [`SPENT`], given `ceil(cooldown / eases)` degrees, as a breath's (`breath.rs`). What it
@@ -37,7 +37,7 @@ pub(super) struct FadeSpec {
 pub enum Invisible {
     /// Never seen: the invisible stalker.
     Innate,
-    /// It fades from sight whenever the cooldown is off (`world/unseen.rs`'s self-buff step).
+    /// It fades from sight whenever the cooldown is off (`world/creatures/unseen.rs`'s self-buff step).
     Fades {
         /// Seconds before it fades again, from the fading.
         cooldown: u32,

@@ -2,9 +2,9 @@
 //! creatures of its side around itself, within its dice, its mana, its cooldown, and its cap;
 //! Silence stops it; what comes is a creature like any other.
 
-use super::*;
 use crate::content::ContentFiles;
 use crate::test_support::{builtin, run, said};
+use crate::world::*;
 
 const TERRAIN: &str = r##"
 [[terrain]]

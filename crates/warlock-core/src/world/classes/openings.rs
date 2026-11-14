@@ -4,7 +4,7 @@
 //! (`builds` in `data/resources.toml`, through `ambush.rs`, `feint.rs`, and `mark.rs`), it
 //! decays with time, and one active spends it, **Exploit** (`use:exploit:E`, level 1): every
 //! opening held (n) spent on a melee blow at the hostile that way that is a sneak attack
-//! whatever the foe knows ([`super::weapon_active::Technique::sneak`]), with the ladder the
+//! whatever the foe knows ([`crate::world::combat::weapon_active::Technique::sneak`]), with the ladder the
 //! thief's class talents build ([`crate::talent::ExploitMods`]): +n × its dice after the sneak
 //! dice ([`World::land_exploit`]; Exploit's 1d6, Improved sneak attack's second from 32), +n ×
 //! its to-hit and its status on the foe struck (Low blow's Stunned, 12), and a threat n × its
@@ -18,22 +18,22 @@
 //! From level 18 **Thrown exploit** (`use:thrown_exploit:c:12,5`, #1465) is the same blow
 //! delivered by a throw of one of stack `c` at the creature the player sees on that cell:
 //! Exploit's refusals, plus what cannot be thrown so (a flask), a cell beyond the throw's range
-//! capped at the sneak dice's reach ([`super::Actor::exploit_throw_range`]), and a wall or
+//! capped at the sneak dice's reach ([`crate::world::Actor::exploit_throw_range`]), and a wall or
 //! creature the player sees in the line. The ladder rides `Technique::at`, so a creature the
 //! player did not see in the way takes a plain throw.
 //!
 //! The grant is the general one for talents that grant a resource (`grants_resource`,
-//! `world/focus.rs::hold`). The ladder's dice are drawn from the gameplay stream after the sneak
+//! `world/classes/focus.rs::hold`). The ladder's dice are drawn from the gameplay stream after the sneak
 //! dice, on a hit that landed them only.
 
-use super::shoot::Loose;
-use super::{ActorId, Spent, World};
 use crate::action::{AttackKind, Event};
 use crate::combat::{Blow, Profile};
 use crate::content::{ActionKind, ClassActive, Stance};
 use crate::fov::radius2;
 use crate::geom::{Dir, Pos};
 use crate::perception::CellView;
+use crate::world::combat::shoot::Loose;
+use crate::world::{ActorId, Spent, World};
 
 impl World {
     /// Exploit's refusals aimed `dir`, before anything is spent (no time; said): no hostile
@@ -90,7 +90,12 @@ impl World {
         {
             self.afflict(target, status, 1, Some(player), events);
         }
-        self.after_attack(player, target, super::free_blow::parried(blow), events);
+        self.after_attack(
+            player,
+            target,
+            crate::world::combat::free_blow::parried(blow),
+            events,
+        );
         self.exert(ActionKind::Melee);
         Spent::Turn(price)
     }
@@ -106,7 +111,7 @@ impl World {
 
     /// `use:thrown_exploit:c:12,5` ([`crate::action::Action::UseThrow`]): the player uses class
     /// active `active`, one that throws, with inventory stack `item` at cell `at`.
-    pub(super) fn use_class_throw(
+    pub(in crate::world) fn use_class_throw(
         &mut self,
         active: ClassActive,
         item: usize,
@@ -136,7 +141,7 @@ impl World {
     /// The thrown exploit's refusals with stack `item` at cell `at`, before anything is spent (no
     /// time; said): Exploit's (no hostile the player sees there, the openings in another
     /// creature's guard, a foe without vitals) and a throw's (what cannot be thrown so, a flask
-    /// among them; beyond [`super::Actor::exploit_throw_range`]; a wall or a creature the player
+    /// among them; beyond [`crate::world::Actor::exploit_throw_range`]; a wall or a creature the player
     /// sees on the line before it, as the aiming mode draws it). The creature there, when it may
     /// be made.
     fn thrown_exploit_may(&mut self, active: ClassActive, item: usize, at: Pos) -> Option<ActorId> {
@@ -247,7 +252,7 @@ impl World {
     /// `profile`, `attacker`'s attack on `target`, with the ladder's before the roll when it is a
     /// thrown exploit's at the creature it is aimed at ([`World::exploit_profile`]); any other
     /// attack as it is. Exploit's blow has its ladder already ([`World::exploit`]).
-    pub(super) fn thrown_exploit_profile(
+    pub(in crate::world) fn thrown_exploit_profile(
         &self,
         attacker: ActorId,
         target: ActorId,
@@ -263,14 +268,14 @@ impl World {
 
     /// Whether `attacker`'s attack is an exploit's ([`World::exploit`]): its sneak attack builds
     /// no openings (`ambush.rs::ambushed`).
-    pub(super) fn exploiting(&self, attacker: ActorId) -> bool {
+    pub(in crate::world) fn exploiting(&self, attacker: ActorId) -> bool {
         attacker == self.state.player && self.technique.exploit > 0
     }
 
     /// `blow`, `attacker`'s attack, `unseen` (its sneak dice landed on a hit), with the ladder's
     /// dice when it is an exploit ([`World::land_exploit`]). The one place
-    /// [`super::weapon_active::Technique::exploit`] is taken.
-    pub(super) fn exploited(
+    /// [`crate::world::combat::weapon_active::Technique::exploit`] is taken.
+    pub(in crate::world) fn exploited(
         &mut self,
         (attacker, target): (ActorId, ActorId),
         unseen: bool,

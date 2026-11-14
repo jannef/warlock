@@ -4,11 +4,11 @@
 //! spoken with, the girl follows in the coward stance, and home in Holtwīc she says her thanks
 //! and the wise-woman pays. Made once only; the load checks of `waits`; a replay.
 
-use super::*;
 use crate::action::parse_actions;
 use crate::content::{CombatStance, ContentFiles, Goal, QuestKind};
 use crate::replay::Replay;
 use crate::test_support::{run as act, texts};
+use crate::world::*;
 use std::sync::LazyLock;
 
 const WYNFLAED: Pos = Pos::new(54, 13);
@@ -141,7 +141,7 @@ fn spoken_with_she_follows_and_home_the_wise_woman_pays() {
     assert_eq!(girl.escorting(), Some(QUEST));
     assert_eq!(girl.stance, CombatStance::Coward);
     let gold = w.content.object_id("gold_coin").expect("gold");
-    let before = super::shop::count_of(&w.state.player().inventory, gold);
+    let before = crate::world::people::shop::count_of(&w.state.player().inventory, gold);
     // Out by the mound, she in the retinue, and into the village.
     w.travel("ascmearc", Some(MOUND)).expect("out");
     assert_eq!(stage(&w), Some(Stage::Active));
@@ -156,7 +156,7 @@ fn spoken_with_she_follows_and_home_the_wise_woman_pays() {
     assert!(heard(&w, "Gammer Wynflæd says: \"Bless you"));
     assert!(heard(&w, "Quest complete: Taken under the hill."));
     assert!(heard(&w, "Gammer Wynflæd gives you"));
-    let after = super::shop::count_of(&w.state.player().inventory, gold);
+    let after = crate::world::people::shop::count_of(&w.state.player().inventory, gold);
     assert!(after >= before + 60, "{before} -> {after}");
 }
 

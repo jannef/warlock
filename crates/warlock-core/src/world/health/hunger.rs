@@ -7,7 +7,7 @@
 //! the time is cut up. Fighting burns a little more ([`World::exert`]). The state it puts them
 //! in takes effect:
 //! - **Weak** (and worse) saps Strength and Dexterity where combat and burden use them
-//!   ([`super::Actor::effective_stats`]);
+//!   ([`crate::world::Actor::effective_stats`]);
 //! - **Fainting** (and Starving): at the start of each turn the player may faint (one draw of the
 //!   gameplay stream), losing turns while the others act ([`World::faint`]);
 //! - **Starving**: no hit points come back ([`World::healing_rate`], the one pace), and some are
@@ -19,16 +19,16 @@
 //! The player is told when their state changes; getting hungrier (into Hungry or worse) is a
 //! message that stops a rest, the rest are only logged.
 
-use super::{ActorId, Cause, Death, World};
 use crate::content::{ActionKind, Effect};
 use crate::hunger::Hunger;
 use crate::talent::TalentMods;
 use crate::time::GameTime;
+use crate::world::{ActorId, Cause, Death, World};
 
 impl World {
     /// How much the player needs to eat, in percent of a human: their race's (`hunger` in
     /// `data/races.toml`), 100 without a character.
-    pub(super) fn hunger_percent(&self) -> u16 {
+    pub(in crate::world) fn hunger_percent(&self) -> u16 {
         let race = (self.state.character.as_ref())
             .and_then(|c| c.spec.race(&self.content).ok())
             .map_or(100, |r| r.hunger);
@@ -42,14 +42,14 @@ impl World {
     }
 
     /// How hungry the player is; `None` when nobody hungers.
-    pub(super) fn player_hunger(&self) -> Option<Hunger> {
+    pub(in crate::world) fn player_hunger(&self) -> Option<Hunger> {
         self.state.player().hunger(&self.content)
     }
 
     /// How long from now, in seconds, until hunger next changes something for actor `id` (at
     /// least 1): its next state ([`Hunger`]) while it is not Starving, else the next hit point
     /// starving costs it. `None` for an actor that does not hunger.
-    pub(super) fn until_hungrier(&self, id: ActorId) -> Option<u64> {
+    pub(in crate::world) fn until_hungrier(&self, id: ActorId) -> Option<u64> {
         let def = self.content.hunger()?;
         let fed = self.state.actors.get(&id)?.satiation?;
         let state = def.state(fed.nutrition);
@@ -72,7 +72,7 @@ impl World {
     /// `seconds` of game time pass for actor `id`'s hunger, within which its state stays as it is
     /// ([`World::until_hungrier`]): its nutrition burns, and while it is Starving the time costs
     /// hit points. Returns the hit points lost, and its state before.
-    pub(super) fn digest(&mut self, id: ActorId, seconds: u64) -> (i32, Option<Hunger>) {
+    pub(in crate::world) fn digest(&mut self, id: ActorId, seconds: u64) -> (i32, Option<Hunger>) {
         let content = self.content.clone();
         let Some(def) = content.hunger() else {
             return (0, None);
@@ -107,7 +107,7 @@ impl World {
 
     /// The player exerts themselves doing `kind` (a blow, a shot, a throw): it burns the extra
     /// nutrition `data/hunger.toml` gives it, at their race's hunger.
-    pub(super) fn exert(&mut self, kind: ActionKind) {
+    pub(in crate::world) fn exert(&mut self, kind: ActionKind) {
         let content = self.content.clone();
         let (Some(def), Some(before)) = (content.hunger(), self.player_hunger()) else {
             return;
@@ -128,7 +128,7 @@ impl World {
     /// stream, while the chance is not 0): they lose turns, a wait each, while the others act.
     /// Long fast never faints (no draw). Returns the price of the turns lost (0 if they did not
     /// faint).
-    pub(super) fn faint(&mut self) -> i64 {
+    pub(in crate::world) fn faint(&mut self) -> i64 {
         let content = self.content.clone();
         let Some(def) = content.hunger() else {
             return 0;
@@ -156,7 +156,7 @@ impl World {
 
     /// `price` as the player pays it while Bloated: raised by `[bloated] slow` percent (rounded
     /// up to a whole unit of energy), like a burden; as it is for anyone else.
-    pub(super) fn bloated(&self, id: super::ActorId, price: i64) -> i64 {
+    pub(in crate::world) fn bloated(&self, id: crate::world::ActorId, price: i64) -> i64 {
         let Some(def) = self.content.hunger() else {
             return price;
         };
@@ -171,7 +171,7 @@ impl World {
 
     /// Says how the player's hunger changed since it was `before`: getting hungrier, into Hungry
     /// or worse, stops a rest; satiation wearing off and being fed are only logged.
-    pub(super) fn hunger_news(&mut self, before: Hunger) {
+    pub(in crate::world) fn hunger_news(&mut self, before: Hunger) {
         let Some(now) = self.player_hunger() else {
             return;
         };
@@ -187,7 +187,7 @@ impl World {
 
     /// The player dies of `cause` at moment `when`, hunger or overeating: the run ends there (no
     /// creature killed them, so no [`crate::Event::Died`]).
-    pub(super) fn die_of(&mut self, cause: Cause, when: GameTime) {
+    pub(in crate::world) fn die_of(&mut self, cause: Cause, when: GameTime) {
         if self.state.death.is_some() {
             return;
         }

@@ -1,10 +1,10 @@
 //! The heritage talents (#697): only at character creation; Family wealth's gold and gems,
 //! Father's sword's heirloom, each from a stream of its own.
 
-use super::*;
 use crate::character::CharacterSpec;
 use crate::content::{GOLD, Rarity, TalentEffect};
 use crate::talent::FortuneEffect;
+use crate::world::*;
 use std::sync::LazyLock;
 
 // Without background stories: what the heritage alone hands down.

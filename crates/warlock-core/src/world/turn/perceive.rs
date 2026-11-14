@@ -2,7 +2,6 @@
 //! the turn's events they saw (and the messages for them), the news they heard, and the weather
 //! they see change. `world/mod.rs` has only the call from the turn pipeline.
 
-use super::{ActorId, ActorKind, World, enter_room, fight, hurl, spell};
 use crate::action::{AttackKind, Breach, DiseaseNews, Event, MissileEnd};
 use crate::content::{CreatureId, TrapEffect};
 use crate::geom::Pos;
@@ -11,6 +10,9 @@ use crate::perception::{Perception, VIEW_RADIUS};
 use crate::sight::LineOfSight;
 use crate::skills::Use;
 use crate::weather::{self, Weather};
+use crate::world::{
+    ActorId, ActorKind, World, combat::fight, combat::hurl, enter_room, magic::spell,
+};
 
 impl World {
     /// The weather now, which the player would see: on a level under the open sky.
@@ -29,7 +31,7 @@ impl World {
     }
 
     /// Creatures (not the player) the player sees, not their images in a hall of mirrors.
-    pub(super) fn creatures_in_view(&self) -> Vec<ActorId> {
+    pub(in crate::world) fn creatures_in_view(&self) -> Vec<ActorId> {
         self.perception()
             .actors()
             .iter()
@@ -58,7 +60,7 @@ impl World {
     /// Phase 4: recomputes perception, updates memory, tells the player about a special room they
     /// are in for the first time and the feature of the ground they arrived on, says what news they heard and how the weather changed, reports
     /// the attacks they perceived, and drops events they did not see.
-    pub(super) fn perceive(&mut self, events: &mut Vec<Event>) {
+    pub(in crate::world) fn perceive(&mut self, events: &mut Vec<Event>) {
         let now = self.state.time;
         // The ice of the moment (after a skip or on arrival), under the weather it had.
         self.update_ice();
@@ -75,7 +77,7 @@ impl World {
         *self.perception = Perception::compute(&self.state, &self.content, &mut self.lights);
         // An unseen shadow come near (`unseen.rs`).
         if !draught && self.perception.draught() {
-            self.say(super::unseen::DRAUGHT_LINE);
+            self.say(crate::world::creatures::unseen::DRAUGHT_LINE);
         }
         self.mark_noticed();
         self.glare_news(dazzled);
@@ -128,7 +130,10 @@ impl World {
     /// are the player or the player saw them (each stopping a rest). A wall that gave way is kept
     /// if the player sees its cell, and one blasted open is said ("The wall collapses!"; digging
     /// says its own).
-    pub(super) fn perceive_events(&mut self, events: &mut Vec<Event>) -> Vec<(String, bool)> {
+    pub(in crate::world) fn perceive_events(
+        &mut self,
+        events: &mut Vec<Event>,
+    ) -> Vec<(String, bool)> {
         use fight::{End, Guard, Words, attack_message, death_message};
         let player = self.state.player;
         let content = self.content.clone();
@@ -345,7 +350,7 @@ impl World {
             }
             Event::Drained { actor, stat } => {
                 if actor == player {
-                    reports.push((super::drain::drained_message(stat), true));
+                    reports.push((crate::world::health::drain::drained_message(stat), true));
                 }
                 actor == player
             }
@@ -461,7 +466,7 @@ impl World {
     /// A message for each sound the player perceives that is news ([`noise::news`]): a patrol
     /// heard turn after turn is said once, not every turn. Messages stop a rest. A voice is said
     /// with its words, if any ([`World::say_mutters`]).
-    pub(super) fn hear(&mut self) {
+    pub(in crate::world) fn hear(&mut self) {
         let turn = self.state.turn;
         let news = noise::news(
             &mut self.state.recent_sounds,

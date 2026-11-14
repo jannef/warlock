@@ -2,8 +2,6 @@
 //! local areas entered with `>` and left by their edges, persistence, sight by daylight and
 //! moonlight, saves, and replays.
 
-use super::light_tests::check_invariants;
-use super::*;
 use crate::content::{ContentFiles, LevelKind, local_area_id};
 use crate::daylight::{SIGHT_DAY, SIGHT_MOONLIT, SIGHT_NIGHT, SIGHT_TWILIGHT};
 use crate::fov::radius2;
@@ -11,6 +9,8 @@ use crate::grid::Grid;
 use crate::perception::Emitter;
 use crate::replay::Replay;
 use crate::test_support::last_text as last_message;
+use crate::world::turn::light_tests::check_invariants;
+use crate::world::*;
 use std::collections::VecDeque;
 use std::sync::LazyLock;
 

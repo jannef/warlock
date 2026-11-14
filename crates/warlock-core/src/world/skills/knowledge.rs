@@ -16,22 +16,22 @@
 //!   No marks: knowing is not practising.
 //! - **Marks**: each such check, whatever comes of it, is a [`Use::Resist`] (one mark draw of
 //!   the training stream per rule, as every use); discovery experience (a first kill of a kind,
-//!   an arrival that pays, `world/experience.rs`) is a [`Use::Discover`].
+//!   an arrival that pays, `world/character/experience.rs`) is a [`Use::Discover`].
 //!
 //! [`World::resisting`] is the one hook: the three checks call it for their modifier. It draws
 //! only from the training stream, never the gameplay stream, so a fight's rolls stay as they
 //! were.
 
-use super::{Actor, ActorId, World};
 use crate::content::{Content, CreatureId, DamageTypeId};
 use crate::damage::{ResistanceWord, Resistances};
 use crate::skills::{Effect, Use};
+use crate::world::{Actor, ActorId, World};
 
 impl World {
     /// Actor `target` rolls a check resisting an ability of `by` (the creature whose ability it
     /// is, if any): for the player and a creature, marks a [`Use::Resist`] and returns what
     /// their Knowledge adds to the check ([`resist_bonus`]); 0 otherwise.
-    pub(super) fn resisting(&mut self, target: ActorId, by: Option<ActorId>) -> i32 {
+    pub(in crate::world) fn resisting(&mut self, target: ActorId, by: Option<ActorId>) -> i32 {
         if target != self.state.player {
             return 0;
         }
@@ -48,7 +48,7 @@ impl World {
     }
 
     /// The player gained discovery experience: a [`Use::Discover`].
-    pub(super) fn discovered(&mut self) {
+    pub(in crate::world) fn discovered(&mut self) {
         if self.trains(Use::Discover) {
             self.train(Use::Discover);
         }

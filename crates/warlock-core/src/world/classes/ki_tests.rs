@@ -6,7 +6,6 @@
 //! Virtuoso's song costs nothing.
 
 use super::class_active_tests::{at_normal_speed, beside, reach, suffers, world};
-use super::*;
 use crate::ability::{Ability, Unavailable};
 use crate::action::parse_actions;
 use crate::character::CharacterSpec;
@@ -16,6 +15,7 @@ use crate::object::Stack;
 use crate::replay::Replay;
 use crate::stats::{PerStat, Stats, modifier};
 use crate::test_support::{builtin, last, run};
+use crate::world::*;
 
 fn resource(w: &World, id: &str) -> ResourceId {
     w.content().resource_id(id).expect(id)

@@ -1,14 +1,14 @@
-//! Item damage (`world/item_damage.rs`, #1168): every material's `resists` reviewed and loaded,
+//! Item damage (`world/combat/item_damage.rs`, #1168): every material's `resists` reviewed and loaded,
 //! the one check by the material's chance over seeds, never a material against a failed
 //! attempt, damaged then destroyed.
 
-use super::class_active_tests::world;
 use super::item_damage::Harmed;
-use super::*;
 use crate::content::{ContentFiles, ItemHarm};
 use crate::item_parts::ItemPart;
 use crate::object::Stack;
 use crate::rng::Rng;
+use crate::world::classes::class_active_tests::world;
+use crate::world::*;
 
 /// A world whose player carries only a long sword of `material`, in the pack's first place.
 fn sword_of(material: &str) -> World {

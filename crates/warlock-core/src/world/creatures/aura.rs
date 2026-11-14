@@ -26,7 +26,6 @@
 //!   stands ([`Act::Cry`]), heard by the hearing rules ("You hear a hiss.", the `sound` layer).
 
 use super::ai::Plan;
-use super::{Actor, ActorId, World};
 use crate::action::Event;
 use crate::check::check;
 use crate::content::{Content, Stance, the};
@@ -34,9 +33,10 @@ use crate::fov::radius2;
 use crate::noise::{self, Act, Noise, SoundKind};
 use crate::sight::LineOfSight;
 use crate::text::capitalized;
+use crate::world::{Actor, ActorId, World};
 
 /// Puts `actor`'s innate statuses on it (module docs): those it lacks, and those that refresh.
-pub(super) fn wear_innate(actor: &mut Actor, content: &Content) {
+pub(in crate::world) fn wear_innate(actor: &mut Actor, content: &Content) {
     let def = content.creature(actor.creature);
     for &status in &def.innate {
         let sdef = content.status(status);

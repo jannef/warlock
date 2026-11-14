@@ -17,7 +17,7 @@
 //! offered. A unique creature on it may come again: it never met its end (`progress.uniques`).
 //!
 //! **Kept beasts** never stay behind: a companion or familiar crosses wherever it stands, held fast
-//! or not (`follow_along`, [`super::Actor::kept`]), so none is lost here. Any other ally left is
+//! or not (`follow_along`, [`crate::world::Actor::kept`]), so none is lost here. Any other ally left is
 //! gone with the floor, and the player is told (the seen ones have just been said to be left
 //! behind): "You will not see the wolf again."
 //!
@@ -31,15 +31,15 @@
 //! stream: a Pit's floor is a pure function of the run seed and its id, the same each time it is
 //! made, and the count of floors made does not go on.
 
-use super::{ActorId, World, WorldState};
 use crate::action::Event;
 use crate::content::{Content, parse_branch_level};
+use crate::world::{ActorId, World, WorldState};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
 /// The seed of level `id` for a run of `seed`, `made` floors made so far: a floor of an endless
 /// branch's own (the module docs), the run's for every other level.
-pub(super) fn floor_seed(content: &Content, seed: u64, id: &str, made: u32) -> u64 {
+pub(in crate::world) fn floor_seed(content: &Content, seed: u64, id: &str, made: u32) -> u64 {
     if content.is_endless_floor(id) && !content.is_portal_floor(id) {
         crate::rng::stream_key(seed, &format!("endless/{made}"))
     } else {
@@ -78,7 +78,7 @@ impl EndlessFloors {
 
     /// Whether arriving on level `id`, not there yet, pays as a first arrival: any level but a
     /// floor of an endless branch no deeper than it has been.
-    pub(super) fn pays(&self, content: &Content, id: &str) -> bool {
+    pub(in crate::world) fn pays(&self, content: &Content, id: &str) -> bool {
         match parse_branch_level(id).filter(|_| content.is_endless_floor(id)) {
             Some((branch, depth)) => depth > self.deepest.get(branch).copied().unwrap_or(0),
             None => true,
@@ -88,7 +88,7 @@ impl EndlessFloors {
 
 impl WorldState {
     /// The seed level `id` is made from, if it is made now.
-    pub(super) fn level_seed(&self, content: &Content, id: &str) -> u64 {
+    pub(in crate::world) fn level_seed(&self, content: &Content, id: &str) -> u64 {
         floor_seed(content, self.seed, id, self.endless.made)
     }
 }
@@ -96,7 +96,7 @@ impl WorldState {
 impl World {
     /// After an action that changed level: every floor of an endless branch but the current one
     /// is forgotten (the module docs).
-    pub(super) fn forget_floors(&mut self, events: &[Event]) {
+    pub(in crate::world) fn forget_floors(&mut self, events: &[Event]) {
         if !(events.iter()).any(|e| matches!(e, Event::LevelChanged { .. })) {
             return;
         }

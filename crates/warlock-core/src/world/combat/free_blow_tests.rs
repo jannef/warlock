@@ -4,11 +4,11 @@
 //! steps), the player's blows in another's turn said after what they answer, and none of it
 //! drawing or changing anything while the switches are off or the triggers do not fire.
 
-use super::*;
 use crate::action::AttackKind;
 use crate::content::ContentFiles;
 use crate::equipment;
 use crate::test_support::said;
+use crate::world::*;
 
 const TERRAIN: &str = r##"
 [[terrain]]
@@ -148,7 +148,7 @@ const LEGEND: &str = r##"
 "p" = { terrain = "floor", creature = "kobold", route = "E1 W1" }
 "##;
 
-const WEAPON_SKILLS: &str = include_str!("../../../../assets/data/weapon_skills.toml");
+const WEAPON_SKILLS: &str = include_str!("../../../../../assets/data/weapon_skills.toml");
 
 /// The test content with `map` at `light` (0 dark to 255 fully lit); the player has a thousand
 /// hit points.

@@ -4,12 +4,12 @@
 //! ([`crate::talent::OffenceMods::grip`]). The Iron Scourge's and the Gate Warden's gifts are
 //! free blows and sums read where those rules live. Nothing here draws at random.
 
-use super::{ActorId, World};
 use crate::action::{AttackKind, Event};
 use crate::combat::Blow;
 use crate::content::{ActionKind, Stance};
 use crate::status::Effect;
 use crate::text::capitalized;
+use crate::world::{ActorId, World};
 
 impl World {
     /// The player rising from the ashes is reborn whole, if their talents say so: every status
@@ -52,7 +52,7 @@ impl World {
     /// `attacker`'s attack of `kind` at `target` has been rolled (`blow`, if it was): with
     /// Drowning grip, a melee blow lets go of every creature it held but `target`, a hit that
     /// leaves `target` alive holds it, and a miss lets go of it too.
-    pub(super) fn grip(
+    pub(in crate::world) fn grip(
         &mut self,
         attacker: ActorId,
         target: ActorId,
@@ -84,7 +84,7 @@ impl World {
 
     /// `holder` lets go of every creature it holds but `keep` (it struck another, missed, or
     /// moved): their grip status ends, silently. Nothing for an actor without Drowning grip.
-    pub(super) fn let_go(&mut self, holder: ActorId, keep: Option<ActorId>) {
+    pub(in crate::world) fn let_go(&mut self, holder: ActorId, keep: Option<ActorId>) {
         let Some(status) = self.grip_of(holder) else {
             return;
         };
@@ -109,8 +109,12 @@ impl World {
     /// What creature `id`, held fast (a status of its `blocks` its steps), does instead of
     /// `plan`'s step: it attacks whoever holds it if that one is hostile and beside it, else
     /// waits. Any other plan stands.
-    pub(super) fn held_back(&self, id: ActorId, plan: super::ai::Plan) -> super::ai::Plan {
-        use super::ai::Plan;
+    pub(in crate::world) fn held_back(
+        &self,
+        id: ActorId,
+        plan: crate::world::creatures::ai::Plan,
+    ) -> crate::world::creatures::ai::Plan {
+        use crate::world::creatures::ai::Plan;
         if !matches!(plan, Plan::Step(_) | Plan::Patrol) {
             return plan;
         }

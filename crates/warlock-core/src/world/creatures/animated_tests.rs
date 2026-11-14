@@ -2,13 +2,13 @@
 //! body (placed by a legend, or composed from its own stream), what it shows, its immunities,
 //! stealing refused, the drop rule with Salvager, Unbinder, saves, and replays.
 
-use super::fight::Harm;
-use super::*;
 use crate::action::parse_actions;
 use crate::content::ContentFiles;
 use crate::geom::Dir;
 use crate::replay::Replay;
 use crate::test_support::last_text as last;
+use crate::world::combat::fight::Harm;
+use crate::world::*;
 
 // A lit hall: the player between an animated candlestick of silver (west) and an animated teapot
 // (east), a rug further on, and a peaceful kobold below.
@@ -38,7 +38,7 @@ fn files(intact: u8) -> ContentFiles {
         "scenarios/hall.toml",
         "name = \"Hall\"\nstart_level = \"hall\"\n",
     );
-    let rules = include_str!("../../../../assets/data/animated.toml")
+    let rules = include_str!("../../../../../assets/data/animated.toml")
         .replace("intact = 50 ", &format!("intact = {intact} "));
     files.insert("data/animated.toml", &rules);
     files

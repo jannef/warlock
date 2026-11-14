@@ -140,7 +140,7 @@ pub(super) fn line_of_sight<'a>(v: &Viewing<'a>) -> Los<'a> {
     );
     let mut grid = Window::new(width, height, lo, hi, false);
     let mut cells = Vec::new();
-    // Smoke stops sight as a wall does, but is no wall (`world/zone.rs`).
+    // Smoke stops sight as a wall does, but is no wall (`world/magic/zone.rs`).
     let stops = level.sight_stops(v.content, viewer, v.state.time);
     compute_fov(viewer, range, stops, |p| {
         if let Some(seen) = grid.get_mut(p)

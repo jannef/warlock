@@ -12,9 +12,9 @@
 //! which the light cache reads for the player's perception and creature sight alike; a magic
 //! light's affixes would modify it there.
 
-use super::{Spent, World, WorldState};
 use crate::content::{ActionKind, Content, LightId};
 use crate::object::LightMode;
+use crate::world::{Spent, World, WorldState};
 
 impl WorldState {
     /// The light the player's ready light gives now: its object's preset while lit (a
@@ -43,7 +43,7 @@ impl World {
     /// Uses the tool ready in the Tool slot without a direction: turns a light there to its next
     /// mode (the module docs). Refused, taking no time, without one (a digging tool is used
     /// toward a direction, `dig:DIR`).
-    pub(super) fn use_tool(&mut self) -> Spent {
+    pub(in crate::world) fn use_tool(&mut self) -> Spent {
         let player = self.state.player;
         let Some(item) = self.state.player().ready_light(&self.content) else {
             self.say("You have no light ready to use.");
@@ -75,7 +75,7 @@ impl World {
     }
 
     /// Puts out the player's ready light, if they have one (an outcome's `snuff`).
-    pub(super) fn snuff_light(&mut self) {
+    pub(in crate::world) fn snuff_light(&mut self) {
         if let Some(item) = self.state.player().ready_light(&self.content) {
             self.player_mut().inventory[item].set_light_mode(LightMode::Unlit);
         }

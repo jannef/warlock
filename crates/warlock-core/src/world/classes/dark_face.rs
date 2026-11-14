@@ -20,11 +20,11 @@
 //! or a level one covers whole): its prayers add no strain (`World::orison`), and the unholy
 //! place's status never touches it (`World::dwell`, the room status's one place).
 
-use super::{ActorId, World};
 use crate::action::Event;
 use crate::content::{DiseaseId, Face, TalentEffect};
 use crate::status::Effect;
 use crate::talent::FaithEffect;
+use crate::world::{ActorId, World};
 
 impl World {
     /// The creature nearest the player that they see on the current level: the least squared
@@ -103,7 +103,7 @@ impl World {
     /// Whether actor `id` is in communion with the dark: it holds Communion, its band is one
     /// the talent's `alignment` allows (or no rules say otherwise), and the dark answers its
     /// prayers. Where it stands is the caller's question.
-    pub(super) fn communes(&self, id: ActorId) -> bool {
+    pub(in crate::world) fn communes(&self, id: ActorId) -> bool {
         let content = &self.content;
         let Some(actor) = self.state.actors.get(&id) else {
             return false;

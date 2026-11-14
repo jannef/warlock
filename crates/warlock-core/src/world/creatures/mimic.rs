@@ -18,13 +18,13 @@
 //! Nothing here draws but the free blow's own rolls (the gameplay stream), so a run that never
 //! touches a mimic is unchanged.
 
-use super::{ActorId, Spent, World};
 use crate::action::{AttackKind, Event};
 use crate::geom::Pos;
+use crate::world::{ActorId, Spent, World};
 
 /// How a mimic is found out (module docs): what is said, and whether it strikes.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(super) enum Reveal {
+pub(in crate::world) enum Reveal {
     /// The player's hand on it: it lurches, and strikes the toucher.
     Touch,
     /// Knock at it: it lurches, but the caster's touch was a spell, not a hand.
@@ -37,12 +37,12 @@ pub(super) enum Reveal {
 
 impl World {
     /// Whether actor `id` hides as something else (a disguised mimic).
-    pub(super) fn disguised(&self, id: ActorId) -> bool {
+    pub(in crate::world) fn disguised(&self, id: ActorId) -> bool {
         (self.state.actors.get(&id)).is_some_and(|a| a.effects.hides(&self.content))
     }
 
     /// Whether actor `id` slips a hold by `by` (Chest-wise: `by` is a mimic).
-    pub(super) fn slips(&self, id: ActorId, by: Option<ActorId>) -> bool {
+    pub(in crate::world) fn slips(&self, id: ActorId, by: Option<ActorId>) -> bool {
         let mimic = (by.and_then(|b| self.state.actors.get(&b)))
             .is_some_and(|b| self.content.has_tag(b.creature, "mimic"));
         mimic
@@ -52,7 +52,7 @@ impl World {
     }
 
     /// The disguised mimic at `p` on the current level, if one stands there.
-    pub(super) fn mimic_at(&self, p: Pos) -> Option<ActorId> {
+    pub(in crate::world) fn mimic_at(&self, p: Pos) -> Option<ActorId> {
         let level = &self.state.current_level;
         let id = self.state.actor_at(level, p)?.id;
         self.disguised(id).then_some(id)
@@ -62,7 +62,7 @@ impl World {
     /// kicking, a step into it): a disguised mimic there is revealed and strikes them, and the
     /// action is refused with no time (`Some(Spent::NoTime)`); `None` where no mimic hides.
     /// A mimic the player sees for what it is (Chest-wise) is no chest to them: `None`.
-    pub(super) fn touch(&mut self, p: Pos, events: &mut Vec<Event>) -> Option<Spent> {
+    pub(in crate::world) fn touch(&mut self, p: Pos, events: &mut Vec<Event>) -> Option<Spent> {
         let mimic = self.mimic_at(p).filter(|&m| !self.perception.shows(m))?;
         self.reveal_mimic(mimic, Reveal::Touch, events);
         Some(Spent::NoTime)
@@ -70,7 +70,12 @@ impl World {
 
     /// Ends mimic `id`'s disguise (module docs), if it is disguised: the line, when the player
     /// sees its cell, and on a touch its blow at the player.
-    pub(super) fn reveal_mimic(&mut self, id: ActorId, how: Reveal, events: &mut Vec<Event>) {
+    pub(in crate::world) fn reveal_mimic(
+        &mut self,
+        id: ActorId,
+        how: Reveal,
+        events: &mut Vec<Event>,
+    ) {
         let Some(status) = self.content.disguise_status() else {
             return;
         };

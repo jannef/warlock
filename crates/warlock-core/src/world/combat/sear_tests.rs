@@ -2,14 +2,14 @@
 //! cold numbs); fire chars the floor it burns and the faces of the walls beside it, more with
 //! every burning; char is perceived and saved as blood is, and never changes what happens.
 
-use super::spell::Caster;
-use super::*;
 use crate::action::{AttackKind, parse_actions};
 use crate::combat::{Blow, Strike};
 use crate::content::{Burst, ContentFiles, DamageTypeId};
 use crate::dice::Roll;
 use crate::geom::Dir;
 use crate::time;
+use crate::world::magic::spell::Caster;
+use crate::world::*;
 use std::sync::LazyLock;
 
 /// A lit hall: the player (`@`), a giant rat (`r`, peaceful), room for a burst east.

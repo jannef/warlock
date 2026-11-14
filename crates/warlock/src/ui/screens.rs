@@ -172,7 +172,7 @@ pub enum ScreenName {
     /// Choose something carried to take apart for its materials (the Salvage ability).
     Salvage,
     /// Choose a damaged thing carried to mend in the field (the craftsperson's Make do and mend,
-    /// `world/make_do.rs`).
+    /// `world/crafting/make_do.rs`).
     MakeDo,
     /// Choose a loose gem to cut (Jewelcraft's Cut recipe, from its profession's screen).
     Cut,

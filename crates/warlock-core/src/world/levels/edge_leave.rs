@@ -5,8 +5,8 @@
 //! rule, the refusal names nobody, and it takes no time. The quick leave keeps its own, wider
 //! rule; this one only adds to walking.
 
-use super::World;
 use crate::content::Stance;
+use crate::world::World;
 
 /// What the player is told when walking off the edge is refused.
 pub const EDGE_LEAVE_REFUSED: &str = "They are too close to slip away.";

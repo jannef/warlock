@@ -1,11 +1,11 @@
 //! The speed system (spec §8 "Speed"): the energy scheduler decides who acts when, in time
 //! order, so faster creatures act more often in the same game time.
 
-use super::*;
 use crate::action::parse_actions;
 use crate::content::ContentFiles;
 use crate::replay::Replay;
 use crate::test_support::run;
+use crate::world::*;
 use std::sync::LazyLock;
 
 const TERRAIN: &str = r##"

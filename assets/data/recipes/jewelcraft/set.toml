@@ -1,7 +1,7 @@
 # Set (docs/design/recipes.md §5; docs/dev/crafting.md "Setting a gem"): a cut loose gem carried
 # set into an item carried whose ornament part is unset, by Dexterity and Jewelcraft against
 # `difficulty` + the gem's `work`. Failed, the gem chips; a natural 2 shatters it. The rules are
-# `world/set.rs`.
+# `world/crafting/set.rs`.
 [[recipe]]
 id = "set"
 use = "set"

@@ -5,7 +5,7 @@
 //! Whoever steps onto a trap sets it off, the player and creatures alike (creatures know nothing
 //! of traps yet, so they walk onto them, and luring them is a tactic): [`World::step_onto_trap`].
 //! A trap on a door (spec §8 "Trapped doors") is the door's, not the floor's: walking through
-//! the doorway never sets it off; opening the door does, and kicking it (`world/door.rs`), at
+//! the doorway never sets it off; opening the door does, and kicking it (`world/fixtures/door.rs`), at
 //! whoever opened or kicked it from the next cell. [`World::spring_trap`] is the one way a trap
 //! goes off: it spends a charge (a trap with none left is spent and gone), makes the trap's noise
 //! on its cell, and does what the trap does ([`crate::content::TrapEffect`]):
@@ -38,9 +38,6 @@
 //! ([`Event::TrapSprung`], then a missile, a spell, what the trap did to whom, and deaths), and
 //! perception decides what the player perceived of it and says so.
 
-use super::fight::Harm;
-use super::spell::Caster;
-use super::{ActorId, World, fnv1a};
 use crate::action::{Event, MissileEnd};
 use crate::check::check;
 use crate::combat::{self, Blow, Profile, Strike};
@@ -54,6 +51,9 @@ use crate::skills::{Effect as SkillEffect, Use};
 use crate::stats::Stat;
 use crate::talent::TalentMods;
 use crate::text::article;
+use crate::world::combat::fight::Harm;
+use crate::world::magic::spell::Caster;
+use crate::world::{ActorId, World, fnv1a};
 use std::collections::BTreeSet;
 
 /// How far past its victim a trap's missile flies on, at most, when it misses.
@@ -64,7 +64,7 @@ impl World {
     /// unless it is on a door or a chest, which only opening or kicking it sets off (spec §8
     /// "Trapped doors", "Chests"). Returns the energy a pit's climb costs on top of the step. Last, an unstable
     /// room may move the stepper ([`World::warp_step`]).
-    pub(super) fn step_onto_trap(
+    pub(in crate::world) fn step_onto_trap(
         &mut self,
         at: Pos,
         victim: ActorId,
@@ -152,7 +152,12 @@ impl World {
     /// action: a pit's climb out, else 0. Nothing happens if no trap lies there. A trap the
     /// player rigged (`rig.rs`) deals its blows as the player's, so what it kills is their kill
     /// ([`World::trap_deals`]); one it springs on the player is a trap's harm all the same.
-    pub(super) fn spring_trap(&mut self, at: Pos, victim: ActorId, events: &mut Vec<Event>) -> i64 {
+    pub(in crate::world) fn spring_trap(
+        &mut self,
+        at: Pos,
+        victim: ActorId,
+        events: &mut Vec<Event>,
+    ) -> i64 {
         let rigged = (self.state.current().traps.get(&at)).is_some_and(|t| t.rigged);
         let rigger = rigged.then_some(self.state.player);
         let before = std::mem::replace(&mut self.rigger, rigger);
@@ -275,7 +280,7 @@ impl World {
     /// Trap `trap` does `damage` to `target` from `source` with no roll to hit (a blast, a bolt,
     /// a fall), less what the target resists of its kind (spec §8 "Damage types"; nothing left
     /// of it is [`Strike::Resisted`]).
-    pub(super) fn trap_hurts(
+    pub(in crate::world) fn trap_hurts(
         &mut self,
         trap: TrapId,
         target: ActorId,
@@ -469,7 +474,7 @@ impl World {
     }
 
     /// Moves `victim` from the teleport trap on `at` to a free cell of the level (module docs).
-    pub(super) fn teleport(&mut self, victim: ActorId, at: Pos, events: &mut Vec<Event>) {
+    pub(in crate::world) fn teleport(&mut self, victim: ActorId, at: Pos, events: &mut Vec<Event>) {
         let state = &self.state;
         let Some(from) = state.actors.get(&victim).map(|a| a.pos) else {
             return;
@@ -498,7 +503,7 @@ impl World {
 
     /// Whether a teleport may land on cell `p` of the current level, someone standing there
     /// aside: walkable, with no trap and no ice. The blink (`blink.rs`) lands the same way.
-    pub(super) fn lands_on(&self, p: Pos) -> bool {
+    pub(in crate::world) fn lands_on(&self, p: Pos) -> bool {
         let level = self.state.current();
         level.is_walkable(&self.content, p)
             && !level.traps.contains_key(&p)
@@ -507,12 +512,12 @@ impl World {
 
     /// Whether a teleport may land on cell `p` of the current level now: [`World::lands_on`],
     /// with no one there.
-    pub(super) fn may_land(&self, p: Pos) -> bool {
+    pub(in crate::world) fn may_land(&self, p: Pos) -> bool {
         self.lands_on(p) && self.state.actor_at(&self.state.current_level, p).is_none()
     }
 
     /// Moves `victim` from one cell to another, at once: no step, no tread.
-    pub(super) fn teleport_to(
+    pub(in crate::world) fn teleport_to(
         &mut self,
         victim: ActorId,
         (from, to): (Pos, Pos),
@@ -535,7 +540,7 @@ impl World {
 
     /// Traps the player saw go off are known from now on (spec §8 "Traps"): those they set off
     /// themselves, and those set off where they see (a creature they see stepping onto one).
-    pub(super) fn learn_traps(&mut self, events: &[Event]) {
+    pub(in crate::world) fn learn_traps(&mut self, events: &[Event]) {
         let player = self.state.player;
         for event in events {
             if let Event::TrapSprung { at, victim, .. } = *event
@@ -549,7 +554,7 @@ impl World {
     /// The trap at `at` on the current level is known from now on: the player saw it go off
     /// ([`World::learn_traps`]) or found it (spec §8 "Searching"). Returns its type, if a trap
     /// lies there.
-    pub(super) fn know_trap(&mut self, at: Pos) -> Option<TrapId> {
+    pub(in crate::world) fn know_trap(&mut self, at: Pos) -> Option<TrapId> {
         let trap = self.state.current_mut().traps.get_mut(&at)?;
         trap.known = true;
         Some(trap.kind)

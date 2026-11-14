@@ -7,7 +7,6 @@
 use crate::test_support::{CONTENT as BUILTIN, builtin, said as messages};
 /// The test creatures name no level: level 1 (spec §8 "Experience").
 const UNLEVELLED: u32 = 1;
-use super::*;
 use crate::action::{AttackKind, parse_actions};
 use crate::character::CharacterSpec;
 use crate::combat::{Category, Strike};
@@ -15,6 +14,7 @@ use crate::content::{ContentFiles, WeaponSkillId};
 use crate::equipment;
 use crate::replay::Replay;
 use crate::weapon_skills::{Training, WeaponSkills};
+use crate::world::*;
 
 const TERRAIN: &str = r##"
 [[terrain]]
@@ -208,7 +208,7 @@ const LEGEND: &str = r##"
 "g" = { terrain = "floor", creature = "golem" }
 "##;
 
-const WEAPON_SKILLS: &str = include_str!("../../../../assets/data/weapon_skills.toml");
+const WEAPON_SKILLS: &str = include_str!("../../../../../assets/data/weapon_skills.toml");
 
 /// The test content with a fully lit level on `map`; the scenario gives the player a thousand
 /// hit points.

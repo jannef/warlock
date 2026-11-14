@@ -2,9 +2,9 @@
 //! guild is derived from their quest records, never saved, and is a title only. The master names
 //! the player to a new rank as the quest that reaches it is given or done, once.
 
-use super::{Quests, Stage, World};
 use crate::content::{Content, GuildDef};
 use crate::perception::PerceptionView;
+use crate::world::{Quests, Stage, World};
 
 /// The player's standing in a guild they have joined.
 #[derive(Clone, Debug)]

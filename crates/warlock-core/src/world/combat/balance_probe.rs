@@ -42,7 +42,7 @@
 //!   it the same roll at style rank 0. The ranks are not set by level: each level's days are
 //!   cast through `World::practise`, a pool a day (`caster_pace`), so the pace
 //!   is the real curve's. No casts to kill: the probe prints the roll and the pool. The
-//!   priest's prayer (#886, `world/orison.rs`) has no roll: a line a level says its name and
+//!   priest's prayer (#886, `world/classes/orison.rs`) has no roll: a line a level says its name and
 //!   what one prayer answers (`World::prayer_state`).
 //!
 //! - **Sneak attacks** (#688): the thief's first blow on a foe unaware of them against its
@@ -98,7 +98,6 @@ mod summons;
 mod tables;
 mod training;
 
-use super::{ActorId, CastBy, World};
 use crate::action::{AttackKind, parse_actions};
 use crate::character::{CharacterSpec, Gender};
 use crate::combat::{self, Attack, Defence, Profile, Target};
@@ -112,6 +111,7 @@ use crate::magic::{LootGrade, loot};
 use crate::object::Stack;
 use crate::rng::Rng;
 use crate::stats::Stat;
+use crate::world::{ActorId, CastBy, World};
 use std::collections::BTreeMap;
 use std::sync::Arc;
 
@@ -603,7 +603,8 @@ fn monsters(content: &Arc<Content>) -> Vec<Monster> {
                 asleep: false,
                 status: Vec::new(),
             };
-            let id = super::travel::make_creature(&mut w.state, content, &level, &spawn);
+            let id =
+                crate::world::levels::travel::make_creature(&mut w.state, content, &level, &spawn);
             sides.push(side_of(&w, id));
             if seed == 0 {
                 spells = casters::spells_of(&w, id);
@@ -789,7 +790,7 @@ struct Snap {
     zeal: Option<Zeal>,
     /// Its prayer's name in the menu and its state, in plain gear (a class that prays): no roll,
     /// so the spell table prints what it answers.
-    prayer: Option<(String, super::orison::PrayerState)>,
+    prayer: Option<(String, crate::world::classes::orison::PrayerState)>,
 }
 
 /// A bare-handed player's ki (#846): their side with one blow an attack and with the flurry's
@@ -1309,7 +1310,7 @@ fn balance_probe() {
     let sweep = training::SWEEP
         .iter()
         .map(|&(per_point, ramp)| {
-            let text: String = (include_str!("../../../../assets/data/stats.toml").lines())
+            let text: String = (include_str!("../../../../../assets/data/stats.toml").lines())
                 .map(|l| match l {
                     l if l.starts_with("price_per_point = ") => {
                         format!("price_per_point = {per_point}\n")

@@ -36,7 +36,7 @@ scimitars"), carrying `poisoned` (and `weakened` on the assassin and the two eld
 weapon (the roster test rolls the gear to check it). The archers shoot with a natural throw
 (`[creature.throw]`, object `bolt`, named "poisoned bolt", verb "shoots"): the drow's sleep poison
 as `drowsy`, and `poisoned`. The blademaster's two blades are `attack_cost = 600` with its dice a
-step below the formula's (`world/cost_tests.rs` lists it). The assassin's dagger threatens from
+step below the formula's (`world/turn/cost_tests.rs` lists it). The assassin's dagger threatens from
 19 and multiplies by 3.
 
 ## Roster

@@ -25,8 +25,6 @@
 //! in a shop is the shop's (`shop.rs`: picking it up is owing for it, and leaving owing any way
 //! but the door is theft).
 
-use super::alignment::Deed;
-use super::{ActorId, Spent, World};
 use crate::action::Positions;
 use crate::check;
 use crate::content::{ActionKind, Stance};
@@ -35,11 +33,13 @@ use crate::object::{self, Stack};
 use crate::skills::{Effect, Use};
 use crate::stats::Stat;
 use crate::text::capitalized;
+use crate::world::character::alignment::Deed;
+use crate::world::{ActorId, Spent, World};
 
 impl World {
     /// [`crate::Action::Steal`]: the player tries to steal from the creature in `dir` (see the
     /// module docs).
-    pub(super) fn steal(&mut self, dir: Dir) -> Spent {
+    pub(in crate::world) fn steal(&mut self, dir: Dir) -> Spent {
         let content = self.content.clone();
         let player = self.state.player;
         let trained = crate::ability::Ability::Steal.had_by(self.state.player(), &content);

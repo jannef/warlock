@@ -9,14 +9,14 @@
 //! may train the Intelligence the scroll trains (`StatUse::Identified`). It draws nothing at
 //! random but that training.
 
-use super::loot::Identified;
-use super::{Spent, World};
 use crate::content::{ActionKind, ClassActive, StatUse};
+use crate::world::items::loot::Identified;
+use crate::world::{Spent, World};
 
 impl World {
     /// `use:ID:LETTER`: the player uses class active `active` on inventory stack `item`; only
     /// one that asks for a stack ([`ClassActive::aims_item`]) may.
-    pub(super) fn use_class_on(&mut self, active: ClassActive, item: usize) -> Spent {
+    pub(in crate::world) fn use_class_on(&mut self, active: ClassActive, item: usize) -> Spent {
         if !active.aims_item() {
             self.say(format!("`{}` works on nothing you carry.", active.id()));
             return Spent::Nothing;

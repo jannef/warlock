@@ -22,8 +22,6 @@
 //! ([`Caster`]): a trap's blows are its own and its kills no one's; an actor's (the player
 //! reading a scroll) are theirs, and so are its kills, which earn them experience.
 
-use super::fight::Harm;
-use super::{Actor, ActorId, Spent, World};
 use crate::action::{AttackKind, Event, SpellShape};
 use crate::combat::{Blow, Strike};
 use crate::content::{Bolt, Burst, BurstIce, DamageTypeId, EffectShape, TrapId, TrapNoise};
@@ -35,11 +33,13 @@ use crate::ice::Shock;
 use crate::noise::{self, Noise};
 use crate::sight::LineOfSight;
 use crate::talent::TalentMods;
+use crate::world::combat::fight::Harm;
+use crate::world::{Actor, ActorId, Spent, World};
 use std::collections::BTreeSet;
 
 /// Who cast a spell, and so who deals its harm.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(super) enum Caster {
+pub(in crate::world) enum Caster {
     /// A trap that went off: its blows are [`Event::TrapStruck`], and its kills earn no one
     /// anything.
     Trap(TrapId),
@@ -54,7 +54,7 @@ pub(super) enum Caster {
 /// Whom a burst strikes, and how hard: those of the tags `only` (Rebuke's; none: everyone), but
 /// creatures of the type `spare`; half (at least 1) beyond radius − 1 unless `full`.
 #[derive(Clone, Copy, Debug)]
-pub(super) struct Reach<'a> {
+pub(in crate::world) struct Reach<'a> {
     pub only: &'a [String],
     pub spare: Option<crate::content::CreatureId>,
     pub full: bool,
@@ -166,7 +166,7 @@ impl World {
     /// cell `at` (a burst around it), or from `at` toward `to` (a burst around `to`, flying there
     /// from `at`; a bolt from `at` to `to`). It hurts no one and takes no time; only the message
     /// log changes.
-    pub(super) fn show_effect(
+    pub(in crate::world) fn show_effect(
         &mut self,
         id: &str,
         at: Pos,
@@ -213,7 +213,7 @@ impl World {
     /// `noise` (a trap's going off, a scroll's spell) on cell `at` of the current level: no actor
     /// made it, so everyone in earshot hears it. A special room scales it like every noise made
     /// inside it.
-    pub(super) fn sound_at(&mut self, noise: Option<TrapNoise>, at: Pos) {
+    pub(in crate::world) fn sound_at(&mut self, noise: Option<TrapNoise>, at: Pos) {
         let Some(sound) = noise else {
             return;
         };
@@ -239,7 +239,7 @@ impl World {
     /// breaks ([`World::blast`]) and the doors it breaks (a spell's type's, [`World::blast_doors`]),
     /// then the ice it melts or shatters ([`World::shock`]) or the water it
     /// freezes ([`World::frost`]). What it rolled.
-    pub(super) fn cast_burst(
+    pub(in crate::world) fn cast_burst(
         &mut self,
         caster: Caster,
         at: (Pos, Pos),
@@ -251,7 +251,7 @@ impl World {
 
     /// [`World::cast_burst`], striking only creatures of the tags `only` (Rebuke's; none:
     /// everyone). The walls, the ice, and the fire are its all the same.
-    pub(super) fn cast_burst_at(
+    pub(in crate::world) fn cast_burst_at(
         &mut self,
         caster: Caster,
         at: (Pos, Pos),
@@ -268,7 +268,7 @@ impl World {
 
     /// [`World::cast_burst_at`], striking as `reach` says: a creature's burst
     /// (`creature_burst.rs`) spares its own kind and strikes everyone in full.
-    pub(super) fn cast_burst_reaching(
+    pub(in crate::world) fn cast_burst_reaching(
         &mut self,
         caster: Caster,
         (origin, center): (Pos, Pos),
@@ -356,7 +356,7 @@ impl World {
     /// `caster`: its effect ([`Event::Spell`], drawn along the cells after its origin: a trap's
     /// own cell, first in its path, is struck but not drawn), and one roll of its damage for
     /// everyone on the path. What it rolled.
-    pub(super) fn cast_bolt(
+    pub(in crate::world) fn cast_bolt(
         &mut self,
         caster: Caster,
         origin: Pos,
@@ -394,7 +394,7 @@ impl World {
     /// halving it, resistances taking their share ([`World::spell_hurts`]). The one place a
     /// cone strikes: Burning hands (`cast.rs`) and a dragon's breath (`breath.rs`). What it
     /// rolled.
-    pub(super) fn cast_cone(
+    pub(in crate::world) fn cast_cone(
         &mut self,
         caster: Caster,
         (here, at, length): (Pos, Pos, i32),
@@ -432,7 +432,7 @@ impl World {
 
     /// What of a burst's or a bolt's `damage` reaches actor `id`: with Evasion (spec §8
     /// "Talents") its share, rounded down (a spell that does nothing more is resisted).
-    pub(super) fn evaded(&self, id: ActorId, damage: Damage) -> Damage {
+    pub(in crate::world) fn evaded(&self, id: ActorId, damage: Damage) -> Damage {
         let percent = (self.state.actors.get(&id)).map_or(0, |a| {
             a.talent_mods(&self.content).defence.spell_damage_percent
         });
@@ -452,7 +452,7 @@ impl World {
     /// the damage, which may kill (a kill by the player earns its experience), and if it lives
     /// the statuses its wound causes. A shopkeeper the player's spell reaches turns on them, as
     /// one they strike does.
-    pub(super) fn spell_hurts(
+    pub(in crate::world) fn spell_hurts(
         &mut self,
         caster: Caster,
         target: ActorId,
@@ -480,7 +480,7 @@ impl World {
     /// shopkeeper the player's spell reaches turns on them, as one they strike does; a miss
     /// provokes too. No Evasion here: [`World::spell_hurts`] takes it off an area's first. The
     /// hit points it took (a Leech's share is of them).
-    pub(super) fn spell_strikes(
+    pub(in crate::world) fn spell_strikes(
         &mut self,
         by: ActorId,
         target: ActorId,
@@ -742,7 +742,7 @@ mod tests {
         // The same run with every effect looking different plays out the same: same state, same
         // events but for the effect's cells (the dev action's radius).
         let mut files = ContentFiles::builtin();
-        let looks = include_str!("../../../../assets/data/effects.toml");
+        let looks = include_str!("../../../../../assets/data/effects.toml");
         let changed = looks
             .replace("speed = 24", "speed = 3")
             .replace("glyphs = \"▓▒░\"", "glyphs = \"*\"")

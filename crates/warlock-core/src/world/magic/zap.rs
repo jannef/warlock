@@ -22,10 +22,10 @@
 //!
 //! Determinism: nothing here draws; the cast draws what the spell's rolls need.
 
-use super::{Actor, Spent, World};
 use crate::action::Event;
 use crate::content::{ActionKind, Content};
 use crate::geom::Pos;
+use crate::world::{Actor, Spent, World};
 
 impl Actor {
     /// Where in its inventory the wand it has ready is: the first stack in a `ready` slot (the
@@ -44,7 +44,7 @@ impl Actor {
 
 impl World {
     /// The player uses the wand in inventory stack `item` at cell `at` (module docs).
-    pub(super) fn zap(&mut self, item: usize, at: Pos, events: &mut Vec<Event>) -> Spent {
+    pub(in crate::world) fn zap(&mut self, item: usize, at: Pos, events: &mut Vec<Event>) -> Spent {
         let content = self.content.clone();
         let me = self.state.player();
         let Some(stack) = me.inventory.get(item) else {

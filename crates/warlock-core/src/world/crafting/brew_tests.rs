@@ -5,13 +5,13 @@
 //! blunder, the refusals with no time, Intelligence the check's stat, the mark, and a replay.
 
 use super::craft_make::make_out_for_test;
-use super::*;
 use crate::content::{ContentFiles, RecipeId};
 use crate::object::Stack;
 use crate::replay::Replay;
 use crate::skills::{SkillId, Trained};
 use crate::stats::Stat;
 use crate::test_support::{builtin, run as apply};
+use crate::world::*;
 
 /// A cave with glowing fungus north-east of the player.
 const ROOM: &str = "\

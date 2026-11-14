@@ -83,10 +83,11 @@
 //! like the floor until the player finds them, searching (a check of Intelligence) or in passing
 //! (of Willpower, after every turn, for those who notice such things).
 
-// The modules, by subsystem (docs/dev/merging.md, "Hot registries"): each group lists its modules,
-// then its test modules, each sorted by name. A new module is one line in its group's list.
+// The modules, one folder per subsystem (docs/dev/merging.md, "Hot registries"): each folder's
+// `mod.rs` lists its modules, then its test modules, each sorted by name. A new module is one line
+// in its folder's list.
 
-/// Gives every item inside `#[cfg(test)]`, so a test module is one line in its group. Shaped and
+/// Gives every item inside `#[cfg(test)]`, so a test module is one line in its folder. Shaped and
 /// named after the `cfg-if` crate's macro on purpose: rustfmt follows `mod` declarations inside a
 /// `cfg_if!` (and inside no other macro), so `cargo fmt` still reaches these files.
 macro_rules! cfg_if {
@@ -104,11 +105,11 @@ mod levels;
 
 // Combat (docs/dev/combat.md, ranged-combat.md, weapon-skills.md, weapon-abilities.md, blood.md,
 // surprise.md).
-mod combat;
+pub(crate) mod combat;
 
 // Statuses, healing, hunger, and potions (docs/dev/status-effects.md, hunger.md, potions.md,
 // burden.md).
-mod health;
+pub(crate) mod health;
 
 // Magic: mana, spells, scrolls, wands (docs/dev/mana.md, spells.md, caster-styles.md, scrolls.md).
 mod magic;
@@ -130,14 +131,14 @@ mod classes;
 mod skills;
 
 // Objects, equipment, and magic items (docs/dev/objects.md, equipment.md, magic-items.md).
-mod items;
+pub(crate) mod items;
 
 // Crafting, enchanting, and digging (docs/dev/crafting.md, enchanting.md, digging.md).
-mod crafting;
+pub(crate) mod crafting;
 
 // Doors, chests, traps, and special rooms (docs/dev/doors.md, chests.md, traps.md,
 // special-rooms.md).
-mod fixtures;
+pub(crate) mod fixtures;
 
 // People: talk, quests, shops, guilds (docs/dev/npcs.md, quests.md, shops.md, guild.md).
 mod people;
@@ -145,82 +146,86 @@ mod people;
 // The campaigns' places and people, end to end.
 mod campaigns;
 
-pub use actor::{Actor, ActorId, ActorKind, AttackSkills, Mind, Patrol};
-pub use actors::Actors;
-pub use alignment::Deed;
-pub use ally::{Ally, AllySource, MAX_DEV_ALLIES, Order};
-pub use attacks::{AttackSource, OwnAttack};
-pub(crate) use beast_friend::calms;
-pub(crate) use body_slots::has_slot;
-pub use calling::CallingStatus;
-pub use cast::Reach;
-pub use collar::fits_neck;
-pub(crate) use companion::smelt_within;
-pub use companion::{CompanionData, draw as companion_draw, name_for as companion_name};
-pub(crate) use craft::recipe_rows;
-pub use craft::{RecipeLack, RecipeRow};
-pub use craft_make::{CraftOption, CraftPlan, CraftStep, CraftStepKind, Grade, grade};
-pub(crate) use craft_make::{craft_plan, craft_steps};
-pub use creation::{chosen_with_talents, creation_bonus, creation_count, parse_talents, pick_text};
-pub use curse::{Rising, rise_candidates, rises_as};
-pub use cut::{CutBand, cut_band, cut_outcome, cuttable};
-pub use decipher::undeciphered;
-pub use dig::{MAX_DIG, WORK_SCALE, dig_refusal, dig_work, digs_to_break};
-pub(crate) use enchant::craft_steps_given;
-pub use enchant::{EnchantBand, enchant_band};
-pub(crate) use encounter::view as encounter_view;
-pub use encounter::{
+pub use allies::ally::{Ally, AllySource, MAX_DEV_ALLIES, Order};
+pub(crate) use allies::beast_friend::calms;
+pub use allies::collar::fits_neck;
+pub(crate) use allies::companion::smelt_within;
+pub use allies::companion::{CompanionData, draw as companion_draw, name_for as companion_name};
+pub use allies::familiar::{draw as familiar_draw, name_for as familiar_name};
+pub use character::alignment::Deed;
+pub use character::creation::{
+    chosen_with_talents, creation_bonus, creation_count, parse_talents, pick_text,
+};
+pub use character::experience::{Discovered, Progress};
+pub use character::gifts::Streak;
+pub use character::skill_roll::{RollBonus, RollCount, SkillRoll, roll_count, skill_roll};
+pub(crate) use character::stars::{PROFANE_RISEN, RISEN, RISEN_TWICE};
+pub use character::talent::Due;
+pub use classes::calling::CallingStatus;
+pub use classes::orison::PrayerState;
+pub use classes::sanctuary::Hallow;
+pub use classes::spirit_weapon::{gift as spirit_gift, pierces_all, shapes as weapon_shapes};
+pub use combat::attacks::{AttackSource, OwnAttack};
+pub use combat::fight::{Cause, Death};
+pub use combat::free_blow::FreeBlows;
+pub(crate) use combat::item_damage::protected_in;
+pub(crate) use crafting::craft::recipe_rows;
+pub use crafting::craft::{RecipeLack, RecipeRow};
+pub use crafting::craft_make::{CraftOption, CraftPlan, CraftStep, CraftStepKind, Grade, grade};
+pub(crate) use crafting::craft_make::{craft_plan, craft_steps};
+pub use crafting::cut::{CutBand, cut_band, cut_outcome, cuttable};
+pub use crafting::dig::{MAX_DIG, WORK_SCALE, dig_refusal, dig_work, digs_to_break};
+pub(crate) use crafting::enchant::craft_steps_given;
+pub use crafting::enchant::{EnchantBand, enchant_band};
+pub(crate) use crafting::field_forge::open_ground;
+pub use crafting::make_do::mendable;
+pub(crate) use crafting::make_do::mends_any;
+pub(crate) use crafting::rig::rigged_rows;
+pub use crafting::rig::{RigRow, takes_words};
+pub use crafting::salvage::{chipped, salvage_percent, salvageable};
+pub use crafting::seal::MOST_SEALS;
+pub use crafting::set::{SetBand, set_band, settable};
+pub use crafting::temper::{temperable, whittleable, workable, workable_wood};
+pub use creatures::statue::Statue;
+pub(crate) use creatures::unseen::{Concealed, unseen_by_player};
+pub use fixtures::curse::{Rising, rise_candidates, rises_as};
+pub use fixtures::graveyard::Fallen;
+pub use fixtures::mirrors::Image;
+pub(crate) use health::heal::allies_beside;
+pub(crate) use items::body_slots::has_slot;
+pub use items::loot::Identified;
+pub(crate) use levels::encounter::view as encounter_view;
+pub use levels::encounter::{
     Choice as EncounterChoice, EncounterView, Forced as EncounterForced, KNOWN_LINE,
     Outcome as EncounterOutcome, PENDING_REFUSED, Party, Pending,
 };
-pub use escort::{escort_slot, fits_escort};
-pub use experience::{Discovered, Progress};
-pub use familiar::{draw as familiar_draw, name_for as familiar_name};
-pub(crate) use field_forge::open_ground;
-pub use fight::{Cause, Death};
-pub(crate) use forage::forage_ground;
-pub use free_blow::FreeBlows;
-pub(crate) use gather::{fungus_ways, unskilled};
-pub use gifts::Streak;
-pub use graveyard::Fallen;
-pub use guild::GuildRank;
-pub(crate) use hash::fnv1a;
-pub(crate) use heal::allies_beside;
-pub(crate) use item_damage::protected_in;
-pub use learn::{Odds, UNTRAINED, study_odds, study_turns};
-pub use level::{Fire, LevelState};
-pub use loot::Identified;
-pub use make_do::mendable;
-pub(crate) use make_do::mends_any;
-pub use mirrors::Image;
-pub use miscast::entry_for as miscast_entry;
-pub use orison::PrayerState;
-pub use pit::Pit;
-pub use quest::{QuestRecord, QuestView, Quests, Stage, asks as quest_asks, wants as quest_wants};
-use rest::Ended;
-pub(crate) use rig::rigged_rows;
-pub use rig::{RigRow, takes_words};
-pub use salvage::{chipped, salvage_percent, salvageable};
-pub use sanctuary::Hallow;
-pub use scribe::scribe_turns;
-pub use seal::MOST_SEALS;
-pub use set::{SetBand, set_band, settable};
-pub use shop::{Shop, ShopStatus, count_of, favour, part_of, unpaid_parts};
-pub use skill_roll::{RollBonus, RollCount, SkillRoll, roll_count, skill_roll};
-pub use spell::cone_cells;
-pub use spell_rung::CastBy;
-pub use spell_words::{SpellRoll, reach_words, reroll_words, roll_words};
-pub use spirit_weapon::{gift as spirit_gift, pierces_all, shapes as weapon_shapes};
-pub(crate) use stars::{PROFANE_RISEN, RISEN, RISEN_TWICE};
-pub use statue::Statue;
-pub(crate) use swim::shore_refusal;
-pub use talent::Due;
-pub use talk::{Conversation, Talk, TopicView};
-pub(crate) use talk_past::offered as encounter_choices;
-pub use temper::{temperable, whittleable, workable, workable_wood};
-use travel::{enter_room, instantiate_level, level_template};
-pub(crate) use unseen::{Concealed, unseen_by_player};
-pub use zone::Zone;
+pub use levels::pit::Pit;
+pub(crate) use levels::swim::shore_refusal;
+pub(crate) use levels::talk_past::offered as encounter_choices;
+use levels::travel::{enter_room, instantiate_level, level_template};
+pub use magic::cast::Reach;
+pub use magic::decipher::undeciphered;
+pub use magic::learn::{Odds, UNTRAINED, study_odds, study_turns};
+pub use magic::miscast::entry_for as miscast_entry;
+pub use magic::scribe::scribe_turns;
+pub use magic::spell::cone_cells;
+pub use magic::spell_rung::CastBy;
+pub use magic::spell_words::{SpellRoll, reach_words, reroll_words, roll_words};
+pub use magic::zone::Zone;
+pub use people::escort::{escort_slot, fits_escort};
+pub use people::guild::GuildRank;
+pub use people::quest::{
+    QuestRecord, QuestView, Quests, Stage, asks as quest_asks, wants as quest_wants,
+};
+pub use people::shop::{Shop, ShopStatus, count_of, favour, part_of, unpaid_parts};
+pub use people::talk::{Conversation, Talk, TopicView};
+pub(crate) use skills::forage::forage_ground;
+pub(crate) use skills::gather::{fungus_ways, unskilled};
+pub use turn::actor::{Actor, ActorId, ActorKind, AttackSkills, Mind, Patrol};
+pub use turn::actors::Actors;
+pub(crate) use turn::hash::fnv1a;
+pub use turn::level::{Fire, LevelState};
+use turn::rest::Ended;
 
 use crate::action::{Action, Event, Outcome, Rest};
 use crate::alignment::Score;
@@ -289,7 +294,7 @@ pub struct WorldState {
     /// The player's vision profile (an id in `data/vision.toml`).
     pub(crate) vision: String,
     /// Whether `vision` is the dev `vision:` override, which a unique item's Vision power never
-    /// betters (`world/eyes.rs`).
+    /// betters (`world/turn/eyes.rs`).
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     pub(crate) vision_dev: bool,
     /// The player's character (spec §8 "Character creation"): race, gender, and class, the stat
@@ -306,42 +311,45 @@ pub struct WorldState {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub(crate) overworld_step: Option<Dir>,
     /// The closed door the player listens at during the turn being taken, and how much fainter
-    /// a sound they hear through it (`world/listen.rs`). Set by the action, cleared as it ends:
+    /// a sound they hear through it (`world/skills/listen.rs`). Set by the action, cleared as it ends:
     /// never in a save.
     #[serde(skip)]
     pub(crate) listening: Option<crate::noise::Listening>,
     /// The overworld encounters' random stream (spec §7 "Overworld encounters": the rate roll,
-    /// the entry, the party's dice), made on the first roll (`world/encounter.rs`).
+    /// the entry, the party's dice), made on the first roll (`world/levels/encounter.rs`).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub(crate) encounters: Option<Rng>,
-    /// The encounter the player must answer before anything else (`world/encounter.rs`).
+    /// The encounter the player must answer before anything else (`world/levels/encounter.rs`).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub(crate) encounter: Option<encounter::Pending>,
-    /// The endless branches' floors made and depths reached (`world/endless.rs`).
-    #[serde(default, skip_serializing_if = "endless::EndlessFloors::is_empty")]
-    pub(crate) endless: endless::EndlessFloors,
-    /// The Pits' records by their integers (`world/pit.rs`; left out while there are none).
+    pub(crate) encounter: Option<levels::encounter::Pending>,
+    /// The endless branches' floors made and depths reached (`world/levels/endless.rs`).
+    #[serde(
+        default,
+        skip_serializing_if = "levels::endless::EndlessFloors::is_empty"
+    )]
+    pub(crate) endless: levels::endless::EndlessFloors,
+    /// The Pits' records by their integers (`world/levels/pit.rs`; left out while there are none).
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-    pub(crate) pits: BTreeMap<u32, pit::Pit>,
-    /// The parties encounters made, by their areas (`world/encounter.rs`).
+    pub(crate) pits: BTreeMap<u32, levels::pit::Pit>,
+    /// The parties encounters made, by their areas (`world/levels/encounter.rs`).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub(crate) parties: Vec<encounter::Party>,
-    /// What traders offer, by trader, once asked (`world/wares.rs`): the item and its price.
+    pub(crate) parties: Vec<levels::encounter::Party>,
+    /// What traders offer, by trader, once asked (`world/people/wares.rs`): the item and its price.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-    pub(crate) wares: BTreeMap<ActorId, wares::Wares>,
-    /// The unique items traders' offers have made in the run (`world/wares.rs`): each once.
+    pub(crate) wares: BTreeMap<ActorId, people::wares::Wares>,
+    /// The unique items traders' offers have made in the run (`world/people/wares.rs`): each once.
     #[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
     pub(crate) uniques_offered: BTreeSet<String>,
     /// What an aristocrat's family has put by for them, until their servant hands it over
-    /// (`world/stipend.rs`).
-    #[serde(default, skip_serializing_if = "stipend::Stipend::is_empty")]
-    pub(crate) stipend: stipend::Stipend,
-    /// A merchant's stake with their business partner (`world/invest.rs`).
-    #[serde(default, skip_serializing_if = "invest::Fund::is_empty")]
-    pub(crate) fund: invest::Fund,
-    /// A craftsperson's commissions from their patron (`world/patron.rs`).
-    #[serde(default, skip_serializing_if = "patron::Patron::is_empty")]
-    pub(crate) patron: patron::Patron,
+    /// (`world/classes/stipend.rs`).
+    #[serde(default, skip_serializing_if = "classes::stipend::Stipend::is_empty")]
+    pub(crate) stipend: classes::stipend::Stipend,
+    /// A merchant's stake with their business partner (`world/classes/invest.rs`).
+    #[serde(default, skip_serializing_if = "classes::invest::Fund::is_empty")]
+    pub(crate) fund: classes::invest::Fund,
+    /// A craftsperson's commissions from their patron (`world/crafting/patron.rs`).
+    #[serde(default, skip_serializing_if = "crafting::patron::Patron::is_empty")]
+    pub(crate) patron: crafting::patron::Patron,
     /// Sounds the player perceived lately: those like them are no news ([`noise::news`]).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub(crate) recent_sounds: Vec<Recent>,
@@ -359,7 +367,7 @@ pub struct WorldState {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub(crate) ruin_rng: Option<Rng>,
     /// When the daily stat check comes next (spec §8 "Stats": 06:00 game time;
-    /// `world/stat_training.rs`). `None` while the content has no training rules (so content
+    /// `world/character/stat_training.rs`). `None` while the content has no training rules (so content
     /// without them hashes as before).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub(crate) next_stat_check: Option<GameTime>,
@@ -387,8 +395,8 @@ pub struct WorldState {
     #[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
     pub(crate) known_scrolls: BTreeSet<ObjectId>,
     /// The petrified dead of past runs, the most recent first, as the app gave them when the run
-    /// began (`world/graveyard.rs`): statues' names, decoration out of the state hash.
-    #[serde(default, skip_serializing_if = "hash::unhashed_vec")]
+    /// began (`world/fixtures/graveyard.rs`): statues' names, decoration out of the state hash.
+    #[serde(default, skip_serializing_if = "turn::hash::unhashed_vec")]
     pub(crate) graveyard: Vec<Fallen>,
 }
 
@@ -550,7 +558,7 @@ pub struct World {
     found: u64,
     /// Lines muttered during the current turn (not saved): said when perception runs, if the
     /// player heard them.
-    mutters: Vec<talk::Mutter>,
+    mutters: Vec<people::talk::Mutter>,
     /// Whether the player is resting ([`World::rest`]; not saved: a rest is one action): they
     /// heal faster.
     resting: bool,
@@ -565,7 +573,7 @@ pub struct World {
     perceived_at: GameTime,
     /// Where the player stood at the last perception (`feature.rs`; not saved): arriving
     /// elsewhere names a feature of the ground there.
-    stood_on: feature::StoodOn,
+    stood_on: fixtures::feature::StoodOn,
     /// Whose action is under way (not saved): the player's outside the turn's schedule, a
     /// creature's during its turn, nobody's while time passes (`schedule.rs`).
     acting: Option<ActorId>,
@@ -573,13 +581,13 @@ pub struct World {
     /// action does not ease them (`weapon_ability.rs`).
     fresh: Vec<(ActorId, StatusId)>,
     /// Spell reflection's counts a turn and the reflector chosen (not saved; `reflect.rs`).
-    reflection: reflect::Reflections,
+    reflection: combat::reflect::Reflections,
     /// The player's weapon active under way (not saved): what its attack does beyond a plain
     /// one, read where that is resolved (`weapon_active.rs`).
-    technique: weapon_active::Technique,
+    technique: combat::weapon_active::Technique,
     /// What an overworld encounter has under way within the action (not saved:
     /// `encounter.rs`).
-    encounter: encounter::Underway,
+    encounter: levels::encounter::Underway,
 }
 
 /// How much time an action took.
@@ -597,15 +605,15 @@ enum Spent {
     /// Running in this direction (see [`World::run`]).
     Run(Dir),
     /// A meal (see [`World::dine`]).
-    Meal(eat::Dish),
+    Meal(health::eat::Dish),
     /// Digging into the wall at this cell (see [`World::dig`]).
     Dig(Pos),
     /// Searching for up to this many turns (see [`World::search`]).
     Search(u8),
     /// Studying a spell from a scroll (see [`World::study`]).
-    Study(learn::Lesson),
+    Study(magic::learn::Lesson),
     /// Writing a scroll of a spell (see [`World::scribe`]).
-    Scribe(scribe::Writing),
+    Scribe(magic::scribe::Writing),
     /// Calling a familiar for this many turns (see [`World::calling`]).
     Calling(u32),
     /// Praying to consecrate a place until this moment (see [`World::consecrate`]).
@@ -613,17 +621,17 @@ enum Spent {
     /// Kneeling to hallow the ground until this moment (see [`World::sanctuary`]).
     Sanctuary(GameTime),
     /// Praying at a forgotten altar (see [`World::pray`]).
-    Pray(pray::Prayer),
+    Pray(fixtures::pray::Prayer),
     /// Drinking at a healing spring (see [`World::drink`]).
-    Drink(drink::Draught),
+    Drink(fixtures::drink::Draught),
     /// Foraging in the wild for this many seconds (see [`World::forage`]).
     Forage(u32),
     /// Gathering herbs from the glowing fungus for this many seconds (see [`World::gather`]).
     Gather(u32),
     /// Long work: deciphering, a craft, salvage, a rig (see [`World::work`]).
-    Work(work::Work),
+    Work(crafting::work::Work),
     /// Taming a beast beside the player (see [`World::tame`]).
-    Tame(tame::Taming),
+    Tame(allies::tame::Taming),
     /// Dev: the clock jumps ahead; nobody acts, then perception is recomputed.
     Skip(Duration),
 }
@@ -670,7 +678,7 @@ impl World {
     /// character the player chose does (New run, `--character`, `--name`). Without it, with the
     /// scenario's pack alone, as a dev launch on the scenario's own character does (tests,
     /// golden walks, `--scenario` alone). A run without a character has no kit. A run with the
-    /// kit also takes the character's creation picks (`world/creation.rs`): the talents `character`
+    /// kit also takes the character's creation picks (`world/character/creation.rs`): the talents `character`
     /// names, else the Random picks, recorded in the character.
     pub fn start_run(
         content: Arc<Content>,
@@ -711,7 +719,7 @@ impl World {
         Ok(world)
     }
 
-    /// [`World::start_run`] with the creation picks still due (`world/creation.rs`).
+    /// [`World::start_run`] with the creation picks still due (`world/character/creation.rs`).
     fn begin(
         content: Arc<Content>,
         scenario: &str,
@@ -785,12 +793,12 @@ impl World {
             };
         let campaign = def.campaign.clone().unwrap_or_default();
         // A run that starts on a Pit's floor (a dev scenario) climbs out to its campaign's start.
-        let pit_from = pit::start_from(&content, &campaign, &def.start_level);
+        let pit_from = levels::pit::start_from(&content, &campaign, &def.start_level);
         let start = level_template(
             &content,
             (
                 &campaign,
-                endless::floor_seed(&content, seed, &def.start_level, 0),
+                levels::endless::floor_seed(&content, seed, &def.start_level, 0),
             ),
             &def.start_level,
             (pit_from.as_deref(), &Default::default()),
@@ -833,9 +841,9 @@ impl World {
             parties: Vec::new(),
             wares: BTreeMap::new(),
             uniques_offered: BTreeSet::new(),
-            stipend: stipend::Stipend::default(),
-            fund: invest::Fund::default(),
-            patron: patron::Patron::default(),
+            stipend: classes::stipend::Stipend::default(),
+            fund: classes::invest::Fund::default(),
+            patron: crafting::patron::Patron::default(),
             recent_sounds: Vec::new(),
             weather_override: None,
             death: None,
@@ -894,15 +902,15 @@ impl World {
             boons: Vec::new(),
             stat_marks: Default::default(),
         };
-        stars::grant(&content, state.character.as_ref(), &[], &mut player.talents);
+        character::stars::grant(&content, state.character.as_ref(), &[], &mut player.talents);
         // The class abilities of level 1 (spec §8 "Class abilities").
-        let given = class::grant(&content, state.character.as_ref(), &mut player, 1);
+        let given = classes::class::grant(&content, state.character.as_ref(), &mut player, 1);
         player.hp = player.max_hp(&content);
         player.mana = player.max_mana(&content);
         crate::rot::made_at(&mut player.inventory, &content, def.start);
         state.actors.insert(ActorId(0), player);
-        if let (Some(from), Some((s, _))) = (pit_from, pit::pit_of(&content, &start.id)) {
-            state.pits.insert(s, pit::Pit::new(from));
+        if let (Some(from), Some((s, _))) = (pit_from, levels::pit::pit_of(&content, &start.id)) {
+            state.pits.insert(s, levels::pit::Pit::new(from));
         }
         instantiate_level(&mut state, &content, &start);
         drop(start); // It may borrow `content`, which `assemble` takes.
@@ -912,16 +920,16 @@ impl World {
         if let Some(line) = &def.arrival {
             state.messages.push(0, line.clone());
         }
-        if let Some(text) = rooms::pervade_line(&state, &content) {
+        if let Some(text) = fixtures::rooms::pervade_line(&state, &content) {
             state.messages.push(0, text);
         }
-        for text in treasury::arrive_lines(&state, &content) {
+        for text in fixtures::treasury::arrive_lines(&state, &content) {
             state.messages.push(0, text);
         }
         if let Some(text) = enter_room(&mut state, &content) {
             state.messages.push(0, text);
         }
-        for text in feature::feature_lines(&state, &content, None) {
+        for text in fixtures::feature::feature_lines(&state, &content, None) {
             state.messages.push(0, text);
         }
         let mut world = Self::assemble(content, state);
@@ -953,7 +961,7 @@ impl World {
     }
 
     /// Restores a world from saved state. The player's sign's gifts are granted afresh
-    /// (`world/stars.rs`), as the content now has them.
+    /// (`world/character/stars.rs`), as the content now has them.
     pub fn from_state(content: Arc<Content>, mut state: WorldState) -> Result<Self, WorldError> {
         state.check()?;
         let Some(scenario) = content.scenario(&state.scenario) else {
@@ -1052,7 +1060,7 @@ impl World {
         // "Class abilities"); a birth sign's gifts first (spec §8 "Birth sign").
         if let Some(player) = state.actors.get_mut(&state.player) {
             let boons = std::mem::take(&mut player.boons);
-            stars::grant(
+            character::stars::grant(
                 &content,
                 state.character.as_ref(),
                 &boons,
@@ -1066,13 +1074,13 @@ impl World {
     }
 
     fn assemble(content: Arc<Content>, mut state: WorldState) -> Self {
-        stat_training::schedule(&mut state, &content);
+        character::stat_training::schedule(&mut state, &content);
         let mut lights = LightCache::default();
         let perception = Box::new(Perception::compute(&state, &content, &mut lights));
         perception.remember(state.current_mut());
         let time = state.time;
         let player = state.player;
-        let stood_on = feature::standing(&state);
+        let stood_on = fixtures::feature::standing(&state);
         let labels = Labels::draw(&content, state.seed);
         Self {
             content,
@@ -1102,7 +1110,7 @@ impl World {
             acting: Some(player),
             fresh: Vec::new(),
             reflection: Default::default(),
-            technique: weapon_active::Technique::default(),
+            technique: combat::weapon_active::Technique::default(),
             encounter: Default::default(),
         }
     }
@@ -1169,7 +1177,7 @@ impl World {
 
     /// How actors `a` and `b` stand toward each other: the stance of their factions (spec §7
     /// "Factions"): their types' unless a level placed them elsewhere; [`Stance::Neutral`] if either is unknown,
-    /// or if they are a Beast-friend and an animal they befriended ([`beast_friend::befriended`]).
+    /// or if they are a Beast-friend and an animal they befriended ([`allies::beast_friend::befriended`]).
     pub fn stance(&self, a: ActorId, b: ActorId) -> Stance {
         match (self.state.actors.get(&a), self.state.actors.get(&b)) {
             (Some(a), Some(b)) => stance_between(&self.state, &self.content, a, b),
@@ -1487,7 +1495,10 @@ impl World {
                 if self.content.spell_id(id).is_none()
                     && self.content.weapon_ability_id(id).is_some() =>
             {
-                let aim = at.map_or(weapon_active::Aimed::Nothing, weapon_active::Aimed::Cell);
+                let aim = at.map_or(
+                    combat::weapon_active::Aimed::Nothing,
+                    combat::weapon_active::Aimed::Cell,
+                );
                 return self.use_weapon(id, aim, events);
             }
             Action::Cast(spell, at) => {
@@ -1495,7 +1506,7 @@ impl World {
                 return self.cast_spell(spell, at, events);
             }
             Action::Act(id, dir) => {
-                return self.use_weapon(id, weapon_active::Aimed::Dir(*dir), events);
+                return self.use_weapon(id, combat::weapon_active::Aimed::Dir(*dir), events);
             }
             Action::CastOn(spell, on) => {
                 let on = Some(crate::action::ReadTarget::Item(*on));
@@ -1572,7 +1583,7 @@ pub(crate) fn stance_between(
     b: &Actor,
 ) -> Stance {
     // A faction friendly to nothing is hostile to its own, never to itself.
-    if a.id == b.id || beast_friend::befriended(state, content, a, b) {
+    if a.id == b.id || allies::beast_friend::befriended(state, content, a, b) {
         return Stance::Neutral;
     }
     content.stance_of(a.faction(content), b.faction(content))

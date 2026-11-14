@@ -4,8 +4,6 @@
 //! fleeing steps, hits after the soak, a chosen element's resistance — and their prerequisites
 //! are checked and said in words.
 
-use super::fight::Harm;
-use super::*;
 use crate::character::CharacterSpec;
 use crate::combat::Category;
 use crate::content::{Benefit, CombatStance, Factor, MAX_RANK, WeaponSkillId};
@@ -13,6 +11,8 @@ use crate::equipment::{free_slot, slots_taken};
 use crate::object::Stack;
 use crate::stats::{PerStat, Stats};
 use crate::test_support::{CONTENT as BUILTIN, last, run};
+use crate::world::combat::fight::Harm;
+use crate::world::*;
 
 /// A human warrior in the showcase, every score 14.
 fn world() -> World {

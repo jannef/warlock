@@ -1,14 +1,14 @@
-//! Zones (`world/zone.rs`): laid, saved, hashed, and dropped; what each kind does and when; who
+//! Zones (`world/magic/zone.rs`): laid, saved, hashed, and dropped; what each kind does and when; who
 //! it spares (no one); what the player knows of one.
 
 use super::caster_tests::{kobold_at, sp};
 use super::spell_type_tests::{HALL_CONTENT, cast, cell, files, start, status};
-use super::*;
 use crate::action::Action;
 use crate::content::ZoneKind;
 use crate::light::Light;
 use crate::stats::{PerStat, Stat, Stats};
 use crate::test_support::run;
+use crate::world::*;
 
 fn hall(seed: u64) -> World {
     let mut w = start(HALL_CONTENT.clone(), seed);

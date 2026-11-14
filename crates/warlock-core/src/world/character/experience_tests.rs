@@ -3,12 +3,12 @@
 //! grows the hit points, and the first kill of a type and the first arrival on a level are worth
 //! a little more.
 
-use super::*;
 use crate::character::CharacterSpec;
 use crate::content::{ContentFiles, StairsDir};
 use crate::replay::Replay;
 use crate::stats::Stat;
 use crate::test_support::{CONTENT as BUILTIN, run, said};
+use crate::world::*;
 
 const TERRAIN: &str = r##"
 [[terrain]]
@@ -142,7 +142,7 @@ const LEGEND: &str = r##"
 "##;
 
 /// The experience rules as shipped.
-const EXPERIENCE: &str = include_str!("../../../../assets/data/experience.toml");
+const EXPERIENCE: &str = include_str!("../../../../../assets/data/experience.toml");
 
 /// A world on `map`, fully lit, with the scenario's `hp` (the stand-in for class hit points) 8.
 fn world_on(map: &str) -> World {

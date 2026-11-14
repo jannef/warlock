@@ -16,20 +16,21 @@
 //!
 //! A new rule for every craft (an interruption, a station check) goes here once.
 
-use super::encounter::Watch;
-use super::rest::Ended;
-use super::{Spent, World};
-use super::{
-    craft_make::Crafting, cut::GemWork, decipher::Deciphering, enchant::Enchanting,
-    field_forge::Forging, make_do::Mending, rig::Rigging, salvage::Salvaging, set::Setting,
-    temper::Tempering,
-};
 use crate::action::Event;
 use crate::content::{ActionKind, Content};
 use crate::time::Duration;
+use crate::world::levels::encounter::Watch;
+use crate::world::turn::rest::Ended;
+use crate::world::{Spent, World};
+use crate::world::{
+    crafting::craft_make::Crafting, crafting::cut::GemWork, crafting::enchant::Enchanting,
+    crafting::field_forge::Forging, crafting::make_do::Mending, crafting::rig::Rigging,
+    crafting::salvage::Salvaging, crafting::set::Setting, crafting::temper::Tempering,
+    magic::decipher::Deciphering,
+};
 
 /// What one kind of long work does around the driver's loop ([`World::work`]).
-pub(super) trait Job {
+pub(in crate::world) trait Job {
     /// The action whose turns the work passes.
     fn kind(&self) -> ActionKind {
         ActionKind::Craft
@@ -64,7 +65,7 @@ pub(super) trait Job {
 
 /// The long work under way, by kind.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(super) enum Task {
+pub(in crate::world) enum Task {
     Craft(Crafting),
     Cut(GemWork),
     Decipher(Deciphering),
@@ -96,14 +97,14 @@ impl Task {
 
 /// Long work under way: the task and how long it takes.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(super) struct Work {
+pub(in crate::world) struct Work {
     task: Task,
     seconds: u32,
 }
 
 impl Work {
     /// `task` for `seconds`, as they are (no Quick hands: [`World::craft_work`] takes it).
-    pub(super) fn spent(task: Task, seconds: u32) -> Spent {
+    pub(in crate::world) fn spent(task: Task, seconds: u32) -> Spent {
         Spent::Work(Work { task, seconds })
     }
 }
@@ -111,12 +112,12 @@ impl Work {
 impl World {
     /// `task` for `base` seconds as the player's Quick hands makes them
     /// ([`World::craft_seconds`], the one time hook).
-    pub(super) fn craft_work(&self, task: Task, base: u32) -> Spent {
+    pub(in crate::world) fn craft_work(&self, task: Task, base: u32) -> Spent {
         Work::spent(task, self.craft_seconds(base))
     }
 
     /// Works turn after turn until the work is done or something stops it (module docs).
-    pub(super) fn work(&mut self, work: Work, events: &mut Vec<Event>) {
+    pub(in crate::world) fn work(&mut self, work: Work, events: &mut Vec<Event>) {
         let mut task = work.task;
         let job = task.job();
         let on = self.work_on(&job.on(&self.content));
@@ -158,6 +159,6 @@ impl World {
 }
 
 /// The one stack `now` names, for a job of one stack: found, so it is there.
-pub(super) fn one(now: &[Option<usize>]) -> usize {
+pub(in crate::world) fn one(now: &[Option<usize>]) -> usize {
     now.first().copied().flatten().expect("the stack worked on")
 }

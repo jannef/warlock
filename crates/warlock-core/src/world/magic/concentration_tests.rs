@@ -1,11 +1,11 @@
 //! Concentration's hold on mana (#668): the pace and the pool by value, nothing untrained, the
 //! pool's fifth, the maximum falling with the skill, and the `cast` marks.
 
-use super::*;
 use crate::character::CharacterSpec;
 use crate::skills::Skills;
 use crate::stats::{PerStat, Stats};
 use crate::test_support::{CONTENT as BUILTIN, run};
+use crate::world::*;
 
 /// An elf wizard in the showcase, every score 14, trained in nothing but Concentration at
 /// `value` (untrained with `None`), with a pool of `base` before Concentration, full.

@@ -2,11 +2,11 @@
 //! draining room's Ebbing, on the player and on creatures, in a rest, over a whole level, eased
 //! after leaving, and Old delver.
 
-use super::*;
 use crate::action::Rest;
 use crate::content::{ContentFiles, StatusId};
 use crate::test_support::said_text as said;
 use crate::time::Duration;
+use crate::world::*;
 
 /// A hall, 25 wide: the west part plain, the east part (x 14 on, walls included) a draining
 /// room unless the level's header says otherwise. A peaceful kobold stands at `k` inside it,

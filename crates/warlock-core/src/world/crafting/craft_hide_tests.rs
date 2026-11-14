@@ -5,11 +5,11 @@
 
 use super::craft::RecipeLack;
 use super::craft_make::{make_out_for_test, stock_need};
-use super::*;
 use crate::content::{ContentFiles, RecipeId};
 use crate::object::Stack;
 use crate::skills::{SkillId, Trained};
 use crate::test_support::{last_text as said, run as apply};
+use crate::world::*;
 
 /// The built-in content with a bare room. The player (a craftsperson) carries nothing and has
 /// Woodcraft at 50.

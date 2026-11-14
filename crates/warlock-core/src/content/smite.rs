@@ -1,7 +1,7 @@
 //! Smiting (`assets/data/rules/smite.toml`, spec §8 "Class abilities": "Smite"): what holy wrath
 //! falls hardest on, and what a sin does to the smiter's zeal.
 //!
-//! The rule itself lives in `world/smite.rs` (the blow) and `world/alignment.rs` (the sin). The
+//! The rule itself lives in `world/classes/smite.rs` (the blow) and `world/character/alignment.rs` (the sin). The
 //! file is optional: without it nothing is unholy and no sin empties a pool (fixtures).
 
 use super::{Content, ContentError, CreatureId, ResourceId};

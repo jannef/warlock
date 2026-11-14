@@ -2,10 +2,10 @@
 //! what each costs and says, saves, and the content checks. The light it gives is tested with
 //! the rest of the light (`light_tests.rs`).
 
-use super::*;
 use crate::content::ContentFiles;
 use crate::object::LightMode;
 use crate::test_support::{builtin, last as last_message};
+use crate::world::*;
 
 fn showcase() -> World {
     let content = builtin();
@@ -14,7 +14,7 @@ fn showcase() -> World {
 
 /// Gives fixture content a lantern a scenario can ready (`wield = ["lantern"]`): a Tool slot,
 /// the item classes, and a lantern of light preset `lantern`, which the fixture brings.
-pub(super) fn with_lantern(files: &mut ContentFiles) {
+pub(in crate::world) fn with_lantern(files: &mut ContentFiles) {
     let slots = files.table("slots").map(|(_, t)| t.to_string()).next();
     let tool = "\n[[slot]]\nid = \"tool\"\nname = \"Tool\"\naction = \"ready\"\nmark = \"ready\"\n";
     files.insert(
@@ -37,7 +37,7 @@ pub(super) fn with_lantern(files: &mut ContentFiles) {
 }
 
 /// The mode of the light the player has ready, if any.
-pub(super) fn light_mode(w: &World) -> Option<LightMode> {
+pub(in crate::world) fn light_mode(w: &World) -> Option<LightMode> {
     let item = w.perception().ready_light()?;
     Some(w.state().player().inventory[item].light_mode())
 }

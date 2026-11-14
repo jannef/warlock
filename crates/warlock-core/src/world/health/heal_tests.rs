@@ -4,7 +4,6 @@
 //! degree and a disease is eased, each once only, the mark clearing as they end; refusals take
 //! no time; marks; saves and replays.
 
-use super::*;
 use crate::ability::{Ability, Unavailable};
 use crate::action::parse_actions;
 use crate::check;
@@ -14,6 +13,7 @@ use crate::skills::{Effect, SkillId, Trained};
 use crate::stats::Stat;
 use crate::test_support::{last_text as last_message, texts as messages};
 use crate::time::Duration;
+use crate::world::*;
 
 /// A lit room with nothing in it.
 const ROOM: &str = r##"
@@ -413,7 +413,7 @@ fn a_try_may_earn_heal_a_mark() {
 
 /// The player's one ally beside them: its id and the way to it.
 fn ally_beside(w: &World) -> Option<(ActorId, crate::geom::Dir)> {
-    (super::allies_beside(&w.state).first()).map(|&(d, a)| (a.id, d))
+    (crate::world::allies_beside(&w.state).first()).map(|&(d, a)| (a.id, d))
 }
 
 #[test]

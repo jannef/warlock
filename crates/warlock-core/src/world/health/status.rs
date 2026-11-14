@@ -5,19 +5,19 @@
 //! - **Causes**: a blow that hits and leaves its target alive ([`World::after_blow`]) causes
 //!   every status whose `wound` it meets (bleeding: a big hit or a confirmed critical), then each
 //!   `on_hit` effect of the attack (a giant rat's bite may poison, or expose its target to filth
-//!   fever: `world/disease.rs`), each with one draw of the gameplay stream for its chance (none
+//!   fever: `world/health/disease.rs`), each with one draw of the gameplay stream for its chance (none
 //!   at 100 %). Other rules call [`World::afflict`].
 //! - **Time**: as the scheduler moves the clock, every actor on the current level lives through
 //!   it ([`World::pass_time`]): its effects tick (costing hit points, and mana for a status with
 //!   `mana_damage`) and ease, and it gets hit points back at its healing rate and mana at its
-//!   mana rate (`world/mana.rs`), in time order, so it makes no difference how the time is cut up
+//!   mana rate (`world/magic/mana.rs`), in time order, so it makes no difference how the time is cut up
 //!   (by a long journey or many short actions). Diseases take their turns and stat damage mends
-//!   at their own moments too (`world/disease.rs`), and so do the points an alternative resource
-//!   gains or loses over time (`world/resource.rs`: one that decays to 0 and ends there ends at
+//!   at their own moments too (`world/health/disease.rs`), and so do the points an alternative resource
+//!   gains or loses over time (`world/character/resource.rs`: one that decays to 0 and ends there ends at
 //!   that moment). At one moment a hit point back, a point of mana back, and a resource's point
 //!   come first, then the ticks, then the easing, then the player's hunger, then a point of stat
 //!   damage mending, then the diseases' turns, then food rotting away in its pack
-//!   (`world/rot.rs`). Actors on other levels are frozen, as with energy, and the dev time skip
+//!   (`world/health/rot.rs`). Actors on other levels are frozen, as with energy, and the dev time skip
 //!   passes no time for anyone.
 //! - **Healing** ([`World::healing_rate`]): normally one hit point per
 //!   [`combat::regen_seconds`] of the actor's (effective) Toughness; twice as fast while the
@@ -30,9 +30,9 @@
 //!   them hit points ([`World::digest`], `hunger.rs`); each change of their hunger state is a
 //!   moment of its own, so healing stops exactly when they start to starve.
 //! - **Deaths**: a tick that takes the last hit point kills, at that moment, by the status
-//!   (`Event::Died`'s `of`, [`super::Death`]'s `of`); the creature counts as killed by whoever
+//!   (`Event::Died`'s `of`, [`crate::world::Death`]'s `of`); the creature counts as killed by whoever
 //!   caused the effect ([`crate::status::Effect::by`]). Starving to death is the player's death
-//!   by hunger ([`super::Death`]'s `cause`), at its moment too.
+//!   by hunger ([`crate::world::Death`]'s `cause`), at its moment too.
 //! - **Messages**: the player's statuses beginning and ending are events
 //!   ([`Event::Status`]), said as the turn is perceived, in order with the attacks that caused
 //!   them ("The giant rat bites you. You feel sick."); a status ending ("The bleeding stops.") is
@@ -41,10 +41,8 @@
 //! - **Cures**: [`World::cure`] ends what a named means cures (`cured_by`: a bandage stops the
 //!   bleeding; diseases list their own), for the Heal skill (#132), potions, and priests to use.
 //! - **Endings**: a status that ends, worn off or cured, may be followed by another (`follows`;
-//!   buffs, hexes, and cooldowns are `world/buff.rs`).
+//!   buffs, hexes, and cooldowns are `world/health/buff.rs`).
 
-use super::fight::Harm;
-use super::{ActorId, Spent, World, disease, mana, resource, rot};
 use crate::action::{AttackKind, Event};
 use crate::combat::{self, Blow, Strike};
 use crate::content::Effect as ItemEffect;
@@ -53,6 +51,10 @@ use crate::hunger::Hunger;
 use crate::stats::Stat;
 use crate::status::{Added, Effect};
 use crate::time::{Duration, GameTime};
+use crate::world::combat::fight::Harm;
+use crate::world::{
+    ActorId, Spent, World, character::resource, health::disease, health::rot, magic::mana,
+};
 
 /// What happened to an actor at one moment while time passed.
 struct Moment {
@@ -88,7 +90,7 @@ impl World {
     }
 
     /// [`World::afflict`] on `id` alone, never shared.
-    pub(super) fn afflict_one(
+    pub(in crate::world) fn afflict_one(
         &mut self,
         id: ActorId,
         status: StatusId,
@@ -180,7 +182,7 @@ impl World {
         self.hurt(
             id,
             hp,
-            super::fight::Harm::Status {
+            crate::world::combat::fight::Harm::Status {
                 of: Some(status),
                 by,
                 when,
@@ -192,7 +194,7 @@ impl World {
     /// Cures actor `id` with `cure`, a means named in the statuses' and diseases' `cured_by`
     /// (`bandage`, `remove_disease`): every status of its that the means cures ends (and what
     /// `follows` it begins), and every disease (showing or not). Returns whether any did. Eating
-    /// a remedy applies its cures (`world/eat.rs`); the Heal skill's bandaging (#132), potions,
+    /// a remedy applies its cures (`world/health/eat.rs`); the Heal skill's bandaging (#132), potions,
     /// and priests will too.
     pub(crate) fn cure(&mut self, id: ActorId, cure: &str, events: &mut Vec<Event>) -> bool {
         let content = self.content.clone();
@@ -225,7 +227,7 @@ impl World {
     /// statuses its wound causes (bleeding from a big hit or a confirmed critical), then the
     /// `on_hit` effects of the attack, each by its chance: its natural attack's, then `made`,
     /// what the attack's profile carries (a unique weapon's Inflict power).
-    pub(super) fn after_blow(
+    pub(in crate::world) fn after_blow(
         &mut self,
         attacker: ActorId,
         target: ActorId,
@@ -253,7 +255,7 @@ impl World {
 
     /// An `on_hit` entry `hit` of `attacker`'s falls on `target` by its chance (one draw of the
     /// gameplay stream, below 100 only): a blow's riders, and a gaze's (`gaze.rs`).
-    pub(super) fn rider(
+    pub(in crate::world) fn rider(
         &mut self,
         attacker: ActorId,
         target: ActorId,
@@ -292,7 +294,7 @@ impl World {
     /// statuses its wound causes (bleeding from a big hit or a confirmed critical, of a kind
     /// that wounds that way: slashing and piercing bleed, a club and a fireball do not; spec §8
     /// "Damage types").
-    pub(super) fn wounded(
+    pub(in crate::world) fn wounded(
         &mut self,
         target: ActorId,
         blow: &Blow,
@@ -329,7 +331,7 @@ impl World {
 
     /// What a hit by `attacker` with an attack of `kind` may cause besides its damage: a
     /// creature's throw's `on_hit`. A natural attack's comes with its melee profile
-    /// ([`super::Actor::melee`], each of several its own), as a unique weapon's Inflict power
+    /// ([`crate::world::Actor::melee`], each of several its own), as a unique weapon's Inflict power
     /// does ([`World::after_blow`]).
     fn on_hit_of(&self, attacker: ActorId, kind: AttackKind) -> Vec<OnHit> {
         let Some(me) = self.actor_or_fallen(attacker) else {
@@ -404,7 +406,7 @@ impl World {
     /// `seconds` of game time from `start` pass for actors `ids` (on the current level, in
     /// schedule order): each takes what the special room it stands in gives
     /// ([`World::dwell`]), then lives through them ([`World::live`]). Some may die.
-    pub(super) fn pass_time(
+    pub(in crate::world) fn pass_time(
         &mut self,
         ids: impl Iterator<Item = ActorId>,
         start: GameTime,
@@ -509,7 +511,7 @@ impl World {
                 heal(actor, &content, left, rate);
                 mana::regain(actor, &content, left, mana_rate);
                 crate::resource::pass(&mut actor.resources, &content, &paces, left);
-                super::mark::faded(actor, &content);
+                crate::world::classes::mark::faded(actor, &content);
                 return;
             }
             // Up to the next moment something happens: a tick, an easing, a hit point or a point
@@ -566,7 +568,7 @@ impl World {
             for ended in crate::resource::pass(&mut actor.resources, &content, &paces, step) {
                 gone.extend(resource::ended(actor, &content, ended, events));
             }
-            super::mark::faded(actor, &content);
+            crate::world::classes::mark::faded(actor, &content);
             let mut moment = Moment {
                 damage: 0,
                 drained: 0,
@@ -646,7 +648,7 @@ impl World {
     /// The dev action `afflict:STATUS` ([`crate::action::Action::Afflict`]): the player suffers
     /// status `id` at severity 1. Refused for an unknown status, and for the one diseases show
     /// as. Takes no time.
-    pub(super) fn afflict_dev(&mut self, id: &str, events: &mut Vec<Event>) -> Spent {
+    pub(in crate::world) fn afflict_dev(&mut self, id: &str, events: &mut Vec<Event>) -> Spent {
         let Some(status) = self.content.status_id(id) else {
             self.say(format!("There is no status `{id}`."));
             return Spent::Nothing;
@@ -671,10 +673,10 @@ impl World {
 }
 
 /// Hit points back for `actor` over `seconds` at `rate` percent of the normal pace: its
-/// progress ([`super::Actor::regen`]) grows by `rate` a second, and every
+/// progress ([`crate::world::Actor::regen`]) grows by `rate` a second, and every
 /// [`combat::regen_seconds`] × 100 of it is a hit point. Nothing at full health (the progress is
 /// dropped) or dead.
-fn heal(actor: &mut super::Actor, content: &Content, seconds: u64, rate: u32) {
+fn heal(actor: &mut crate::world::Actor, content: &Content, seconds: u64, rate: u32) {
     let Some(need) = need(actor, content) else {
         actor.regen = 0;
         return;
@@ -690,9 +692,9 @@ fn heal(actor: &mut super::Actor, content: &Content, seconds: u64, rate: u32) {
     };
 }
 
-/// The progress `actor` needs for a hit point back ([`super::Actor::regen`]); `None` when it
+/// The progress `actor` needs for a hit point back ([`crate::world::Actor::regen`]); `None` when it
 /// heals no more: at full health, or dead.
-fn need(actor: &super::Actor, content: &Content) -> Option<u64> {
+fn need(actor: &crate::world::Actor, content: &Content) -> Option<u64> {
     let toughness = actor.effective_stats(content).score(Stat::Toughness);
     (actor.hp > 0 && actor.hp < actor.max_hp(content))
         .then(|| u64::from(combat::regen_seconds(toughness)) * 100)

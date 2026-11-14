@@ -9,13 +9,13 @@
 //! the player attacks to that faction ([`World::provoke_court`], beside a shopkeeper's
 //! outrage in `fight.rs` and `spell.rs`).
 
-use super::{ActorId, World};
 use crate::content::{Content, CreatureId, FactionId};
 use crate::rng::Rng;
+use crate::world::{ActorId, World};
 
 /// The faction a creature of type `creature`, made as actor `id` in the run of `seed`, joins:
 /// one of its type's factions, drawn by weight; `None` for a type of one faction.
-pub(super) fn join(
+pub(in crate::world) fn join(
     content: &Content,
     seed: u64,
     id: ActorId,
@@ -33,7 +33,7 @@ pub(super) fn join(
 impl World {
     /// The player attacked `target`: a creature of a faction with `provoked` joins that one (a
     /// Seelie fey turns wrathful), and stays there.
-    pub(super) fn provoke_court(&mut self, target: ActorId) {
+    pub(in crate::world) fn provoke_court(&mut self, target: ActorId) {
         let Some(actor) = self.state.actors.get_mut(&target) else {
             return;
         };

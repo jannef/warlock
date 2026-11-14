@@ -26,9 +26,7 @@
 //!   `WorldState::next_stat_check` holds the moment ([`schedule`]). Content without training
 //!   rules checks nothing (and draws nothing).
 
-use super::ice::Footing;
 use super::stat_deeds::drop_news;
-use super::{ActorId, World, WorldState};
 use crate::action::AttackKind;
 use crate::combat::{Blow, Category, Strike};
 use crate::content::{Content, HAUL_GRAMS, ODDS_SCALE, SpellData, StatDeed, StatUse, TerrainId};
@@ -39,6 +37,8 @@ use crate::stats::{PerStat, Stat};
 use crate::status::Effect;
 use crate::temperature::Temperature;
 use crate::time::{DAWN, GameTime};
+use crate::world::levels::ice::Footing;
+use crate::world::{ActorId, World, WorldState};
 
 /// The least a step costs, in percent of a plain one, for its water to be waded through (deep
 /// water: a pool, a stream; not a flooded floor).
@@ -64,7 +64,7 @@ impl World {
 
     /// The player made use `used` of their stats: each rule for it gives its stat a mark with
     /// the rule's chance (a draw of the training stream below 100). Nothing is said.
-    pub(super) fn train_stat(&mut self, used: StatUse) {
+    pub(in crate::world) fn train_stat(&mut self, used: StatUse) {
         self.train_stat_times(used, None, 1);
     }
 
@@ -72,7 +72,12 @@ impl World {
     /// its stat, or `named` for a use that names its own (a potion's), up to `count` marks, each
     /// with the rule's chance: one draw of the training stream per mark for a rule below 100,
     /// none at 100 (as a single use). The pile saturates at `i32::MAX`.
-    pub(super) fn train_stat_times(&mut self, used: StatUse, named: Option<Stat>, count: u16) {
+    pub(in crate::world) fn train_stat_times(
+        &mut self,
+        used: StatUse,
+        named: Option<Stat>,
+        count: u16,
+    ) {
         self.train_stats_of(used, named, count, PerStat::splat(true));
     }
 
@@ -111,14 +116,14 @@ impl World {
 
     /// The player cast `spell`, a spell they know: the `spell` use's rules of the stats its
     /// scales name ([`crate::content::SpellData::trained_stats`]).
-    pub(super) fn train_spell(&mut self, spell: &SpellData) {
+    pub(in crate::world) fn train_spell(&mut self, spell: &SpellData) {
         self.train_stats_of(StatUse::Spell, None, 1, spell.trained_stats());
     }
 
     /// The player stepped onto `onto` with `footing`: a step through deep water (water that
     /// freezes and that a step wades slowly through, at least [`WADING_COST`]) trains
     /// Strength, unless its ice held them up.
-    pub(super) fn train_wade(&mut self, onto: TerrainId, footing: Footing) {
+    pub(in crate::world) fn train_wade(&mut self, onto: TerrainId, footing: Footing) {
         let terrain = self.content.terrain(onto);
         let deep = terrain.freeze.is_some() && terrain.move_cost >= WADING_COST;
         if deep && !matches!(footing, Footing::Held { .. }) {
@@ -127,14 +132,14 @@ impl World {
     }
 
     /// The player picked up `got`: one stack of [`HAUL_GRAMS`] or more trains Strength, once.
-    pub(super) fn train_haul(&mut self, got: &[Stack]) {
+    pub(in crate::world) fn train_haul(&mut self, got: &[Stack]) {
         if got.iter().any(|s| s.weight(&self.content) >= HAUL_GRAMS) {
             self.train_stat(StatUse::Hauled);
         }
     }
 
     /// The player acted, not waiting: while Hungry (not yet Weak), Toughness may earn a mark.
-    pub(super) fn train_hungry_step(&mut self) {
+    pub(in crate::world) fn train_hungry_step(&mut self) {
         if self.player_hunger() == Some(Hunger::Hungry) {
             self.train_stat(StatUse::HungryStep);
         }
@@ -142,7 +147,7 @@ impl World {
 
     /// Statuses wore off actor `id` by time (`ended`): each that harms as it ticks (hit points
     /// or mana) trains the player's Toughness.
-    pub(super) fn train_shaking_off(&mut self, id: ActorId, ended: &[Effect]) {
+    pub(in crate::world) fn train_shaking_off(&mut self, id: ActorId, ended: &[Effect]) {
         if id != self.state.player {
             return;
         }
@@ -157,7 +162,11 @@ impl World {
 
     /// Actor `attacker`'s attack of `kind` killed `target`: a kill of the player's in melee of
     /// a creature of their level or above trains Toughness.
-    pub(super) fn train_kill(&mut self, (attacker, target): (ActorId, ActorId), kind: AttackKind) {
+    pub(in crate::world) fn train_kill(
+        &mut self,
+        (attacker, target): (ActorId, ActorId),
+        kind: AttackKind,
+    ) {
         let player = self.state.player;
         if attacker != player || kind != AttackKind::Melee {
             return;
@@ -176,7 +185,7 @@ impl World {
     /// points trains Toughness, a big hit or a critical more; one their shield blocked
     /// Strength, one their Parry turned Dexterity. (A dodge is the skills' report,
     /// `World::train`.)
-    pub(super) fn train_fight(
+    pub(in crate::world) fn train_fight(
         &mut self,
         (attacker, target): (ActorId, ActorId),
         kind: AttackKind,
@@ -222,7 +231,7 @@ impl World {
 
     /// The player won a check against a disease made with `stat`: Willpower's trains it, any
     /// other's Toughness (spec §8 "Diseases").
-    pub(super) fn train_resisting(&mut self, id: ActorId, stat: Stat) {
+    pub(in crate::world) fn train_resisting(&mut self, id: ActorId, stat: Stat) {
         if id != self.state.player {
             return;
         }
@@ -242,7 +251,7 @@ impl World {
 
     /// Seconds from `now` until the player's daily stat check, if one is scheduled (a moment of
     /// [`World::live`]; 0 when it is due).
-    pub(super) fn until_stat_check(&self, id: ActorId, now: GameTime) -> Option<u64> {
+    pub(in crate::world) fn until_stat_check(&self, id: ActorId, now: GameTime) -> Option<u64> {
         let next = self
             .state
             .next_stat_check
@@ -253,7 +262,7 @@ impl World {
     /// The daily stat check, if it is due at `when` (module docs): each stat in display order
     /// gets its check on the training stream, six draws whatever the marks, and a rise is said
     /// at once (it stops a rest). The next comes at the next 06:00.
-    pub(super) fn daily_stat_check(&mut self, id: ActorId, when: GameTime) {
+    pub(in crate::world) fn daily_stat_check(&mut self, id: ActorId, when: GameTime) {
         let Some(next) = self.state.next_stat_check else {
             return;
         };
@@ -276,7 +285,7 @@ impl World {
 
     /// The dev skip to `to` passes no moment ([`World::skip_time_dev`]): a daily check it jumps
     /// over or lands on is not made, and the next comes at the first 06:00 after `to`.
-    pub(super) fn skip_stat_check(&mut self, to: GameTime) {
+    pub(in crate::world) fn skip_stat_check(&mut self, to: GameTime) {
         if let Some(next) = &mut self.state.next_stat_check
             && *next <= to
         {
@@ -375,7 +384,7 @@ pub(super) enum Check {
 
 /// Schedules the daily stat check for a new or loaded run: the next 06:00 after now when the
 /// content has training rules and none is scheduled (a run just begun), none without the rules.
-pub(super) fn schedule(state: &mut WorldState, content: &Content) {
+pub(in crate::world) fn schedule(state: &mut WorldState, content: &Content) {
     if !content.stat_training().is_active() {
         state.next_stat_check = None;
     } else if state.next_stat_check.is_none() {

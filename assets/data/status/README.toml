@@ -108,7 +108,7 @@
 #              them in a burst (Water walking's)
 #   escape     bonds a trained Escape artist may slip: the difficulty of the automatic
 #              check, the better of Strength and Dexterity plus the skill, when the status stops
-#              or slows what they try (world/hold.rs). Needs `blocks` or a `cost` above 100 (else it is
+#              or slows what they try (world/health/hold.rs). Needs `blocks` or a `cost` above 100 (else it is
 #              never struggled against); its `seen` ("You struggle, but you are still caught in a
 #              web.") is said of a failed try; not on a hold, whose
 #              grip counts the same way. Slowed minds and bodies (Staggered, Stunned, Surprised,

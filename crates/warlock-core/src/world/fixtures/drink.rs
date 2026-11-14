@@ -15,16 +15,16 @@
 //!
 //! [`Action::Drink`]: crate::action::Action::Drink
 
-use super::rest::Ended;
-use super::{Spent, World};
 use crate::action::Event;
 use crate::content::{ActionKind, Offer};
 use crate::geom::{Dir, Pos};
 use crate::time::Duration;
+use crate::world::turn::rest::Ended;
+use crate::world::{Spent, World};
 
 /// A drink under way: the spring's cell and how long it takes.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(super) struct Draught {
+pub(in crate::world) struct Draught {
     spring: Pos,
     seconds: u32,
 }
@@ -43,7 +43,7 @@ impl World {
     }
 
     /// The player begins to drink at the spring beside them; refused, taking no time, with none.
-    pub(super) fn start_drink(&mut self) -> Spent {
+    pub(in crate::world) fn start_drink(&mut self) -> Spent {
         let Some(spring) = self.spring_beside() else {
             self.say("There is no spring here to drink from.");
             return Spent::Nothing;
@@ -59,7 +59,7 @@ impl World {
 
     /// Drinks turn after turn until the drink is done or something breaks it off (module docs):
     /// its last turn cut short to end exactly when its time is up, as a prayer's is.
-    pub(super) fn drink(&mut self, draught: Draught, events: &mut Vec<Event>) {
+    pub(in crate::world) fn drink(&mut self, draught: Draught, events: &mut Vec<Event>) {
         let until = self.state.time + Duration::seconds(u64::from(draught.seconds));
         let turn = self.price_of(self.state.player, ActionKind::Drink);
         let ended = self.keep_at(

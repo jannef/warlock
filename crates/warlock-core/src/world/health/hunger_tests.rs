@@ -4,7 +4,6 @@
 //! has its price, creatures leave corpses that rot away, corpses do what their creature's
 //! `on_eat` says, and all of it saves and replays.
 
-use super::*;
 use crate::action::{Meal, parse_actions};
 use crate::character::CharacterSpec;
 use crate::content::ContentFiles;
@@ -13,9 +12,10 @@ use crate::replay::Replay;
 use crate::rot::Stage as Age;
 use crate::stats::Stat;
 use crate::test_support::{run, texts};
+use crate::world::*;
 
 /// The built-in hunger file, to edit for a test.
-const HUNGER: &str = include_str!("../../../../assets/data/hunger.toml");
+const HUNGER: &str = include_str!("../../../../../assets/data/hunger.toml");
 
 /// Food underfoot, nothing else about.
 const PANTRY: &str = r##"

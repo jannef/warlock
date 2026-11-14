@@ -8,16 +8,16 @@
 //! stranger of the level's folk (a given name, a byname, an epitaph, how many years ago they died
 //! and how old they were, before the year the level is made). Every stone draws all of that
 //! whatever the graveyard holds, so a stranger's stone reads the same with any graveyard. Where the
-//! roll comes up and one of the run's graveyard (`world/graveyard.rs`) is left, the stone is theirs
+//! roll comes up and one of the run's graveyard (`world/fixtures/graveyard.rs`) is left, the stone is theirs
 //! instead: which one is drawn from the stream `graves/<level>/fallen`, never twice on a level.
 //!
 //! **Decoration**: no rule reads an inscription, and they are left out of the state hash
 //! (`LevelState::graves`), so a replay verifies under any graveyard. Saves keep them.
 
-use super::{Fallen, WorldState};
 use crate::content::{Content, Graves};
 use crate::geom::Pos;
 use crate::rng::Rng;
+use crate::world::{Fallen, WorldState};
 use std::collections::BTreeMap;
 
 /// What a death without words reads as (an entry the app gave none).
@@ -25,7 +25,7 @@ const UNTOLD: &str = "taken before their time";
 
 /// Cuts the inscriptions of level `id`'s gravestones (module docs); a level without `graves`
 /// words keeps its stones blank.
-pub(super) fn carve_graves(state: &mut WorldState, content: &Content, id: &str) {
+pub(in crate::world) fn carve_graves(state: &mut WorldState, content: &Content, id: &str) {
     let Some(graves) = content.level(id).and_then(|t| t.graves.as_ref()) else {
         return;
     };

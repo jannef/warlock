@@ -7,8 +7,6 @@
 //! Hobnailed, Delving, of Sustenance, of Wariness, and of Health. The pick-axe is a base item
 //! (`tool`): loot rolls it magic from item level 3, while the hand-placed ones stay normal.
 
-use super::fixture_factions::make_peace;
-use super::*;
 use crate::action::parse_actions;
 use crate::character::CharacterSpec;
 use crate::content::{ContentFiles, ItemKind};
@@ -17,6 +15,8 @@ use crate::magic::describe;
 use crate::magic::{Affix, LootGrade, Magic, Numbers, Rarity, loot, may_roll};
 use crate::rng::Rng;
 use crate::stats::Stat;
+use crate::world::creatures::fixture_factions::make_peace;
+use crate::world::*;
 
 // A lit cellar: the player beside packed earth (E) to dig, a kobold standing by.
 const CELLAR: &str = r##"

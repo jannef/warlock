@@ -24,17 +24,17 @@
 //!   `lasting` not: it always ends ([`World::allies_lapse`]). Its kill pays as any of its type,
 //!   and it counts in no level's population (`spawn.rs`).
 //!
-//! [`Actor::risen`]: super::Actor::risen
+//! [`Actor::risen`]: crate::world::Actor::risen
 
-use super::ally::AllySource;
 use super::cast::Cast;
-use super::{ActorId, World, travel};
 use crate::action::Event;
 use crate::content::{
     CorpseUse, CreatureId, CreatureSpawn, FactionId, LevelKind, SpellData, SpellRise,
 };
 use crate::geom::Pos;
 use crate::time::{Duration, GameTime};
+use crate::world::allies::ally::AllySource;
+use crate::world::{ActorId, World, levels::travel};
 
 impl World {
     /// The position in the pile at `at` of its top-most corpse stack, if the player sees the

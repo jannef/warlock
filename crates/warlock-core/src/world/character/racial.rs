@@ -3,10 +3,10 @@
 //! (`stars.rs`), and Small target, the one racial rule that needs two actors. The others are
 //! effects read where their rules live, as every talent's are.
 
-use super::{ActorId, World};
 use crate::character::Character;
 use crate::combat::{Category, Target};
 use crate::content::Content;
+use crate::world::{ActorId, World};
 
 /// The talents `character`'s race grants, in data order (none for a run without a character).
 pub(super) fn grants<'c>(content: &'c Content, character: Option<&Character>) -> Vec<&'c str> {
@@ -18,7 +18,7 @@ pub(super) fn grants<'c>(content: &'c Content, character: Option<&Character>) ->
 impl World {
     /// `struck`, what actor `target` defends with against `attacker`, with Small target's Dodge
     /// when the attacker is larger than it.
-    pub(super) fn small_target(
+    pub(in crate::world) fn small_target(
         &self,
         attacker: ActorId,
         target: ActorId,

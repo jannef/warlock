@@ -26,15 +26,15 @@
 //! Determinism: nothing here draws at random (the price is derived, the turns counted, the
 //! scroll made from a known id); the spend's own training chances are the only draws.
 
-use super::{Actor, Ended, Spent, World};
 use crate::action::{Event, Positions};
 use crate::content::{ActionKind, ClassActive, Content, ObjectId, SpellData, SpellId, StatUse};
 use crate::object::{self, Stack};
+use crate::world::{Actor, Ended, Spent, World};
 use std::cell::Cell;
 
 /// A scroll being written: the spell, the scroll object it makes, and the turns it takes.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(super) struct Writing {
+pub(in crate::world) struct Writing {
     pub(super) spell: SpellId,
     pub(super) scroll: ObjectId,
     pub(super) turns: u32,
@@ -44,7 +44,7 @@ pub(super) struct Writing {
 /// (`data/study.toml`), without Quick study's cut; `None` without the study rules.
 pub fn scribe_turns(content: &Content, spell: &SpellData) -> Option<u32> {
     let rules = content.study_rules()?;
-    Some(super::study_turns(rules, spell.level, 0))
+    Some(crate::world::study_turns(rules, spell.level, 0))
 }
 
 impl Actor {
@@ -68,7 +68,7 @@ impl Actor {
 impl World {
     /// `scribe:SPELL`: the player begins to write a scroll of the spell of id `name` (module
     /// docs), or is refused.
-    pub(super) fn start_scribe(&mut self, name: &str) -> Spent {
+    pub(in crate::world) fn start_scribe(&mut self, name: &str) -> Spent {
         if !self.may_use_class(ClassActive::Scribe) {
             return Spent::Nothing;
         }
@@ -111,7 +111,7 @@ impl World {
     }
 
     /// Writes turn after turn until the scroll is done or something interrupts (module docs).
-    pub(super) fn scribe(&mut self, writing: Writing, events: &mut Vec<Event>) {
+    pub(in crate::world) fn scribe(&mut self, writing: Writing, events: &mut Vec<Event>) {
         let left = Cell::new(writing.turns);
         let ended = self.keep_at(
             events,

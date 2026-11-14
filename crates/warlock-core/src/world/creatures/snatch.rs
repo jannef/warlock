@@ -24,10 +24,10 @@
 //! creature is said; "Something" for one the player does not see: they feel the hand). The
 //! message history keeps it, so the player knows what to look for in the drop.
 
-use super::{ActorId, World};
 use crate::action::{AttackKind, Event, Positions};
 use crate::content::{SMALL_LOOT, Takes};
 use crate::object;
+use crate::world::{ActorId, World};
 
 impl World {
     /// Whether creature `thief` would rather strike its target `target` to steal than do
@@ -48,7 +48,7 @@ impl World {
 
     /// Creature `thief`'s melee blow hit `victim` and left them alive: it may steal (module
     /// docs).
-    pub(super) fn snatch(
+    pub(in crate::world) fn snatch(
         &mut self,
         thief: ActorId,
         victim: ActorId,

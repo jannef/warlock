@@ -5,16 +5,17 @@
 //! hidden barrow in the Wildlands' Mirefen leading into the Depths, revealed by the hermit's
 //! second quest.
 
-use super::*;
 use crate::action::parse_actions;
 use crate::content::{ContentFiles, RevealWhen};
 use crate::dump::{self, Layer};
 use crate::replay::Replay;
 use crate::test_support::{builtin, last_text as last, run as act, texts};
+use crate::world::*;
 
-const OVERWORLD: &str = include_str!("../../../../assets/campaigns/showcase/levels/overworld.toml");
+const OVERWORLD: &str =
+    include_str!("../../../../../assets/campaigns/showcase/levels/overworld.toml");
 const QUESTS: &str =
-    include_str!("../../../../assets/campaigns/showcase/data/quests/showcase.toml");
+    include_str!("../../../../../assets/campaigns/showcase/data/quests/showcase.toml");
 
 /// The hidden barrow's cell: a swamp cell of the Mirefen.
 const BARROW: Pos = Pos::new(50, 43);
@@ -387,12 +388,13 @@ fn content_checks_hidden_locations_and_reveals() {
     }
     // A hand-made level may hide one too (Gimmwīc's crystal portal, #1446).
     let mut files = ContentFiles::builtin();
-    let arena = include_str!("../../../../assets/campaigns/showcase/levels/arena.toml").replacen(
-        "[legend]\n",
-        "[legend]\n\"9\" = { terrain = \"floor\", hidden = { id = \"pit\", terrain = \
+    let arena = include_str!("../../../../../assets/campaigns/showcase/levels/arena.toml")
+        .replacen(
+            "[legend]\n",
+            "[legend]\n\"9\" = { terrain = \"floor\", hidden = { id = \"pit\", terrain = \
          \"stairs_down\", to = \"hub\", name = \"The Pit\" } }\n",
-        1,
-    );
+            1,
+        );
     let arena = arena.replacen("map = '''\n#", "map = '''\n9", 1);
     files.insert("campaigns/showcase/levels/arena.toml", &arena);
     Content::load(&files).expect("a hidden location on a hand-made level");

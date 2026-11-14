@@ -4,7 +4,7 @@
 //! **Flow**: a giver lists each quest it has for the player as a topic (`quest-ID`, named after
 //! the quest). Asking it **gives** the quest (#422: no accepting, no declining): the giver says
 //! the offer (and the quest's `accept` line after it), a rolled quest draws its target
-//! (`world/quest_roll.rs`), and the quest is active at once, on the log with its first
+//! (`world/people/quest_roll.rs`), and the quest is active at once, on the log with its first
 //! breadcrumb ("Sister Hild wants you to ..."). An active quest stays a topic of its giver
 //! (the reminder) and, once its goal is met, of whoever it is handed in to; asking that one
 //! completes it: what it asks for leaves the pack, they say their thanks, and the reward
@@ -28,7 +28,6 @@
 //! Progress the player's action made is said at once ("Quest updated: 2 / 3 giant rats."). The
 //! quest log reads [`PerceptionView::quests`]: the player knows their quests.
 
-use super::{ActorId, Deed, Spent, TopicView, World};
 use crate::action::{Event, Positions};
 use crate::content::StatUse;
 use crate::content::{
@@ -40,6 +39,7 @@ use crate::perception::PerceptionView;
 use crate::rng::Rng;
 use crate::talent::TalentMods;
 use crate::text::capitalized;
+use crate::world::{ActorId, Deed, Spent, TopicView, World};
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
 use std::collections::{BTreeMap, BTreeSet};
@@ -87,7 +87,7 @@ fn is_zero(n: &u32) -> bool {
 pub struct Quests {
     /// The quests the player has heard of, by id.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-    pub(super) records: BTreeMap<String, QuestRecord>,
+    pub(in crate::world) records: BTreeMap<String, QuestRecord>,
     /// The player's kills of every creature type: by level id, then by creature type id.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
     kills: BTreeMap<String, BTreeMap<String, u32>>,
@@ -181,7 +181,7 @@ impl Quests {
     }
 
     /// Whether quest `def` is active.
-    pub(super) fn is_active(&self, def: &QuestDef) -> bool {
+    pub(in crate::world) fn is_active(&self, def: &QuestDef) -> bool {
         self.stage(def) == Some(Stage::Active)
     }
 
@@ -211,7 +211,7 @@ impl Quests {
     }
 
     /// A unique creature type, `id`, died.
-    pub(super) fn slay(&mut self, id: &str) {
+    pub(in crate::world) fn slay(&mut self, id: &str) {
         self.slain.insert(id.to_string());
     }
 }
@@ -960,7 +960,11 @@ impl World {
     /// type (the design's B6: kill quests and the ranger's Favoured prey read it). The type
     /// killed most becomes the favoured prey once it is killed more often than the one before.
     /// A family's members (animated blades) are tallied as one type, by the family's id.
-    pub(super) fn tally_kill(&mut self, creature: crate::content::CreatureId, level: &str) {
+    pub(in crate::world) fn tally_kill(
+        &mut self,
+        creature: crate::content::CreatureId,
+        level: &str,
+    ) {
         let id = self.content.family_key(creature).to_string();
         let quests = &mut self.state.quests;
         let kills = quests.kills.entry(level.to_string()).or_default();
@@ -972,7 +976,7 @@ impl World {
     }
 
     /// The player arrived on level `level`: active reach quests there are reached.
-    pub(super) fn reach(&mut self, level: &str) {
+    pub(in crate::world) fn reach(&mut self, level: &str) {
         let content = self.content.clone();
         for def in content.quests() {
             let here = matches!(&def.goal, Goal::Reach { level: l } if l == level);
@@ -986,7 +990,7 @@ impl World {
     }
 
     /// How far each active quest has got, before an action of the player's.
-    pub(super) fn quest_progress(&self) -> Vec<(QuestId, (u32, u32))> {
+    pub(in crate::world) fn quest_progress(&self) -> Vec<(QuestId, (u32, u32))> {
         (self.content.quests().iter().enumerate())
             .filter(|(_, def)| self.state.quests.is_active(def))
             .map(|(i, def)| (QuestId(i as u16), self.progress_of(def)))
@@ -994,7 +998,7 @@ impl World {
     }
 
     /// Says the progress the player's action made on the quests active before it (`before`).
-    pub(super) fn quest_news(&mut self, before: &[(QuestId, (u32, u32))]) {
+    pub(in crate::world) fn quest_news(&mut self, before: &[(QuestId, (u32, u32))]) {
         let content = self.content.clone();
         for &(q, (had, _)) in before {
             let def = content.quest(q);

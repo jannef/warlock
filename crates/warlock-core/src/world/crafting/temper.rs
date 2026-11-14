@@ -44,10 +44,7 @@
 //! [`TemperRules::against`]: crate::content::TemperRules::against
 //! [`Aspect`]: crate::magic::Aspect
 
-use super::item_damage::{Harmed, proof};
-use super::loot::Identified;
 use super::work::{Job, Task};
-use super::{Actor, Spent, World};
 use crate::ability::Unavailable;
 use crate::action::Event;
 use crate::combat;
@@ -58,6 +55,9 @@ use crate::magic::worked::{arms, aspects};
 use crate::object::Stack;
 use crate::skills::{Effect, Use};
 use crate::stats::Stat;
+use crate::world::combat::item_damage::{Harmed, proof};
+use crate::world::items::loot::Identified;
+use crate::world::{Actor, Spent, World};
 
 /// What an attempt is made with: a hammer at an anvil on metal, or a knife on wood.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -209,7 +209,7 @@ pub(super) fn check_made(natural: i32, modifier: i32, against: i32) -> bool {
 
 /// An attempt under way: what it is made with and the stack worked.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(super) struct Tempering {
+pub(in crate::world) struct Tempering {
     craft: Craft,
     item: usize,
 }
@@ -259,7 +259,7 @@ impl World {
     /// untrained in its skill: what it needs ("You need Metalcraft to work at the anvil."; the
     /// step is refused, taking no time, as any bump is). The trained are shown the profession's
     /// screen by the game, and walking in says the plain bump.
-    pub(super) fn anvil_needs(&self, terrain: TerrainId) -> Option<String> {
+    pub(in crate::world) fn anvil_needs(&self, terrain: TerrainId) -> Option<String> {
         if self.content.offer(terrain) != Some(Offer::Temper) {
             return None;
         }
@@ -275,7 +275,7 @@ impl World {
     /// The player begins to work the stack at `item` at the anvil beside them; refused, taking no
     /// time, untrained in Metalcraft, with none, with a stack that cannot be worked, or with one
     /// that can be no finer.
-    pub(super) fn start_temper(&mut self, item: usize) -> Spent {
+    pub(in crate::world) fn start_temper(&mut self, item: usize) -> Spent {
         if self.untrained_for(Craft::Temper) {
             return Spent::Nothing;
         }
@@ -311,7 +311,7 @@ impl World {
     /// The player begins to whittle the stack at `item`; refused, taking no time, untrained in
     /// Woodcraft, without a knife
     /// carried, with a stack that is not a wooden weapon, or with one that can be no finer.
-    pub(super) fn start_whittle(&mut self, item: usize) -> Spent {
+    pub(in crate::world) fn start_whittle(&mut self, item: usize) -> Spent {
         if self.untrained_for(Craft::Whittle) {
             return Spent::Nothing;
         }

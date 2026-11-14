@@ -3,11 +3,11 @@
 //! what it carried (laid, solid, seen past, dug, kicked, broken), the scroll of restoration and
 //! the Heal skill ending it, and the basilisk's gaze that gives it.
 
-use super::*;
 use crate::content::ContentFiles;
 use crate::skills::{SkillId, Trained};
 use crate::stats::Stat;
 use crate::test_support::{run, texts};
+use crate::world::*;
 
 // A lit hall: the player by a pick-axe and a scroll of restoration, a kobold east of them on a
 // dagger, a deer far off, and a basilisk behind the wall (B) for the gaze.

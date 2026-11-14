@@ -1,5 +1,5 @@
 //! Training (spec §8 "Skills"): meaningful uses of the player's skills earn training marks,
-//! which gather until a skill roll spends them (`world/skill_roll.rs`): a level-up's, or the
+//! which gather until a skill roll spends them (`world/character/skill_roll.rs`): a level-up's, or the
 //! automatic one when they reach `[rolls] auto_at`. The more marks, the bigger the roll's die.
 //!
 //! A use ([`Use`]) is reported where it happens: a step within earshot of a creature
@@ -13,16 +13,16 @@
 //!
 //! Only the player trains for now; creatures keep the skills their type gives them.
 
-use super::{ActorId, World};
 use crate::combat::{Blow, Category, Strike};
 use crate::content::StatUse;
 use crate::skills::{SkillId, Use};
+use crate::world::{ActorId, World};
 
 impl World {
     /// `blow`, a plain miss at the player (`Missed { by: None }`) made a dodge one time in
     /// four, on the training stream (`docs/design/skill-uses.md` Tu1): everything after it sees
     /// one dodge. Blows between creatures, and at creatures, draw nothing.
-    pub(super) fn plain_miss_dodged(
+    pub(in crate::world) fn plain_miss_dodged(
         &mut self,
         attacker: ActorId,
         target: ActorId,
@@ -41,7 +41,7 @@ impl World {
 
     /// Whether any of the player's trained skills earns marks on `used`: when none does, a use
     /// need not even be looked for.
-    pub(super) fn trains(&self, used: Use) -> bool {
+    pub(in crate::world) fn trains(&self, used: Use) -> bool {
         let content = &self.content;
         (self.state.player().skills.iter())
             .any(|(id, _)| content.skill(id).marks.iter().any(|m| m.on == used))
@@ -52,14 +52,14 @@ impl World {
     /// rule for it gets a mark with the rule's chance (one draw of the training stream per rule),
     /// scaled by the special rooms where they stand (a scriptorium's 200 for Decipher script
     /// gives two marks; `Here::train`).
-    pub(super) fn train(&mut self, used: Use) {
+    pub(in crate::world) fn train(&mut self, used: Use) {
         self.train_some(used, None);
     }
 
     /// [`World::train`] for skill `only` alone: a use that practises one skill of several that
     /// mark it (a salvage's check practises the profession that worked the material,
-    /// `world/salvage.rs`).
-    pub(super) fn train_skill(&mut self, used: Use, only: SkillId) {
+    /// `world/crafting/salvage.rs`).
+    pub(in crate::world) fn train_skill(&mut self, used: Use, only: SkillId) {
         self.train_some(used, Some(only));
     }
 

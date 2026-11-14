@@ -1,6 +1,6 @@
 //! Status effects on actors (spec §8 "Status effects"): the rules of one actor's effects. What
 //! the statuses are is data ([`crate::content::StatusDef`], `data/status/`); applying them
-//! to the world (causes, ticks as the clock moves, deaths, messages) is `world/status.rs`.
+//! to the world (causes, ticks as the clock moves, deaths, messages) is `world/health/status.rs`.
 //!
 //! An actor carries its **effects** ([`Effects`]): at most one of each status, each with a
 //! **severity** in degrees (1 up to the status's `max`), its progress toward its next **tick**
@@ -27,7 +27,7 @@
 //! - **Slowness** ([`Effects::slow`]): each status multiplies the price of every action by its
 //!   `cost` percent.
 //! - **Blocks** ([`Effects::blocking`]): the actions a status refuses while it lasts, by kind.
-//! - **Follows**: as a status ends, the one it `follows` begins (`world/buff.rs`).
+//! - **Follows**: as a status ends, the one it `follows` begins (`world/health/buff.rs`).
 //!
 //! Every effect is in the world state (saved, covered by the state hash). The player knows their
 //! own statuses by name, and sees on creatures those a status says show (`seen`); never a

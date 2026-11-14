@@ -715,7 +715,7 @@ fn status_cures(content: &Content, status: usize, def: &StatusDef) -> Vec<String
             out.push(format!("eating {}", object.name));
         }
     }
-    // The means `world/restore.rs` and `world/service.rs` cure by (private there).
+    // The means `world/magic/restore.rs` and `world/people/service.rs` cure by (private there).
     if def.cured_by.iter().any(|c| c == "restoration") {
         out.push("the [scroll of restoration](scrolls.md#the-scroll-of-restoration)".into());
     }

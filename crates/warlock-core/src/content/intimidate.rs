@@ -1,7 +1,7 @@
 //! Intimidating (`assets/data/rules/intimidate.toml`, spec §8 "Skills": Intimidate; #868): the
 //! numbers of the Intimidate skill's use, a threat at one foe.
 //!
-//! The rule itself lives in `world/intimidate.rs`, on War cry's check (`world/war_cry.rs`): who
+//! The rule itself lives in `world/skills/intimidate.rs`, on War cry's check (`world/classes/war_cry.rs`): who
 //! can (anyone trained in a skill with the `intimidate` benefit, `data/skills/`), at whom (a
 //! hostile creature they see within `range`, with vitals), the check (its Willpower against
 //! `difficulty` + their Strength modifier + their Intimidate), and the status a failed check

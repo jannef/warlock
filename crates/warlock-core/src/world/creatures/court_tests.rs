@@ -2,8 +2,8 @@
 //! when it is made, by its type's weights, from its own stream; the pick is saved; a level's
 //! `faction` wins; a Seelie fey the player attacks turns wrathful.
 
-use super::*;
 use crate::content::{ContentFiles, Stance};
+use crate::world::*;
 use std::collections::BTreeMap;
 
 /// A lit glade with the player (`@`) and a row of `p` pixies, `R` redcaps, `D` dryads, and `P`

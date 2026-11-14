@@ -2,7 +2,6 @@
 //! level 18 mends a damaged thing carried, anywhere, in ten minutes, by a check that never
 //! destroys anything.
 
-use super::*;
 use crate::ability::{Ability, Aim, Unavailable};
 use crate::action::{parse_actions, position_text};
 use crate::content::{ActionKind, ClassActive, ContentFiles, ItemHarm};
@@ -10,6 +9,7 @@ use crate::item_list::ItemList;
 use crate::magic::Worked;
 use crate::talent::CraftEffect;
 use crate::test_support::{builtin, last, run};
+use crate::world::*;
 
 const MEND: ClassActive = ClassActive::MakeDo;
 

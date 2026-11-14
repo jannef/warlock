@@ -37,7 +37,6 @@
 //! draws, and with no zone on the level nothing here costs more than a look at an empty list.
 
 use super::spell::{Caster, burst_cells};
-use super::{ActorId, Cause, LevelState, Spent, World};
 use crate::action::{AttackKind, Event, SpellShape};
 use crate::check;
 use crate::combat::Strike;
@@ -47,6 +46,7 @@ use crate::geom::Pos;
 use crate::light::Light;
 use crate::stats::Stat;
 use crate::time::{Duration, GameTime};
+use crate::world::{ActorId, Cause, LevelState, Spent, World};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeSet;
 
@@ -196,7 +196,7 @@ impl World {
 
     /// `cast` went off: its zone lies on `cells` for its turns. A fire's harm is rolled here,
     /// one number for all its time, and the ice under a fire melts.
-    pub(super) fn lay_spell_zone(
+    pub(in crate::world) fn lay_spell_zone(
         &mut self,
         cast: &Cast<'_>,
         cells: Vec<Pos>,
@@ -300,7 +300,7 @@ impl World {
     /// The dev action `zone:KIND@X,Y,R` ([`crate::action::Action::Zone`]): a zone of `kind`
     /// around `at`, within `radius` in its line of sight, by the player, for ten turns. A fire's
     /// harm is fixed. Takes no time and draws nothing.
-    pub(super) fn zone_dev(
+    pub(in crate::world) fn zone_dev(
         &mut self,
         kind: ZoneKind,
         at: Pos,
@@ -327,7 +327,7 @@ impl World {
     /// Whether a dev burst's centre `at` lies off the current level, said if so: the dev bursts
     /// (`zone:`, `freeze:`, `thaw:`) refuse it, with no time (a centre far off the map would
     /// overflow their line of sight, #1569).
-    pub(super) fn off_level_dev(&mut self, at: Pos) -> bool {
+    pub(in crate::world) fn off_level_dev(&mut self, at: Pos) -> bool {
         let off = !self.state.current().terrain.in_bounds(at);
         if off {
             self.say(format!("{},{} is off the level (dev).", at.x, at.y));
@@ -352,7 +352,7 @@ impl World {
     }
 
     /// Actor `id`'s turn starts where it stands: a fire burns it, a cloud poisons it.
-    pub(super) fn zone_turn_start(&mut self, id: ActorId, events: &mut Vec<Event>) {
+    pub(in crate::world) fn zone_turn_start(&mut self, id: ActorId, events: &mut Vec<Event>) {
         let Some(pos) = self.zoned(id) else {
             return;
         };
@@ -365,7 +365,7 @@ impl World {
 
     /// Actor `id` stepped from `from` to `to`: a fire there burns it, slick ground under either
     /// end of the step may trip it.
-    pub(super) fn zone_tread(
+    pub(in crate::world) fn zone_tread(
         &mut self,
         id: ActorId,
         (from, to): (Pos, Pos),
@@ -482,7 +482,7 @@ impl World {
     }
 
     /// The end of a turn: the current level's zones past their end are dropped, quietly.
-    pub(super) fn zones_fade(&mut self) {
+    pub(in crate::world) fn zones_fade(&mut self) {
         let now = self.state.time;
         let level = self.state.current_mut();
         if !level.zones.is_empty() {

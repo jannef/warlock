@@ -40,15 +40,15 @@
 //!
 //! [`FaithMods::services`]: crate::talent::FaithMods::services
 
-use super::actor::undrained;
 use super::goodwill::discounted;
 use super::shop::{count_of, haggling};
-use super::{ActorId, Spent, World};
 use crate::action::Event;
 use crate::content::{ActionKind, DialogueId, MAX_FAVOUR, Service, ServiceKind};
 use crate::skills::SkillId;
 use crate::skills::Use;
 use crate::text::capitalized;
+use crate::world::turn::actor::undrained;
+use crate::world::{ActorId, Spent, World};
 
 /// The means a temple's cure names in `cured_by`.
 pub const PRAYER: &str = "prayer";

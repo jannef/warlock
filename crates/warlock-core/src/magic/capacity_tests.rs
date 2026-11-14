@@ -361,8 +361,8 @@ fn every_loot_path_holds_its_items_to_their_capacity() {
         for seed in 0..20 {
             let mut rng = Rng::gear(seed, "capacity");
             let mut pack = crate::gear::roll(&c, &mut rng, id, 12);
-            let mut condition = crate::world::gear_condition::stream(seed, "capacity");
-            crate::world::gear_condition::apply(&c, &mut condition, (id, 12), &mut pack);
+            let mut condition = crate::world::items::gear_condition::stream(seed, "capacity");
+            crate::world::items::gear_condition::apply(&c, &mut condition, (id, 12), &mut pack);
             crate::gear::finish(&c, &mut rng, &mut pack);
             for s in &pack.items {
                 fits(s, "gear");

@@ -457,7 +457,7 @@ impl TalentEffect {
         )
     }
 
-    /// Whether it is handed down once as it is taken (`world/heirloom.rs`): Family wealth's gold
+    /// Whether it is handed down once as it is taken (`world/character/heirloom.rs`): Family wealth's gold
     /// and gems, Father's sword's heirloom, a trade's skill and tools.
     pub fn is_handed_down(&self) -> bool {
         matches!(

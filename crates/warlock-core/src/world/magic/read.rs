@@ -28,14 +28,16 @@
 //! **The scroll of restoration** casts no spell ([`Reading::Cleanse`], `restore.rs`): read on
 //! oneself, it mends every point of stat damage and gives back every point drains took.
 
-use super::fight::{End, Guard, Words, attack_message, death_message, driven_message};
-use super::{Spent, World};
 use crate::action::{AttackKind, Event, Positions, ReadTarget};
 use crate::content::StatUse;
 use crate::content::{ActionKind, Reading, percent_of};
 use crate::geom::Pos;
 use crate::object::Stack;
 use crate::skills::Use;
+use crate::world::combat::fight::{
+    End, Guard, Words, attack_message, death_message, driven_message,
+};
+use crate::world::{Spent, World};
 
 /// What the player is told when Scroll savant keeps a scroll they read.
 pub(super) const KEPT: &str = "The writing does not fade from the scroll.";
@@ -43,7 +45,7 @@ pub(super) const KEPT: &str = "The writing does not fade from the scroll.";
 impl World {
     /// The kind of action reading inventory stack `item` is, as a status's `blocks` names it:
     /// `study` for a grimoire, else `read`.
-    pub(super) fn read_kind(&self, item: usize) -> ActionKind {
+    pub(in crate::world) fn read_kind(&self, item: usize) -> ActionKind {
         let pack = &self.state.player().inventory;
         match pack.get(item) {
             Some(s) if self.content.object(s.object).grimoire.is_some() => ActionKind::Study,
@@ -52,7 +54,7 @@ impl World {
     }
 
     /// The player reads one of inventory stack `item` at `target` (module docs).
-    pub(super) fn read(
+    pub(in crate::world) fn read(
         &mut self,
         item: usize,
         target: Option<ReadTarget>,
@@ -130,7 +132,7 @@ impl World {
 
     /// Where a burst read from `from` at `at` goes off (module docs): the first cell on the
     /// line through `at` someone stands on, the last before an opaque cell, or `at`.
-    pub(super) fn burst_center(&self, from: Pos, at: Pos, range: i32) -> Pos {
+    pub(in crate::world) fn burst_center(&self, from: Pos, at: Pos, range: i32) -> Pos {
         let level = self.state.current();
         let mut center = from;
         let steps = from.chebyshev(at).clamp(0, range.max(0)) as usize;
@@ -148,7 +150,7 @@ impl World {
 
     /// The cells a bolt read from `from` at `at` runs over: the line through `at` and on, after
     /// `from`, at most `length` cells, cut short before the first opaque cell.
-    pub(super) fn bolt_line(&self, from: Pos, at: Pos, length: i32) -> Vec<Pos> {
+    pub(in crate::world) fn bolt_line(&self, from: Pos, at: Pos, length: i32) -> Vec<Pos> {
         let level = self.state.current();
         (from.ray(at).take(length.max(1) as usize))
             .take_while(|&p| !level.is_opaque(&self.content, p))
@@ -161,7 +163,7 @@ impl World {
     /// presentation the same way: the spell's own, and the blows and deaths seen. The player's
     /// own death is said as the turn is perceived. `(noun, verb)` say the spell's blows ("the
     /// fireball burns"); a birth sign's Blaze is said the same way.
-    pub(super) fn say_spell(
+    pub(in crate::world) fn say_spell(
         &mut self,
         (noun, verb): (&str, &str),
         made: Vec<Event>,
@@ -191,8 +193,9 @@ impl World {
                         _ => End::Unseen,
                     };
                     // How the spell found the one it struck at, in its words (`surprise.rs`).
-                    let named =
-                        def.map(|d| super::surprise::caught_name(&content, &d.name, caught));
+                    let named = def.map(|d| {
+                        crate::world::combat::surprise::caught_name(&content, &d.name, caught)
+                    });
                     let struck_at = match (end, named.as_deref()) {
                         (End::Seen(_), Some(named)) => End::Seen(named),
                         _ => end,

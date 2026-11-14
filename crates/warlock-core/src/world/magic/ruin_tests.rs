@@ -4,11 +4,11 @@
 
 use super::caster_tests::{reach, sp, world_with};
 use super::spell::Caster;
-use super::*;
 use crate::content::{Burst, ContentFiles, DamageTypeId};
 use crate::magic::{Magic, Rarity};
 use crate::object::Stack;
 use crate::test_support::{builtin, said};
+use crate::world::*;
 
 fn kind(w: &World, id: &str) -> DamageTypeId {
     w.content().damage_type_id(id).expect("a damage type")

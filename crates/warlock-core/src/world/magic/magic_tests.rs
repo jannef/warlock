@@ -3,8 +3,6 @@
 //! else leaks them; items survive saves and replays; creatures drop loot and generated levels hold
 //! it, deterministically.
 
-use super::fixture_factions::make_peace;
-use super::*;
 use crate::action::{AttackKind, Positions, parse_actions};
 use crate::combat::{self, Category, Profile};
 use crate::content::{ContentFiles, Effect};
@@ -13,6 +11,8 @@ use crate::noise::Act;
 use crate::replay::Replay;
 use crate::stats::Stat;
 use crate::test_support::{builtin, run};
+use crate::world::creatures::fixture_factions::make_peace;
+use crate::world::*;
 
 // A lit room: the player, and a kobold behind a door.
 const LEVEL: &str = r##"
@@ -254,7 +254,7 @@ fn ranged_effects_change_shots_and_throws() {
     assert_eq!(p.bonus, base.bonus + 2);
     let arrow = &me(&w).inventory[quiver];
     assert_eq!(
-        super::shoot::break_chance(arrow, w.content()),
+        crate::world::combat::shoot::break_chance(arrow, w.content()),
         30 * 70 / 100
     );
 
@@ -637,14 +637,18 @@ fn a_drop_rolls_at_the_creatures_level_at_least_the_floors() {
         .clone();
     assert_eq!(content.item_level(&kobold.level), 3);
     assert!(content.creature(kobold.creature).level < 3);
-    assert_eq!(super::loot::drop_level(content, &kobold), 3, "the floor's");
+    assert_eq!(
+        crate::world::items::loot::drop_level(content, &kobold),
+        3,
+        "the floor's"
+    );
     let deep = (content.creature_defs().iter())
         .position(|d| d.level > 3 && d.loot > 0)
         .expect("a creature above the floor's level that drops loot");
     let mut a = kobold.clone();
     a.creature = crate::content::CreatureId(u16::try_from(deep).unwrap());
     let level = content.creature(a.creature).level;
-    assert_eq!(super::loot::drop_level(content, &a), level);
+    assert_eq!(crate::world::items::loot::drop_level(content, &a), level);
     let mut seen = 0;
     for id in 1..400 {
         a.id = ActorId(id);

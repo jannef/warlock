@@ -12,10 +12,6 @@
 //! outcome's line, not the status's own start line. Harm an outcome does is the place's: its
 //! kills are no one's and earn nothing ([`Harm::Place`]), as a trap's.
 
-use super::fight::Harm;
-use super::spell::Caster;
-use super::travel::make_creature;
-use super::{ActorId, World};
 use crate::action::{Event, Positions};
 use crate::alignment::Alignment;
 use crate::combat::Blow;
@@ -30,6 +26,10 @@ use crate::magic::loot::{self, LootGrade};
 use crate::object::{Stack, add_to_pile};
 use crate::stats::Stat;
 use crate::variant::Source;
+use crate::world::combat::fight::Harm;
+use crate::world::levels::travel::make_creature;
+use crate::world::magic::spell::Caster;
+use crate::world::{ActorId, World};
 
 /// The kinds' weights of `table` for a player of side `player` at a place of side `place`
 /// (spec §7 "Special rooms"): agreement (both good, or both evil) moves its `lean` from the bane
@@ -55,7 +55,7 @@ pub fn leaned_kinds(
 impl World {
     /// Draws an outcome of `table` with the kinds' weights `kinds` ([`leaned_kinds`]): the kind
     /// first, then one of its outcomes by weight. `None` only for a table with nothing to draw.
-    pub(super) fn draw_outcome<'t>(
+    pub(in crate::world) fn draw_outcome<'t>(
         &mut self,
         table: &'t OutcomeTable,
         kinds: [u32; 3],
@@ -76,7 +76,12 @@ impl World {
     }
 
     /// `outcome` befalls the player at the place whose feature is on `feature` (module docs).
-    pub(super) fn befall(&mut self, outcome: &OutcomeDef, feature: Pos, events: &mut Vec<Event>) {
+    pub(in crate::world) fn befall(
+        &mut self,
+        outcome: &OutcomeDef,
+        feature: Pos,
+        events: &mut Vec<Event>,
+    ) {
         let line = match outcome.messages.len() {
             0 => None,
             1 => outcome.messages.first().cloned(),
@@ -144,7 +149,7 @@ impl World {
         }
         if let Some(drain) = effect.drain {
             let amount = drain.roll(&mut self.state.rng);
-            super::mana::drain(self.player_mut(), amount);
+            crate::world::magic::mana::drain(self.player_mut(), amount);
             done = true;
         }
         for &(status, degrees) in &effect.status {
@@ -626,7 +631,12 @@ impl World {
     /// A place (`Caster::Place`: an altar's fire) does `damage` to `target`, with no roll to hit,
     /// less what it resists (spec §7 "Special rooms"): the player is told when they are hit, or
     /// see who is; a kill is no one's.
-    pub(super) fn place_hurts(&mut self, target: ActorId, damage: Damage, events: &mut Vec<Event>) {
+    pub(in crate::world) fn place_hurts(
+        &mut self,
+        target: ActorId,
+        damage: Damage,
+        events: &mut Vec<Event>,
+    ) {
         let Some(to) = self.state.actors.get(&target).map(|a| a.pos) else {
             return;
         };
@@ -659,7 +669,7 @@ fn found_once<'f, W>(found: &'f mut impl FnMut(&mut W)) -> impl FnOnce(&mut W) +
 }
 
 /// Takes the stacks at `positions` out of `actor`'s pack (and off them).
-pub(super) fn remove_stacks(actor: &mut super::Actor, positions: &[usize]) {
+pub(in crate::world) fn remove_stacks(actor: &mut crate::world::Actor, positions: &[usize]) {
     let mut sorted = positions.to_vec();
     sorted.sort_unstable();
     sorted.dedup();

@@ -11,7 +11,7 @@
 //!   ([`World::learn_scroll`]).
 //! - **What it does**, by its kind ([`Draught`]), each through the one path that does it: hit
 //!   points back (never past the maximum) and what it cures; cures ([`World::cure`], and every
-//!   disease for `diseases`); mana back; a stat raised for good (an elixir, `world/elixir.rs`);
+//!   disease for `diseases`); mana back; a stat raised for good (an elixir, `world/health/elixir.rs`);
 //!   sickness ([`World::afflict`]); a meal's nutrition, never into Bloated (a nourish,
 //!   [`World::satiate`]); the scroll of restoration's cleanse (a restore, [`World::restore`]);
 //!   the drinker moved to a free cell of the level as a teleport trap moves its victim (a blink,
@@ -33,12 +33,12 @@
 //! [`Action::Eat`]: crate::action::Action::Eat
 //! [`Draught`]: crate::content::Draught
 
-use super::{Actor, Spent, World};
 use crate::action::{Event, Meal, Positions};
 use crate::content::{
     ActionKind, Cleansing, Content, Draught, Effect, LevelKind, StatUse, StatusId,
 };
 use crate::object::Stack;
+use crate::world::{Actor, Spent, World};
 
 impl Actor {
     /// The chance in percent a potion this actor drinks is not used up: Thrifty drinker's
@@ -55,7 +55,7 @@ impl Actor {
 }
 
 /// What the player is told when Thrifty drinker keeps a potion they drank.
-pub(super) const KEPT: &str = "There is enough left in the flask for another draught.";
+pub(in crate::world) const KEPT: &str = "There is enough left in the flask for another draught.";
 
 /// What a potion of restoration cleanses: stat damage and drains both.
 const RESTORE: Cleansing = Cleansing {

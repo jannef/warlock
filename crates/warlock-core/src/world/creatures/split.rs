@@ -16,7 +16,7 @@
 //!   one drawn from the pool (`below(pool.len())`) and made on the next of the free cells within
 //!   `spread` of the corpse, of the dead one's faction. Only on the player's level.
 //! - **The credit** ([`World::offspring_share`]): what was made so remembers it
-//!   ([`super::Actor::split_from`]): a half's kill pays a quarter of its type's experience, a
+//!   ([`crate::world::Actor::split_from`]): a half's kill pays a quarter of its type's experience, a
 //!   creature that crawled out of a corpse a tenth, and neither counts toward a quest's kills,
 //!   so no quest counts the halves twice and a pudding farm is a poor one.
 //! - **Words**: the first split of a type the player sees in a run says what to do about it
@@ -25,10 +25,10 @@
 //!   crawls out where the player sees it, "3 grave worms crawl out of the wormhost!". Unseen,
 //!   nothing. Said with the news, after the blow's own words.
 
-use super::{ActorId, World};
 use crate::content::{CORPSE_SHARE, CreatureId, CreatureSpawn, HALF_SHARE, counted};
 use crate::content::{the, the_start};
 use crate::text::{and_list, capitalized};
+use crate::world::{ActorId, World};
 use serde::{Deserialize, Serialize};
 
 /// What a creature was made of (docs/design/monster-dread.md §5.5), for its kill's credit.
@@ -44,7 +44,11 @@ pub enum Split {
 impl World {
     /// Creature `id`, struck by a blow of damage kind `kind` that left it alive, splits if its
     /// type's `splits` say so (module docs).
-    pub(super) fn split(&mut self, id: ActorId, kind: Option<crate::content::DamageTypeId>) {
+    pub(in crate::world) fn split(
+        &mut self,
+        id: ActorId,
+        kind: Option<crate::content::DamageTypeId>,
+    ) {
         let content = self.content.clone();
         let Some(me) = self.state.actors.get(&id) else {
             return;
@@ -80,7 +84,8 @@ impl World {
             status: Vec::new(),
         };
         let level = self.state.current_level.clone();
-        let made = super::travel::make_creature(&mut self.state, &content, &level, &spawn);
+        let made =
+            crate::world::levels::travel::make_creature(&mut self.state, &content, &level, &spawn);
         let half = hp / 2;
         if let Some(new) = self.state.actors.get_mut(&made) {
             new.hp = half;
@@ -112,7 +117,7 @@ impl World {
 
     /// Creature `id`, dying, lets out what its type's `dies_into` says (module docs). Returns
     /// what the player is told, said with its death.
-    pub(super) fn dies_into(&mut self, id: ActorId) -> Option<String> {
+    pub(in crate::world) fn dies_into(&mut self, id: ActorId) -> Option<String> {
         let content = self.content.clone();
         let me = self.state.actors.get(&id)?;
         let def = content.creature(me.creature);
@@ -143,7 +148,12 @@ impl World {
                 asleep: false,
                 status: Vec::new(),
             };
-            let made = super::travel::make_creature(&mut self.state, &content, &level, &spawn);
+            let made = crate::world::levels::travel::make_creature(
+                &mut self.state,
+                &content,
+                &level,
+                &spawn,
+            );
             if let Some(actor) = self.state.actors.get_mut(&made) {
                 actor.split_from = Some(Split::Corpse);
             }
@@ -173,7 +183,7 @@ impl World {
 
     /// The share of a kill of actor `id` its master earns, `percent` before what it was made
     /// of (module docs), and whether the kill counts toward a quest's.
-    pub(super) fn offspring_share(&self, id: ActorId, percent: u8) -> (u8, bool) {
+    pub(in crate::world) fn offspring_share(&self, id: ActorId, percent: u8) -> (u8, bool) {
         let made = self.state.actors.get(&id).and_then(|a| a.split_from);
         let share = match made {
             None => return (percent, true),

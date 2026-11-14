@@ -3,9 +3,6 @@
 //! level's special rooms (spec §7 "Special rooms") and whether the player has been inside each;
 //! its shops (spec §7 "Shops").
 
-use super::curse::Rising;
-use super::shop::Shop;
-use super::spawn::Spawner;
 use crate::blood::{Spatter, Stain};
 use crate::chest::Chest;
 use crate::color::Rgb;
@@ -22,6 +19,9 @@ use crate::object::Stack;
 use crate::scorch::{self, Burn};
 use crate::temperature::{self, Temperature};
 use crate::time::GameTime;
+use crate::world::creatures::spawn::Spawner;
+use crate::world::fixtures::curse::Rising;
+use crate::world::people::shop::Shop;
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -84,13 +84,13 @@ pub struct LevelState {
     /// smashed, its level (its band follows) and, while shut, what it holds. Ground truth.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty", with = "by_pos")]
     pub(crate) chests: BTreeMap<Pos, Chest>,
-    /// Statues of the stoned, by position (spec §8 "Statues"; `world/statue.rs`): on every cell
+    /// Statues of the stoned, by position (spec §8 "Statues"; `world/creatures/statue.rs`): on every cell
     /// of the statue terrain a stoned creature left, what it was and what it held. Gone (what it
     /// held spilt) once the statue breaks. Ground truth but for what it was, which the player
     /// sees.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty", with = "by_pos")]
-    pub(crate) statues: BTreeMap<Pos, super::statue::Statue>,
-    /// What is cut in its gravestones, by position (spec §7 "Graves"; `world/graves.rs`): one
+    pub(crate) statues: BTreeMap<Pos, crate::world::creatures::statue::Statue>,
+    /// What is cut in its gravestones, by position (spec §7 "Graves"; `world/fixtures/graves.rs`): one
     /// inscription on every grave terrain cell, when the level has words for them. Decoration,
     /// read by no rule and left out of the state hash; the player reads one in look mode.
     #[serde(
@@ -131,7 +131,7 @@ pub struct LevelState {
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty", with = "by_pos")]
     pub(crate) scorch_memory: BTreeMap<Pos, Stain>,
     /// Walls dug into and still standing, by position (spec §8 "Digging"): the work done on each,
-    /// in [`super::dig::WORK_SCALE`]ths of the work its hardness counts.
+    /// in [`crate::world::crafting::dig::WORK_SCALE`]ths of the work its hardness counts.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty", with = "by_pos")]
     pub(crate) dug: BTreeMap<Pos, u32>,
     /// Special rooms (spec §7 "Special rooms"), none overlapping another, each with whether the
@@ -143,17 +143,17 @@ pub struct LevelState {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub(crate) pervading: Option<RoomEffectId>,
     /// The dead due to rise from their corpses (spec §7 "Special rooms": a cursed room;
-    /// `world/curse.rs`), in the order they died.
+    /// `world/fixtures/curse.rs`), in the order they died.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub(crate) risings: Vec<Rising>,
     /// The ground hallowed by Sanctuary (spec §7 "Special rooms": hallowed ground;
-    /// `world/sanctuary.rs`), in the order laid; one past its end is dropped at the end of a turn.
+    /// `world/classes/sanctuary.rs`), in the order laid; one past its end is dropped at the end of a turn.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub(crate) hallows: Vec<super::Hallow>,
-    /// The zones spells laid here (`world/zone.rs`), in the order laid, their cells never shared;
+    pub(crate) hallows: Vec<crate::world::Hallow>,
+    /// The zones spells laid here (`world/magic/zone.rs`), in the order laid, their cells never shared;
     /// one past its end is dropped at the end of a turn.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub(crate) zones: Vec<super::Zone>,
+    pub(crate) zones: Vec<crate::world::Zone>,
     /// The zones as the player last saw them, by position: a cell seen clear is forgotten.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty", with = "by_pos")]
     pub(crate) zone_memory: BTreeMap<Pos, crate::content::ZoneKind>,
@@ -177,7 +177,7 @@ pub struct LevelState {
     /// there, and how its keeper stands toward them.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub(crate) shops: Vec<Shop>,
-    /// What comes to the level over time (spec §7 "Danger levels"; `world/spawn.rs`): only on a
+    /// What comes to the level over time (spec §7 "Danger levels"; `world/creatures/spawn.rs`): only on a
     /// level with a danger rule, so every other level's state is as it was.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub(crate) spawner: Option<Spawner>,
@@ -325,11 +325,11 @@ impl LevelState {
     /// The statues of the stoned on the level, by position (ground truth: what each holds). Only
     /// reachable through [`crate::World::ground_truth`] outside the rules, **for developer tools
     /// only**.
-    pub fn statues(&self) -> &BTreeMap<Pos, super::Statue> {
+    pub fn statues(&self) -> &BTreeMap<Pos, crate::world::Statue> {
         &self.statues
     }
 
-    /// What is cut in its gravestones, by position (spec §7 "Graves"; `world/graves.rs`).
+    /// What is cut in its gravestones, by position (spec §7 "Graves"; `world/fixtures/graves.rs`).
     pub fn graves(&self) -> &BTreeMap<Pos, String> {
         &self.graves
     }
@@ -473,7 +473,7 @@ impl LevelState {
     }
 
     /// Whether a closed door is at `p` ([`crate::content::TerrainDef::is_closed_door`]): a
-    /// companion's nose smells through one (`world/companion.rs`).
+    /// companion's nose smells through one (`world/allies/companion.rs`).
     pub(crate) fn is_closed_door(&self, content: &Content, p: Pos) -> bool {
         self.terrain
             .get(p)

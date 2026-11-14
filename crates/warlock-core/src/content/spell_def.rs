@@ -1,7 +1,7 @@
 //! Spells as data (spec §8 "Spells", the magic design `docs/design/magic.md` §3, §5, §6, the
 //! spell scaling design `docs/design/spell-scaling.md` §4 to §6): the cost table
 //! (`data/spells.toml`, [`SpellRules`]) and the spells (`data/spells/`, one `[[spell]]` file
-//! each, [`SpellData`]), cast by the one cast path (`world/cast.rs`). Not the bursts and bolts
+//! each, [`SpellData`]), cast by the one cast path (`world/magic/cast.rs`). Not the bursts and bolts
 //! traps cast (`content/spell.rs`), whose code the cast path shares.
 //!
 //! - **Spell levels**: a spell has a level, 0 to [`MAX_SPELL_LEVEL`]: its base mana (at least
@@ -30,7 +30,7 @@ use std::collections::BTreeMap;
 /// The highest level a spell may have (the spell scaling design §5.1): 0 (a cantrip) to 70.
 pub const MAX_SPELL_LEVEL: u8 = 70;
 /// The farthest a ray, bolt, or burst reaches and a line runs, in cells, however far it grows
-/// (`world/spell_rung.rs` clamps to it).
+/// (`world/magic/spell_rung.rs` clamps to it).
 pub const MAX_REACH: u8 = 20;
 /// The longest a cone is, in cells, however long it grows.
 pub const MAX_CONE: u8 = 5;
@@ -92,7 +92,7 @@ pub enum SpellPurpose {
     Hex,
     Cleanse,
     Utility,
-    /// Calls creatures to the caster's side (spec §8 "Allies"; `world/summon_spell.rs`).
+    /// Calls creatures to the caster's side (spec §8 "Allies"; `world/magic/summon_spell.rs`).
     Summon,
 }
 
@@ -122,7 +122,7 @@ impl SpellPurpose {
     }
 }
 
-/// What lies on a zone's cells (`[spell.effect] zone`, `world/zone.rs`; the spell types design
+/// What lies on a zone's cells (`[spell.effect] zone`, `world/magic/zone.rs`; the spell types design
 /// §7 "Zones"): one reader a kind, each at an existing moment.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -135,7 +135,7 @@ pub enum ZoneKind {
     Slick,
     /// No light reaches it, and a source on it sheds none.
     Dark,
-    /// No eye sees into it or through it; light passes (`world/zone.rs`).
+    /// No eye sees into it or through it; light passes (`world/magic/zone.rs`).
     Smoke,
 }
 
@@ -649,19 +649,19 @@ pub struct SpellEffect {
     /// A `summon`'s call.
     pub summon: Option<SpellSummon>,
     /// That it is aimed at a corpse the caster sees, and what becomes of the corpse
-    /// (`world/corpse_spell.rs`).
+    /// (`world/magic/corpse_spell.rs`).
     pub corpse: Option<CorpseUse>,
     /// A `summon` that raises the corpse it is aimed at, in place of `summon`.
     pub rise: Option<SpellRise>,
     /// A `hex` that makes the creature it falls on the caster's ally a while
-    /// (`world/charm.rs`).
+    /// (`world/allies/charm.rs`).
     pub charm: Option<SpellCharm>,
     /// A `heal`'s mana back, never past the maximum.
     pub mana: Option<Roll>,
     /// The percent of the harm it does that comes back to its caster (Leech, 1 to 100).
     pub leech: Option<u8>,
     /// Whether a creature it kills leaves crystals of its colour in place of its corpse and its
-    /// body's crafting stock (Soulglass, docs/design/enchanting.md §6; `world/crystal.rs`): a
+    /// body's crafting stock (Soulglass, docs/design/enchanting.md §6; `world/crafting/crystal.rs`): a
     /// single-target `damage` spell's.
     pub crystal: bool,
     /// A burst's targets: only creatures with one of these tags, friend or foe (Rebuke); empty:
@@ -682,10 +682,10 @@ pub struct SpellEffect {
     pub blink: Option<SpellBlink>,
     /// A `utility` spell's weather (Cloudburst).
     pub weather: Option<SpellWeather>,
-    /// The zone it leaves on its cells (`world/zone.rs`).
+    /// The zone it leaves on its cells (`world/magic/zone.rs`).
     pub zone: Option<SpellZone>,
     /// A `damage` spell's jumps taken without a draw, each up to [`ARC_REACH`] cells (its `count`
-    /// ladder grows them; Chain lightning; `world/spell_arc.rs`).
+    /// ladder grows them; Chain lightning; `world/magic/spell_arc.rs`).
     pub arcs: Option<u8>,
 }
 
@@ -698,7 +698,7 @@ pub enum CorpseUse {
     Kept,
 }
 
-/// A summon spell's raising of a corpse (`[spell.effect] rise`; `world/corpse_spell.rs`): the
+/// A summon spell's raising of a corpse (`[spell.effect] rise`; `world/magic/corpse_spell.rs`): the
 /// corpse's own creature type stands up.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SpellRise {
@@ -718,7 +718,7 @@ pub struct SpellRise {
     pub berserk_message: String,
 }
 
-/// A hex's charm (`[spell.effect] charm`; `world/charm.rs`): the creature it falls on is the
+/// A hex's charm (`[spell.effect] charm`; `world/allies/charm.rs`): the creature it falls on is the
 /// caster's ally for its degrees in minutes, then itself again where it stands.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SpellCharm {
@@ -739,7 +739,7 @@ pub enum OnlyTerrain {
     Plants,
 }
 
-/// A spell's move (`[spell.effect] blink`; `world/spell_rule.rs`).
+/// A spell's move (`[spell.effect] blink`; `world/magic/spell_rule.rs`).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SpellBlink {
     /// How far it may carry its caster.
@@ -748,7 +748,7 @@ pub struct SpellBlink {
     pub ends: Vec<StatusId>,
 }
 
-/// A spell's weather (`[spell.effect] weather`; `world/spell_rule.rs`).
+/// A spell's weather (`[spell.effect] weather`; `world/magic/spell_rule.rs`).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct SpellWeather {
     pub kind: Weather,
@@ -766,7 +766,7 @@ pub struct SpellZone {
 }
 
 /// A summon spell's call (`[spell.effect] summon`; spec §8 "Allies": "Summons";
-/// `world/summon_spell.rs`).
+/// `world/magic/summon_spell.rs`).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SpellSummon {
     /// The pool as written: each called creature is one of these, each as likely.
@@ -846,7 +846,7 @@ pub struct SpellData {
     /// Dexterity; a scroll's or a wand's always Dexterity).
     pub aim: Stat,
     /// Added to the study check's difficulty (0: none); a positive one makes the study a check
-    /// at any learning (`world/learn.rs`).
+    /// at any learning (`world/magic/learn.rs`).
     pub study_difficulty: i32,
 }
 
@@ -879,7 +879,7 @@ impl SpellData {
 
     /// Whether it is a healing spell (Cure wounds, Mend, Benison): a `heal` that does not feed
     /// on a corpse (Grave feast drains life, it does not heal). One on an undead harms it
-    /// (`world/heal_harm.rs`).
+    /// (`world/health/heal_harm.rs`).
     pub fn heals_wounds(&self) -> bool {
         self.kind == SpellPurpose::Heal && !self.aims_corpse()
     }
@@ -1198,7 +1198,7 @@ struct Bases {
 /// `[spell.grows]` checked against the spell's `bases` (the spell scaling design §6.3): a
 /// ladder only for a dimension the spell has (another would never be read), and a jump count
 /// in whole numbers. Nothing reads how much a rung does (decision 16); casting clamps reach to
-/// the engine's limits (`world/spell_rung.rs`).
+/// the engine's limits (`world/magic/spell_rung.rs`).
 fn grows(spec: GrowsSpec, bases: &Bases) -> Result<Grows, String> {
     let ladder = |name: &str, text: Option<String>, has: bool, unit: Unit, why: &str| {
         let Some(text) = text else {

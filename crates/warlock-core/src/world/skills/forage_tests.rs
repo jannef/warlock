@@ -3,13 +3,13 @@
 //! takes its time, then finds food by the ground's chance plus Survival, fresh, into the pack;
 //! refusals take none; it trains Survival; replays verify.
 
-use super::*;
 use crate::ability::{Ability, Unavailable};
 use crate::action::parse_actions;
 use crate::content::{ContentFiles, Landscape};
 use crate::replay::Replay;
 use crate::skills::{Effect, SkillId, Trained};
 use crate::test_support::last_text as last_message;
+use crate::world::*;
 
 /// The built-in content, with Survival earning a mark on every forage when `eager`, and every
 /// ground's chance `chance` percent when given.
@@ -23,7 +23,7 @@ fn content(eager: bool, chance: Option<u8>) -> Arc<Content> {
         );
     }
     if let Some(chance) = chance {
-        let text = include_str!("../../../../assets/data/forage.toml");
+        let text = include_str!("../../../../../assets/data/forage.toml");
         let mut out = String::new();
         for line in text.lines() {
             if line.starts_with("chance = ") {
@@ -348,7 +348,7 @@ fn a_forage_without_herbalism_draws_as_before() {
     // The same forages with and without the `herbs` lists: one untrained in Herbalism draws
     // nothing more, so the runs hash alike.
     let with = content(false, None);
-    let text = include_str!("../../../../assets/data/forage.toml");
+    let text = include_str!("../../../../../assets/data/forage.toml");
     // Every `herbs = [...]`, on one line or several, left out.
     let mut bare = String::new();
     let mut skipping = false;

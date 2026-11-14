@@ -2,16 +2,16 @@
 //! and [`crate::action::Action::Drop`], the positions they name, and the burden news a changed
 //! load is said with. `world/mod.rs` has only the dispatch line.
 
-use super::{Spent, World};
 use crate::action::Positions;
 use crate::burden::Burden;
 use crate::content::ActionKind;
 use crate::object::{self, Stack};
+use crate::world::{Spent, World};
 
 impl World {
     /// [`crate::action::Action::PickUp`]: picks up what `positions` names ([`World::pick_up`])
     /// and returns what it cost.
-    pub(super) fn pick_up_objects(&mut self, positions: &Positions) -> Spent {
+    pub(in crate::world) fn pick_up_objects(&mut self, positions: &Positions) -> Spent {
         if self.refused_afloat("It would sink.") {
             return Spent::Nothing;
         }
@@ -26,7 +26,7 @@ impl World {
 
     /// A message when the player's burden is no longer `before` (spec §8 "Burden"): picking
     /// something up or dropping it changed it. Said right after the action that did it.
-    pub(super) fn burden_news(&mut self, before: Burden) {
+    pub(in crate::world) fn burden_news(&mut self, before: Burden) {
         let now = self.load_of(self.state.player).burden();
         if now != before {
             self.say(now.news());
@@ -92,7 +92,7 @@ impl World {
     /// Drops the inventory stacks `positions` names (everything with none) on top of the pile on
     /// the player's cell, taking off first what of them is worn or wielded (which takes its time
     /// too).
-    pub(super) fn drop_objects(&mut self, positions: &Positions) -> Spent {
+    pub(in crate::world) fn drop_objects(&mut self, positions: &Positions) -> Spent {
         if self.refused_afloat("It would sink.") {
             return Spent::Nothing;
         }
@@ -137,7 +137,7 @@ impl World {
     /// The stacks `positions` names in a list of `len` stacks, every one for none. A
     /// position past the end is refused with the message `missing` (no letter: positions are
     /// not what the player sees, spec §6).
-    pub(super) fn chosen(
+    pub(in crate::world) fn chosen(
         &mut self,
         positions: &Positions,
         len: usize,

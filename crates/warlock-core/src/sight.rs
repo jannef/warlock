@@ -129,7 +129,7 @@ pub(crate) enum By {
 }
 
 /// [`sees`], and what settled it: darkvision is asked first, and within it the light is not
-/// computed (slipping past, `world/slip.rs`, asks [`lit_for`] when it matters).
+/// computed (slipping past, `world/combat/slip.rs`, asks [`lit_for`] when it matters).
 pub(crate) fn sees_by(
     state: &WorldState,
     content: &Content,
@@ -142,7 +142,7 @@ pub(crate) fn sees_by(
         return Some(By::Light);
     }
     let level = state.current();
-    // Smoke hides what is in it beyond the cells beside the viewer (`world/zone.rs`).
+    // Smoke hides what is in it beyond the cells beside the viewer (`world/magic/zone.rs`).
     if !los.contains(p) || level.smoke_hides(los.origin, p, state.time) {
         return None;
     }

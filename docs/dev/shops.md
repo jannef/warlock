@@ -44,7 +44,7 @@ nothing: `World::spoilt` (by `rot::stage`) makes `asking_price` and `picked_up_g
 `deal` refuse it (`Deal::spoilt`: "Grimbold sniffs at ... and says: \"Not at any price.\"");
 `ShopView::price`/`offer` in perception do the same for look mode, the object screens, and the
 sale dialog, while the bill (`Shop::owed`, `PerceptionView::unpaid`) stays priced by object. The
-rules are `world/shop.rs`: `turned_back` from `player_moves` (a step onto an exit owing
+rules are `world/people/shop.rs`: `turned_back` from `player_moves` (a step onto an exit owing
 anything: the keeper steps into the way and the step lands one cell back into the shop, priced
 as a step; walking out of the door never steals), `shop_step` (greeting, theft: leaving owing
 any other way, such as a wall dug open) from `player_moves`, `picked_up_goods` from `pick_up`,
@@ -54,7 +54,7 @@ the pack stays owed, and the keeper says so), `trade` (drop and `Action::Sell`) 
 steps out at once),
 `provoke` from `fight.rs::resolve` (the player attacking a keeper; `provoke`, theft in
 `shop_step`, and `pay` each make one alignment deed, `docs/dev/alignment.md`), `caught_stealing`
-from `world/steal.rs` (a keeper that catches the player stealing, `docs/dev/stealing.md`; a theft
+from `world/skills/steal.rs` (a keeper that catches the player stealing, `docs/dev/stealing.md`; a theft
 it does not notice takes its purse and leaves the shop open), `keeper_died` from
 `creature_dies`, `may_loose` in `shoot.rs` (unpaid goods are not shot or thrown). An outraged
 keeper gets the `outraged` faction as its `faction_override`, so the AI and stance need nothing
@@ -62,10 +62,10 @@ new. Keepers are NPCs: `budge = "off_post"` (no swapping at the post), one-liner
 `data/dialogue.toml`, and `World::called` names them by their shop ("Grimbold says: ...").
 Prices are by the goods, never their magic (`Stack::magic` is kept on what is sold and put back, never
 priced; keys and quest letters are worth 0). Generated shops avoid locked rooms and rooms with
-something lying in them, and `hide_traps`/`place_loot` leave shop floors alone. A service's price (`world/service.rs`) follows `shop::haggling` (the same without a keeper's alignment) unless the
+something lying in them, and `hide_traps`/`place_loot` leave shop floors alone. A service's price (`world/people/service.rs`) follows `shop::haggling` (the same without a keeper's alignment) unless the
 service is `temple = true` (a temple's cure and mending stay flat, Pious aside), and a service paid reports `Use::Deal`
 (#1031). The player's `favour` (Presence modifier × `presence` + the Negotiation `Effect::Bargain` (Appraise's until #666), through `Actor::skill_effect` so of Haggling and skill talents count, + what
-a good keeper makes of their alignment band, `world/alignment.rs::keeper_favour`, at most
+a good keeper makes of their alignment band, `world/character/alignment.rs::keeper_favour`, at most
 `MAX_FAVOUR`) is never shown: presentation reads only prices
 (`PerceptionView::shop_at`/`shop_here`, `price_tag`, `unpaid`, `owed_on_leaving`, `sale`,
 `own_gold`; look mode, the object screens, and the shop's dialogs in `ui/step_dialogs.rs`).

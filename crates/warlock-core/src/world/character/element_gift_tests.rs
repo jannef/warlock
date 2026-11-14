@@ -2,7 +2,6 @@
 //! menu's Birth sign group, with its cooldown) and Kindled (a brighter lantern), Metal's
 //! Forge-born (marks half again as fast), and Water's Tidal (mana a quarter faster).
 
-use super::*;
 use crate::ability::{Ability, Source, Unavailable};
 use crate::action::{SpellShape, parse_actions};
 use crate::character::CharacterSpec;
@@ -10,6 +9,7 @@ use crate::content::{Role, Sign, SignActive};
 use crate::dump::{self, Layer};
 use crate::replay::Replay;
 use crate::test_support::{CONTENT as BUILTIN, last, run, said};
+use crate::world::*;
 
 const BLAZE: Action = Action::Gift(SignActive::Blaze, None);
 

@@ -2,8 +2,6 @@
 //! names; Skill focus raises the chosen trained skill, past 100 too; Treasure hunter's
 //! prerequisite is either of two.
 
-use super::search::{Hidden, Look};
-use super::*;
 use crate::action::Meal;
 use crate::burden::Burden;
 use crate::character::CharacterSpec;
@@ -17,6 +15,8 @@ use crate::rng::Rng;
 use crate::stats::{PerStat, Stats};
 use crate::talent::{self, Candidate};
 use crate::test_support::{CONTENT as BUILTIN, run, said};
+use crate::world::skills::search::{Hidden, Look};
+use crate::world::*;
 
 /// A human warrior in the showcase, every score 14.
 fn world() -> World {

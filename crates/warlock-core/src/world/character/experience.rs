@@ -5,7 +5,7 @@
 //! character's experience factor (thresholds in `data/experience.toml`, times their race's and
 //! their class's `experience`), so only the total is saved. Each level gained, up to the file's
 //! `hp_level`, adds `max(1, class hp ÷ 2 + the Toughness modifier)` to the player's maximum hit
-//! points and to their current ones, and each up to `mana_level` adds mana (`world/mana.rs`).
+//! points and to their current ones, and each up to `mana_level` adds mana (`world/magic/mana.rs`).
 //!
 //! **Discovery** (`[discovery]`): the player's first kill of each creature type is worth the
 //! type's XP once more, unscaled ("You learn something of kobolds."), and their first arrival on
@@ -14,11 +14,11 @@
 //! random. The creature types are remembered in [`Progress`]; a level is new when this arrival
 //! made its state.
 
-use super::{Due, Spent, World};
 use crate::content::StatUse;
 use crate::content::{Content, CreatureId, Factor, LevelKind, parse_local_area};
 use crate::stats::Stat;
 use crate::talent::TalentMods;
+use crate::world::{Due, Spent, World};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeSet;
 
@@ -29,7 +29,7 @@ use std::collections::BTreeSet;
 pub struct Progress {
     #[serde(default, skip_serializing_if = "Discovered::is_empty")]
     pub(crate) discovered: Discovered,
-    /// The choices levels still ask for, the lowest level's first (`world/talent.rs`).
+    /// The choices levels still ask for, the lowest level's first (`world/character/talent.rs`).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub(crate) due: Vec<Due>,
     /// The highest level the player has lost (spec §7 "Special rooms": Unmade,
@@ -38,24 +38,24 @@ pub struct Progress {
     #[serde(default, skip_serializing_if = "is_zero")]
     pub(crate) peak: u8,
     /// The creature types (by id) of animal factions a Beast-friend has attacked, which stand
-    /// toward them as their faction does again (`world/beast_friend.rs`).
+    /// toward them as their faction does again (`world/allies/beast_friend.rs`).
     #[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
     pub(crate) empathy_broken: BTreeSet<String>,
     /// What may happen once in a life and has (spec §8 "Birth sign": `risen`, the Phoenix's
-    /// rising; `world/stars.rs`).
+    /// rising; `world/character/stars.rs`).
     #[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
     pub(crate) once: BTreeSet<String>,
     /// The unique creature types (by id) a population has brought, never again (spec §7
-    /// "Danger levels"; `world/spawn.rs`).
+    /// "Danger levels"; `world/creatures/spawn.rs`).
     #[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
     pub(crate) uniques: BTreeSet<String>,
     /// The creature types (by id) with a first-sight line the player has seen, whose line was
-    /// said (`world/first_sight.rs`).
+    /// said (`world/creatures/first_sight.rs`).
     #[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
     pub(crate) sighted: BTreeSet<String>,
-    /// The strain of the priest's prayers (`world/orison.rs`), once they have prayed.
+    /// The strain of the priest's prayers (`world/classes/orison.rs`), once they have prayed.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub(crate) prayer: Option<super::orison::Strain>,
+    pub(crate) prayer: Option<crate::world::classes::orison::Strain>,
 }
 
 impl Progress {
@@ -119,7 +119,7 @@ impl World {
 
     /// The player's experience factor: their race's and their class's (100 % without a
     /// character).
-    pub(super) fn experience_factor(&self) -> Factor {
+    pub(in crate::world) fn experience_factor(&self) -> Factor {
         let spec = self.state.character.as_ref().map(|c| &c.spec);
         Factor::of(&self.content, spec)
     }
@@ -128,13 +128,13 @@ impl World {
     /// and its XP once more the first time they kill one of its type, and any levels that
     /// earns. The messages wait in `news` until the attack's own are said.
     #[cfg(test)]
-    pub(super) fn earn_kill(&mut self, creature: CreatureId) {
+    pub(in crate::world) fn earn_kill(&mut self, creature: CreatureId) {
         self.earn_kill_at(creature, 100);
     }
 
     /// [`World::earn_kill`] at `percent` of what the player's own blow would have paid (the
     /// first-kill bonus and the level scaling included): an ally's kill (spec §8 "Allies").
-    pub(super) fn earn_kill_at(&mut self, creature: CreatureId, percent: u8) {
+    pub(in crate::world) fn earn_kill_at(&mut self, creature: CreatureId, percent: u8) {
         let content = self.content.clone();
         let def = content.creature(creature);
         let rules = content.experience();
@@ -159,7 +159,7 @@ impl World {
     /// The player has arrived on level `id` for the first time: a level of a dungeon branch or
     /// a hand-made one is worth `arrival` × its item level; the overworld and its local areas
     /// nothing. Said after the arrival's own messages, as the turn is perceived.
-    pub(super) fn discover_level(&mut self, id: &str) {
+    pub(in crate::world) fn discover_level(&mut self, id: &str) {
         let overworld = self.state.levels.get(id).map(|l| l.kind) == Some(LevelKind::Overworld);
         if overworld || parse_local_area(id).is_some() {
             return;
@@ -178,7 +178,7 @@ impl World {
 
     /// The dev action `xp:N` ([`crate::action::Action::GrantXp`]): the player gains `xp`
     /// experience, and any levels that earns. Takes no time.
-    pub(super) fn grant_xp_dev(&mut self, xp: u32) -> Spent {
+    pub(in crate::world) fn grant_xp_dev(&mut self, xp: u32) -> Spent {
         self.say(format!("You gain {xp} experience (dev)."));
         self.grant_xp(xp);
         Spent::NoTime
@@ -187,7 +187,7 @@ impl World {
     /// The player gains `gain` experience (more by the talents that teach quicker, spec §8
     /// "Talents": Good learner), and any levels that earns, each handing out what it brings
     /// ([`World::level_up`]).
-    pub(super) fn grant_xp(&mut self, gain: u32) {
+    pub(in crate::world) fn grant_xp(&mut self, gain: u32) {
         let content = self.content.clone();
         if gain == 0 {
             return;
@@ -200,7 +200,7 @@ impl World {
 
     /// The player gains exactly `gain` experience, and any levels that earns (no talent
     /// scales it: [`World::grant_xp`] has).
-    pub(super) fn add_xp(&mut self, gain: u32) {
+    pub(in crate::world) fn add_xp(&mut self, gain: u32) {
         let before = self.player_level();
         self.state.experience = self.state.experience.saturating_add(gain);
         self.rise_from(before);
@@ -210,7 +210,7 @@ impl World {
     /// level they have now reached beyond it comes, with its hit points (up to `hp_level`, each
     /// by the class of the level), its mana, its news, and what the level hands out
     /// ([`World::level_up`]). Nothing when they are still at `before`.
-    pub(super) fn rise_from(&mut self, before: u8) {
+    pub(in crate::world) fn rise_from(&mut self, before: u8) {
         let content = self.content.clone();
         let rules = content.experience();
         let after = self.player_level();
@@ -235,7 +235,7 @@ impl World {
     /// What total level `level` adds to the player's hit points: half the hit points of the
     /// class the level falls in (spec §8 "Prestige classes"; the scenario's `hp` without a
     /// character) plus the Toughness modifier, at least 1.
-    pub(super) fn level_hp(&self, content: &Content, level: u8) -> i32 {
+    pub(in crate::world) fn level_hp(&self, content: &Content, level: u8) -> i32 {
         let class_hp = match &self.state.character {
             Some(c) => c
                 .class_of(content, level)
@@ -252,7 +252,7 @@ impl World {
 
     /// Says what the player's kills earned them, after the attack's own messages, then the
     /// notes the action earned (an alignment band crossed), which do not stop a rest.
-    pub(super) fn say_news(&mut self) {
+    pub(in crate::world) fn say_news(&mut self) {
         for text in std::mem::take(&mut self.news) {
             self.say(text);
         }

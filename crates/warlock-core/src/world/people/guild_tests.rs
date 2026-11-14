@@ -4,12 +4,12 @@
 //! said once), the scroll handed in (an unpaid one stays on the bill), the `stats` dump, a
 //! replay, and the guilds' load checks.
 
-use super::*;
 use crate::action::parse_actions;
 use crate::content::ContentFiles;
 use crate::dump::{self, Layer};
 use crate::replay::Replay;
 use crate::test_support::{run as act, texts};
+use crate::world::*;
 use std::sync::LazyLock;
 
 /// Wat One-Eye's post, by the Gildhalle's far wall.

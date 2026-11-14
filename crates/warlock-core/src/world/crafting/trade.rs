@@ -16,18 +16,18 @@
 //! Both draw from the stream `character/trade/<race>,<gender>,<class>/<skill>`, its own, so no
 //! other roll of the run moves. The skill stays a trade of the holder's
 //! (`CraftMods::trades`): a level-up roll on it throws the die one step up
-//! (`world/skill_roll.rs`).
+//! (`world/character/skill_roll.rs`).
 
-use super::World;
 use crate::content::{Content, KitLineSpec};
 use crate::dice::Dice;
 use crate::magic::loot;
 use crate::rng::Rng;
+use crate::world::World;
 
 impl World {
     /// A trade just taken: `skill` trained at `dice` plus the trade bonus, and `tools` handed
     /// down, from the trade's own stream for the character `spec` (`race,gender,class`).
-    pub(super) fn learn_trade(
+    pub(in crate::world) fn learn_trade(
         &mut self,
         content: &Content,
         spec: &str,

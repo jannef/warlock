@@ -1,24 +1,24 @@
 //! Crafting, enchanting, and digging (docs/dev/crafting.md, enchanting.md, digging.md).
 
-mod craft;
-mod craft_make;
+pub(in crate::world) mod craft;
+pub(in crate::world) mod craft_make;
 mod crystal;
-mod cut;
-mod dig;
-mod enchant;
-mod field_forge;
+pub(in crate::world) mod cut;
+pub(in crate::world) mod dig;
+pub(in crate::world) mod enchant;
+pub(in crate::world) mod field_forge;
 mod fletch;
-mod make_do;
+pub(in crate::world) mod make_do;
 mod mastery;
 mod mine;
 pub(crate) mod patron;
-mod rig;
-mod salvage;
-mod seal;
-mod set;
-mod temper;
+pub(in crate::world) mod rig;
+pub(in crate::world) mod salvage;
+pub(in crate::world) mod seal;
+pub(in crate::world) mod set;
+pub(in crate::world) mod temper;
 mod trade;
-mod work;
+pub(in crate::world) mod work;
 mod work_on;
 cfg_if! {
     if #[cfg(test)] {

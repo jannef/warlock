@@ -14,15 +14,15 @@
 //! eating, or prayer, and only on a level with a danger. Draws (the type, the cell) come from the
 //! gameplay stream, and only when a haunting is due.
 
-use super::{World, curse, travel};
 use crate::content::CreatureSpawn;
 use crate::geom::Pos;
 use crate::time::GameTime;
+use crate::world::{World, fixtures::curse, levels::travel};
 
 impl World {
     /// The end of a turn that began at `began`: if the player rests inside a haunted room and the
     /// turn passed a full multiple of its `every`, something comes (module docs).
-    pub(super) fn haunt_tick(&mut self, began: GameTime) {
+    pub(in crate::world) fn haunt_tick(&mut self, began: GameTime) {
         if !self.resting || self.state.death.is_some() {
             return;
         }

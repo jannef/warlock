@@ -1,7 +1,7 @@
 //! Harm to gear (spec §8 "Creature gimmicks"; the dread design §5.8): a creature type's
 //! `corrodes = { chance, what, kind }` damages the player's gear in melee by item damage of
 //! `kind` (acid, rust, or fire; `item_damage.rs`, the one damaged state the smith mends at an
-//! anvil, `world/temper.rs`).
+//! anvil, `world/crafting/temper.rs`).
 //!
 //! - **`armour`** (the hezrou's filth): a melee hit of its that lands on the player rolls the
 //!   chance; made, one piece the player wears (armour or a shield) is drawn: "The acid eats at
@@ -30,9 +30,9 @@
 //! player's pack alone, so a creature's gear is never eaten.
 
 use super::item_damage::Harmed;
-use super::{ActorId, World};
 use crate::action::AttackKind;
 use crate::content::{CorrodesWhat, ItemHarm, ObjectId};
+use crate::world::{ActorId, World};
 
 /// The chance in percent that harm of `chance` reaches the gear of one who resists its damage
 /// type by `resistance` percent: halved (rounded down) for any resistance at all.
@@ -118,7 +118,7 @@ impl World {
 
     /// A spell of a type that `corrodes` harmed the player (module docs): the first piece they
     /// wear takes acid's item damage, said as a corroding creature's touch is.
-    pub(super) fn spell_eats_gear(&mut self) {
+    pub(in crate::world) fn spell_eats_gear(&mut self) {
         let Some(&item) = self.exposed(CorrodesWhat::Armour, None).first() else {
             return;
         };

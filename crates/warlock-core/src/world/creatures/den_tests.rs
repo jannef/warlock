@@ -1,12 +1,12 @@
-//! Teeming dens (spec §7 "Special rooms"; `world/den.rs`, `mapgen/den.rs`): sleepers take no
+//! Teeming dens (spec §7 "Special rooms"; `world/creatures/den.rs`, `mapgen/den.rs`): sleepers take no
 //! turn and never wake by time, a quiet noise wakes no one, a loud one wakes the near ones and
 //! their cries the rest, a blow wakes, sneak attacks land on sleepers, Hush-foot, sleepers count
 //! toward the spawn cap, and a generated den's sleepers and hoard.
 
-use super::fight::Harm;
-use super::*;
 use crate::content::{ContentFiles, StatusId, Swarm};
 use crate::noise::{Noise, SoundKind};
+use crate::world::combat::fight::Harm;
+use crate::world::*;
 
 /// A hall, 25 wide: its east part (x 4 on, walls included) a teeming den. Hostile kobolds lie at
 /// `a`, `b`, and `c`, three cells apart (a cry carries to the next), and at `d`, five cells past
@@ -268,7 +268,7 @@ fn a_generated_den_holds_sleepers_of_the_danger_and_their_hoard() {
     let mut files = ContentFiles::builtin();
     let dungeons = format!(
         "{}{WARREN}",
-        include_str!("../../../../assets/data/dungeons.toml")
+        include_str!("../../../../../assets/data/dungeons.toml")
     );
     files.insert("data/dungeons.toml", &dungeons);
     let content = Content::load(&files).expect("content");

@@ -5,19 +5,19 @@
 Design document for the owner's review (2026-11-03, #907). Written against `origin/main` at
 39aad1ac (Cackle, W1 #908, merged). Nothing here is implemented; §13 cuts it into issues. It
 builds on what is there: the **merged ally core** (`docs/design/druid-and-summons.md` §4 and
-§14; `docs/dev/allies.md`; `crates/warlock-core/src/world/ally.rs`: `Actor::ally`,
+§14; `docs/dev/allies.md`; `crates/warlock-core/src/world/allies/ally.rs`: `Actor::ally`,
 `Ally { master, source, order, retinue, until }`, `AllySource::{Summoned, Companion}`, the ally
 arm `ally_plan`, the three orders, `follow_along` and the retinue, `make_ally`, `ally_mods`,
 the kill credit, the ally mark), the **approved ranger design** (`docs/design/ranger-companion.md`,
 #832: `CompanionData { name, grade }`, growth, "always comes along", the collar, tending, the
 story's chapter; its slices C0–C8 are issues, #916 C1 and #918 C3 among them, none built yet),
 the **approved witch design** (`docs/design/witch-and-wizard.md`, #830: the hex loop; Cackle at 6
-is merged, `world/witch.rs::{cackle, own_hexes_in_sight}`, `Content::hex_statuses()`; Malison at
+is merged, `world/classes/witch.rs::{cackle, own_hexes_in_sight}`, `Content::hex_statuses()`; Malison at
 18 is #905), the hexes as statuses with a giver (`Effect::by`, `World::afflict` in
-`world/status.rs`, `data/status.toml`), the spells' degree ladders (`spell_degrees`,
+`world/health/status.rs`, `data/status.toml`), the spells' degree ladders (`spell_degrees`,
 `data/spells/evil_eye.toml`), the class tables and actives (`docs/dev/progression.md` "Class
 tables", "Class actives"; `content/class.rs::ClassActive`), the multi-turn action loop a study
-uses (`World::keep_at`, `world/learn.rs`), the abilities registry (`warlock_core::ability`), the
+uses (`World::keep_at`, `world/magic/learn.rs`), the abilities registry (`warlock_core::ability`), the
 background story (`docs/dev/background.md`), and the talent coverage policy, rules 1 to 9 of #776
 (`docs/dev/progression.md` "Coverage policy", binding). Every number is data and hidden in the
 game; the wiki states it (the owner's rule: the game is vague, the wiki is accurate).
@@ -118,13 +118,13 @@ abilities in the one abilities menu; effects subtle.
 |---|---|---|
 | `Actor::ally`, `Ally { master, source, order, retinue, until }`, `AllySource::{Summoned { spell }, Companion}` | the ally core; `Companion` is a variant with no data, reserved for #825 | `Familiar(CompanionData)` beside it (§4); `until = None` |
 | `World::make_ally(creature, at, source, until)` | makes an ally on the player's side with no gear | the familiar at the start and at a calling |
-| `ally_plan` (`world/ally.rs`): step 1 the nearest actor in sight with `stance_between(master, other) == Hostile` | the target choice, ties by lower id | the familiar's sort key: her hexed first (§5.2) |
+| `ally_plan` (`world/allies/ally.rs`): step 1 the nearest actor in sight with `stance_between(master, other) == Hostile` | the target choice, ties by lower id | the familiar's sort key: her hexed first (§5.2) |
 | `fight.rs::resolve` → `World::ally_blow` (Beast-bond's `to_hit` on an ally's profile); the hit's resolution; `OnHit` statuses a natural attack lays | where a blow of an ally's is made and lands | the touch, one hook after an ally's hit lands (§5.1); not an `on_hit` row (its giver would be the familiar and its severity fixed) |
-| `World::afflict(target, status, severity, by)` (`world/status.rs`); `Effects::add` with `refresh` (the higher severity, `wear` reset); `Effect::by` | how a hex is laid and by whom | the touch's one call |
-| `Content::hex_statuses()`; `world/witch.rs::own_hexes_in_sight` (W1) | "under a hex of hers" | the harrying's predicate (the same read, on one creature) |
+| `World::afflict(target, status, severity, by)` (`world/health/status.rs`); `Effects::add` with `refresh` (the higher severity, `wear` reset); `Effect::by` | how a hex is laid and by whom | the touch's one call |
+| `Content::hex_statuses()`; `world/classes/witch.rs::own_hexes_in_sight` (W1) | "under a hex of hers" | the harrying's predicate (the same read, on one creature) |
 | `spell_degrees` / `SpellData::base_degrees()`, Evil eye's ladder `presence 14 2, 18 3` | the degrees she would cast a hex at (Presence, the school's and the talents' `degrees` hooks) | the touch's severity (§5.1) |
 | `class::grant`, `hand_out`, `ClassActive`, `use_class`, `Ability::Class` | the class tables and their actives | Familiar at 1; `ClassActive::CallFamiliar` (§7.2) |
-| `World::keep_at` (`world/learn.rs`: a study's turn loop, interrupted by a creature coming into view, a message, a blow) | multi-turn actions | the calling's hour |
+| `World::keep_at` (`world/magic/learn.rs`: a study's turn loop, interrupted by a creature coming into view, a message, a blow) | multi-turn actions | the calling's hour |
 | `World::start_run`: `take_creation`, the level 1 grants, `tell_background` | where a ranger's beast is made (C1: `bring_companion`, before the story) | `bring_familiar` in the same place (§7.1) |
 | The ranger design (#832): `CompanionData { name, grade }`, growth's six hooks, `follow_along`'s companion filter, Give, `heal:ID:DIR`, the companion chapter with `Chapter::when` and the `companion` line condition, the status bar line, `World::companion()` | approved, slices C0–C8 as issues (C1 #916, C3 #918) | §8: read as `kept()`; `World::familiar()` beside `companion()` |
 | `data/creatures/bat.toml` (level 1, `wildlife`, silent, darkvision, speed 2000) | a small flying beast | the fifth kind (§6.1) |
@@ -159,7 +159,7 @@ impl AllySource {
 
 ### 5.1 The touch
 
-One hook, `World::familiar_touch(attacker, target)` in `world/familiar.rs`, called from
+One hook, `World::familiar_touch(attacker, target)` in `world/allies/familiar.rs`, called from
 `fight.rs::resolve` where a **hit** of an actor's natural attack has landed and its `on_hit`
 statuses are applied (the same point, after the damage), when the attacker's `ally` is
 `Familiar` and the target is a creature (not the master; the arm never attacks her):
@@ -311,7 +311,7 @@ Nothing goes, nothing moves.
 
 The Familiar entry gives the active **Call familiar**: `ClassActive::CallFamiliar`, `Aim::Nothing`,
 `use:call_familiar`, a row of the abilities menu's Class group ("Call familiar (class): nothing to
-aim"), had by whoever holds `familiar`. The one place is `world/familiar.rs`.
+aim"), had by whoever holds `familiar`. The one place is `world/allies/familiar.rs`.
 
 | Step | Rule |
 |---|---|
@@ -353,7 +353,7 @@ wrote it and C1 finds it there. Nothing is designed twice.
 | **The kill credit** (§9, C0): the master's class's `ally_share`, else `[xp] ally_percent` 50 | the witch's class has no `ally_share` | a familiar's kill (rare) pays half; the hex's tithe is how it pays her (§5) |
 | `World::companion()` (§4.3) | `World::familiar()` beside it, each the one ally of its source | both may exist at once: a witch with Handle animal may tame a hound (Tame checks `companion()`, not `kept()`); the familiar is never what Tame makes |
 
-**What is the familiar's own** (this design, `world/familiar.rs`): the touch (§5.1), the
+**What is the familiar's own** (this design, `world/allies/familiar.rs`): the touch (§5.1), the
 harrying (§5.2), `bring_familiar` and Call familiar (§7), `data/familiars.toml` (§9), the four
 beasts and the names, the `familiar` dump (§11.3).
 
@@ -418,7 +418,7 @@ holders (`Ability::Class`'s `had_by`).
 | **Saved** | `AllySource::Familiar(CompanionData)` inside `Actor::ally`; the collar in the familiar's `equipment`; nothing on `WorldState` (`World::familiar()` is derived from the actors). A calling in progress is one action through `keep_at`: nothing is in flight between actions. Saves are pinned to the version: the new creature types and the new variant invalidate development saves, said in the PR; **no former ids, no shims** |
 | **Hashes** | a run without a witch hashes as before (the touch and the harrying run only for a `Familiar` ally; `kept()` is true for no existing actor). Every **witch** run gains an actor at the start and a story chapter: no shipped scenario, replay, dump snapshot, or golden has a witch (`assets/campaigns/` names none), so none changes; `caster_tests`' witch table (`levelup:auto` to 60) gains the familiar's presence and is re-pinned |
 | **Replays** | `use:call_familiar` (the existing `UseClass` arm); the orders, Give, and Heal are the core's and the ranger's |
-| **Invariants** (F1's and F2's tests, `world/familiar_tests.rs`) | a witch starts with one familiar of the five kinds, named, at her grade, on her side; its hit lays Hexed on the target with **her** as the giver at her Evil eye degrees (base 1; 2 at Presence 14 with a fixture), and refreshes her Hex of weakness on it (the `wear` reset, the severity kept); a cast of Cackle lengthens the familiar's hex; a hexed creature's death pays Malison's tithe when she holds it (with #905); it sorts a hexed creature before a nearer unhexed one, and the nearest hostile with none hexed; a wild cat's (a dev `ally:cat`'s) blow hexes nothing; its blows get no Malison bite; growth, always along, Give, Heal, and the corpse hold for it as for a companion; Call familiar is refused with one alive (on the level, elsewhere, in the retinue), with a hostile in sight, without the ability, and costs nothing then; the ritual takes `call_turns` turns, is interrupted by a creature coming into view with the time spent and no familiar made, and ends with a new familiar named and placed, or "Nothing comes." with no free cell; a save round trip keeps the variant and the collar; a replay through the start, a fight with the touch, a death, a calling, a level change, and the retinue verifies; `levelup:auto` on a witch to 60 holds every entry; the load checks (an unknown kind, a non-hex `touch`, a unique) |
+| **Invariants** (F1's and F2's tests, `world/allies/familiar_tests.rs`) | a witch starts with one familiar of the five kinds, named, at her grade, on her side; its hit lays Hexed on the target with **her** as the giver at her Evil eye degrees (base 1; 2 at Presence 14 with a fixture), and refreshes her Hex of weakness on it (the `wear` reset, the severity kept); a cast of Cackle lengthens the familiar's hex; a hexed creature's death pays Malison's tithe when she holds it (with #905); it sorts a hexed creature before a nearer unhexed one, and the nearest hostile with none hexed; a wild cat's (a dev `ally:cat`'s) blow hexes nothing; its blows get no Malison bite; growth, always along, Give, Heal, and the corpse hold for it as for a companion; Call familiar is refused with one alive (on the level, elsewhere, in the retinue), with a hostile in sight, without the ability, and costs nothing then; the ritual takes `call_turns` turns, is interrupted by a creature coming into view with the time spent and no familiar made, and ends with a new familiar named and placed, or "Nothing comes." with no free cell; a save round trip keeps the variant and the collar; a replay through the start, a fight with the touch, a death, a calling, a level change, and the retinue verifies; `levelup:auto` on a witch to 60 holds every entry; the load checks (an unknown kind, a non-hex `touch`, a unique) |
 
 ## 11. What the player sees
 
@@ -506,9 +506,9 @@ not ours: §14).
 
 | Slice | Issue | What it touches | Depends on |
 |---|---|---|---|
-| **F1 The familiar** | the variant, the data, the beasts, the start, the touch, the harrying, the shared rules as `kept()`, the words, the dumps, the wiki, the spec | `world/ally.rs` (`AllySource::Familiar(CompanionData)`, `kept()`, `data()`, `id` "familiar"); `content/familiar.rs` (`data/familiars.toml`, the checks); `data/creatures/{cat,toad,raven,hare}.toml` (+ `beasts.md` rows, `beast_roster_tests`); `talents/familiar.toml`, `TalentEffect::Familiar`, `TalentMods::familiar`, `10-witch.toml`; `world/familiar.rs` (`bring_familiar` from `start_run`, `World::familiar`, `familiar_touch` from `fight.rs::resolve`, the harrying's sort key in `ally_plan`); the ranger's growth hooks, `follow_along`'s filter, Give's target, the status bar line, the Character screen's line, and the companion chapter's `when` read as `kept()` (or built as the ranger design wrote them, if F1 is first); the `familiar` dump layer and JSON; `world/familiar_tests.rs` (§10); `docs/dev/familiar.md`, `allies.md`, `companion.md`, `progression.md`, CLAUDE.md; the wiki's "Familiars" and `familiars.rs`; the spec | the ranger's C1 (#916) for `CompanionData`, growth, always along, when it lands first; else F1 builds them |
-| **F2 Call familiar** | the active | `ClassActive::CallFamiliar`, `Ability::Class`'s row and reasons, `actions.toml` `call_familiar`, `world/familiar.rs::{start_calling, calling, finish_calling}` through `keep_at` (`Spent::Calling`), the refusals, the draw, the words; tests (§10); the `abilities` dump; the text snapshot `abilities-menu-witch`; the wiki's "Call familiar"; `docs/dev/familiar.md` | F1 |
-| **F3 The story's lines** | the companion chapter's familiar lines | `background/08-companion.toml` gains the five `only` lines with `when = { familiar = ["cat"] }` etc.; `When::familiar` and `Witness::companion`'s source (`content/background.rs`, `world/background.rs`); the chapter's `when` fits a kept beast; the chapter's wiki table; tests (a witch is told her line; a ranger with a bat his; no draw moves for anyone else) | F1, C1's chapter (#916) |
+| **F1 The familiar** | the variant, the data, the beasts, the start, the touch, the harrying, the shared rules as `kept()`, the words, the dumps, the wiki, the spec | `world/allies/ally.rs` (`AllySource::Familiar(CompanionData)`, `kept()`, `data()`, `id` "familiar"); `content/familiar.rs` (`data/familiars.toml`, the checks); `data/creatures/{cat,toad,raven,hare}.toml` (+ `beasts.md` rows, `beast_roster_tests`); `talents/familiar.toml`, `TalentEffect::Familiar`, `TalentMods::familiar`, `10-witch.toml`; `world/allies/familiar.rs` (`bring_familiar` from `start_run`, `World::familiar`, `familiar_touch` from `fight.rs::resolve`, the harrying's sort key in `ally_plan`); the ranger's growth hooks, `follow_along`'s filter, Give's target, the status bar line, the Character screen's line, and the companion chapter's `when` read as `kept()` (or built as the ranger design wrote them, if F1 is first); the `familiar` dump layer and JSON; `world/allies/familiar_tests.rs` (§10); `docs/dev/familiar.md`, `allies.md`, `companion.md`, `progression.md`, CLAUDE.md; the wiki's "Familiars" and `familiars.rs`; the spec | the ranger's C1 (#916) for `CompanionData`, growth, always along, when it lands first; else F1 builds them |
+| **F2 Call familiar** | the active | `ClassActive::CallFamiliar`, `Ability::Class`'s row and reasons, `actions.toml` `call_familiar`, `world/allies/familiar.rs::{start_calling, calling, finish_calling}` through `keep_at` (`Spent::Calling`), the refusals, the draw, the words; tests (§10); the `abilities` dump; the text snapshot `abilities-menu-witch`; the wiki's "Call familiar"; `docs/dev/familiar.md` | F1 |
+| **F3 The story's lines** | the companion chapter's familiar lines | `background/08-companion.toml` gains the five `only` lines with `when = { familiar = ["cat"] }` etc.; `When::familiar` and `Witness::companion`'s source (`content/background.rs`, `world/character/background.rs`); the chapter's `when` fits a kept beast; the chapter's wiki table; tests (a witch is told her line; a ranger with a bat his; no draw moves for anyone else) | F1, C1's chapter (#916) |
 | (**F4** the probe) | a witch-and-cat row in `balance_probe` beside the ranger's (C8): the hex held by the familiar against the monsters of her level; `docs/balance.md` | F1, Malison (#905) |
 
 F1 adds saved state (inside the core's field and the creature list) and no action; F2 adds one

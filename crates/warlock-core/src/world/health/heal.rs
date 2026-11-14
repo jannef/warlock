@@ -24,7 +24,6 @@
 //!   put off to a full interval from now instead. A try never cures a disease outright.
 //! - **Failed**: any ailment may be tried again at once (time is the price, the owner's rule).
 
-use super::{Actor, ActorId, Spent, World, WorldState};
 use crate::ability::Ability;
 use crate::action::Event;
 use crate::check::check;
@@ -33,6 +32,7 @@ use crate::geom::Dir;
 use crate::heal::{self, Ailment};
 use crate::skills::{Effect, Use};
 use crate::stats::Stat;
+use crate::world::{Actor, ActorId, Spent, World, WorldState};
 
 /// The player's allies beside them on the current level, each by the way to it, in direction
 /// order: the patients the Heal ability may tend besides the player.
@@ -50,7 +50,7 @@ impl World {
     /// The player treats `what` (an ailment's id) on themselves, or on their ally the way
     /// `ally`; or the first thing there is to treat on themselves with neither (module docs).
     /// Returns what it cost.
-    pub(super) fn heal(
+    pub(in crate::world) fn heal(
         &mut self,
         what: Option<&str>,
         ally: Option<Dir>,

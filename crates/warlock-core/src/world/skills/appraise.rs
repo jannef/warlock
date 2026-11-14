@@ -18,11 +18,11 @@
 //! not known that is neither a potion nor a scroll). Each draws only when trained and with a
 //! candidate: one draw for the chance, one for which. They mark nothing until their crafts come.
 
-use super::World;
-use super::loot::Identified;
 use crate::rng::Rng;
 use crate::skills::{Effect, Use};
 use crate::time::{GameTime, HOUR};
+use crate::world::World;
+use crate::world::items::loot::Identified;
 
 /// The looks an hour may bring, in the order they draw (module docs).
 const LOOKS: [Effect; 3] = [
@@ -34,7 +34,7 @@ const LOOKS: [Effect; 3] = [
 impl World {
     /// `seconds` of game time from `start` pass for the player: each whole hour the clock passes
     /// may tell one of the things they do not know for what it is (see the module docs).
-    pub(super) fn appraise_hours(&mut self, start: GameTime, seconds: u64) {
+    pub(in crate::world) fn appraise_hours(&mut self, start: GameTime, seconds: u64) {
         let (first, last) = (
             start.seconds() / HOUR + 1,
             (start.seconds() + seconds) / HOUR,

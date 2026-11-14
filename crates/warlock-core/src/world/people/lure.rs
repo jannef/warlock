@@ -30,16 +30,16 @@
 //! and post) and the quest's record.
 
 use super::escort_waits::spot;
-use super::travel::make_creature;
-use super::{Actor, ActorId, Event, Spent, World};
 use crate::content::{CombatStance, CreatureSpawn, QuestId};
 use crate::equipment::Equipment;
 use crate::skills::SkillId;
+use crate::world::levels::travel::make_creature;
+use crate::world::{Actor, ActorId, Event, Spent, World};
 
 impl World {
     /// The player is on level `level`: each active lure quest whose creature waits there and is
     /// nowhere in the run gets it made on its place (the module docs).
-    pub(super) fn lure_places(&mut self, level: &str) {
+    pub(in crate::world) fn lure_places(&mut self, level: &str) {
         if !self.state.levels.contains_key(level) {
             return;
         }
@@ -77,7 +77,7 @@ impl World {
     /// The player has arrived by the stairs, the followers beside them: on a lure quest's level,
     /// its creature there unbound and its giver there too, the giver binds it and the quest is
     /// done (the module docs).
-    pub(super) fn lure_home(&mut self, events: &mut Vec<Event>) {
+    pub(in crate::world) fn lure_home(&mut self, events: &mut Vec<Event>) {
         let content = self.content.clone();
         let here = self.state.current_level.clone();
         for (i, def) in content.quests().iter().enumerate() {
@@ -122,7 +122,7 @@ impl World {
 
     /// The dev action `lure:ID` ([`crate::action::Action::Lure`]): active lure quest `id`'s
     /// creature comes beside the player, aware of them, made if it is nowhere. Takes no time.
-    pub(super) fn lure_dev(&mut self, id: &str) -> Spent {
+    pub(in crate::world) fn lure_dev(&mut self, id: &str) -> Spent {
         let content = self.content.clone();
         let def = (content.quest_id(id)).map(|q| content.quest(q));
         let Some((def, (creature, ..))) = def.and_then(|d| Some((d, d.lure()?))) else {
@@ -166,7 +166,7 @@ impl World {
 
     /// `actor` died: a lure quest's creature, unbound while the quest is active, has its
     /// `shatters` line told (it forms anew: the module docs). The lines to say.
-    pub(super) fn lured_dies(&self, actor: &Actor) -> Vec<String> {
+    pub(in crate::world) fn lured_dies(&self, actor: &Actor) -> Vec<String> {
         (self.content.quests().iter())
             .filter_map(|def| {
                 let (creature, _, _, binding) = def.lure()?;
@@ -181,7 +181,7 @@ impl World {
     /// What bound creatures on the player's level add to their checks of skill `skill`'s
     /// recipes (the module docs): each lure quest's boon of that skill whose creature stands
     /// there bound.
-    pub(super) fn binding_boon(&self, skill: SkillId) -> i32 {
+    pub(in crate::world) fn binding_boon(&self, skill: SkillId) -> i32 {
         let here = &self.state.current_level;
         (self.content.quests().iter())
             .filter_map(|def| {

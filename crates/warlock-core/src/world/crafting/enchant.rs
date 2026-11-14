@@ -3,7 +3,7 @@
 //! [`EnchantKind`] each), made by [`Action::Craft`] with the item's position, then a crystal's
 //! for each the recipe takes (`craft:kindle:ITEM,CRYSTAL`, `craft:quicken:ITEM,CRYSTAL`,
 //! `craft:recast:ITEM,CRYSTAL`, `craft:imbue:ITEM,C1,C2,C3`, `craft:ennoble:ITEM,CRYSTAL`,
-//! `craft:unbind:ITEM`), then up to three seals and Recast's affix kept (`world/seal.rs`:
+//! `craft:unbind:ITEM`), then up to three seals and Recast's affix kept (`world/crafting/seal.rs`:
 //! `craft:kindle:ITEM,CRYSTAL,SEAL`, `craft:recast:ITEM,CRYSTAL,-,-,-,AFFIX`), from the
 //! profession's screen through the wizard's steps ([`steps`], [`plan`]). One stack may give
 //! several of Imbue's crystals, one each.
@@ -52,11 +52,9 @@
 
 use super::craft::RecipeLack;
 use super::craft_make::{CraftOption, CraftPlan, CraftStep, CraftStepKind, MAX_PICKS};
-use super::item_damage::Harmed;
 use super::seal;
 use super::temper::WITHSTOOD;
 use super::work::{Job, Task};
-use super::{Actor, LevelState, Spent, World};
 use crate::action::Event;
 use crate::combat;
 use crate::content::{
@@ -72,6 +70,8 @@ use crate::skills::{Effect, MAX_ENCHANT_LEVEL, Use};
 use crate::stats::Stat;
 use crate::text::capitalized;
 use crate::time::Duration;
+use crate::world::combat::item_damage::Harmed;
+use crate::world::{Actor, LevelState, Spent, World};
 
 /// What the check comes to.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -297,7 +297,7 @@ pub(super) fn steps(
 /// The steps of `recipe` for `player` as `picks` narrow them: an Enchanting recipe's seals and
 /// affix kept follow its picks (`seal::steps`); any other's are [`craft_steps`]'s.
 ///
-/// [`craft_steps`]: super::craft_steps
+/// [`craft_steps`]: crate::world::craft_steps
 pub(crate) fn craft_steps_given(
     content: &Content,
     lore: Lore<'_>,
@@ -309,7 +309,7 @@ pub(crate) fn craft_steps_given(
     let def = content.recipe(recipe);
     match def.uses {
         Some(RecipeUse::Enchant(_)) => steps(content, lore, player, def, picks),
-        _ => super::craft_steps(content, lore, level, player, recipe),
+        _ => crate::world::craft_steps(content, lore, level, player, recipe),
     }
 }
 
@@ -648,7 +648,7 @@ pub(super) fn plan(
 
 /// An enchanting under way: the recipe and the picks (in step order).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(super) struct Enchanting {
+pub(in crate::world) struct Enchanting {
     recipe: RecipeId,
     picks: [Option<usize>; MAX_PICKS],
     len: u8,
@@ -877,7 +877,7 @@ impl World {
                 None => {}
             }
         }
-        super::outcome::remove_stacks(self.player_mut(), &gone);
+        crate::world::fixtures::outcome::remove_stacks(self.player_mut(), &gone);
     }
 
     /// `stack` after kind `kind`'s work, made (the draws in the module docs' order).

@@ -1,9 +1,8 @@
-//! Mining (spec §8 "Digging"; #1389, `world/mine.rs`): only the trained break anything out of a
+//! Mining (spec §8 "Digging"; #1389, `world/crafting/mine.rs`): only the trained break anything out of a
 //! wall they dig through, on a dungeon branch's floor; what comes out is drawn by rarity at the
 //! floor's danger, mithril and adamantium only deeper than any bounded branch goes; a branch's
 //! `ores` leaves out the others; Smelt makes the ore's ingot at an anvil; replays verify.
 
-use super::*;
 use crate::action::parse_actions;
 use crate::content::{ContentFiles, Mined};
 use crate::geom::Dir;
@@ -11,6 +10,7 @@ use crate::object::Stack;
 use crate::replay::Replay;
 use crate::skills::{SkillId, Trained};
 use crate::test_support::builtin;
+use crate::world::*;
 
 /// The built-in content with a one-floor branch `mine` of `generator` at danger `danger`, its
 /// `ores` line if given, nothing living there, and every band of `data/mining.toml` certain to be
@@ -25,10 +25,10 @@ fn content(generator: &str, danger: u8, ores: &str) -> Arc<Content> {
     );
     let dungeons = format!(
         "{}{branch}",
-        include_str!("../../../../assets/data/dungeons.toml")
+        include_str!("../../../../../assets/data/dungeons.toml")
     );
     files.insert("data/dungeons.toml", &dungeons);
-    let mining = include_str!("../../../../assets/data/mining.toml")
+    let mining = include_str!("../../../../../assets/data/mining.toml")
         .replace("chance = 5\n", "chance = 100\n")
         .replace("chance = 20\n", "chance = 100\n")
         .replace("chance = 40\n", "chance = 100\n");
@@ -203,7 +203,7 @@ fn mithril_and_adamantium_lie_deeper_than_any_bounded_branch() {
 
 #[test]
 fn bad_files_are_refused() {
-    let text = include_str!("../../../../assets/data/mining.toml");
+    let text = include_str!("../../../../../assets/data/mining.toml");
     for (from, to, says) in [
         ("skill = \"mining\"", "skill = \"digging\"", "unknown skill"),
         ("stat = \"strength\"", "stat = \"luck\"", "unknown stat"),
@@ -256,7 +256,7 @@ fn bad_files_are_refused() {
     let dungeons = format!(
         "{}\n[[dungeon]]\nid = \"bad\"\ngenerator = \"rooms\"\ndepth = 1\nsize = [40, 20]\n\
          ores = [\"steel\"]\n",
-        include_str!("../../../../assets/data/dungeons.toml")
+        include_str!("../../../../../assets/data/dungeons.toml")
     );
     files.insert("data/dungeons.toml", &dungeons);
     let error = Content::load(&files).expect_err("steel").to_string();

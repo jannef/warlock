@@ -1,9 +1,8 @@
-//! The condition creature gear spawns in (`world/gear_condition.rs`, #1193): the shares by tribe
+//! The condition creature gear spawns in (`world/items/gear_condition.rs`, #1193): the shares by tribe
 //! over many creatures, the kind by the material, protected items untouched, the loader's checks,
 //! and a damaged weapon in a creature's hand; deeper finds' make (#1436).
 
 use super::gear_condition::{apply, conditioned, kind, quest_objects, stream};
-use super::*;
 use crate::content::{ContentFiles, CreatureId, ItemHarm, PER_MILLE};
 use crate::gear;
 use crate::item_parts::ItemPart;
@@ -13,6 +12,7 @@ use crate::magic::make::make;
 use crate::object::Stack;
 use crate::rng::Rng;
 use crate::test_support::CONTENT;
+use crate::world::*;
 use std::collections::BTreeSet;
 
 fn creature(id: &str) -> CreatureId {

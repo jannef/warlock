@@ -209,7 +209,7 @@ pub(super) fn rules(content: &Content) -> String {
 /// The modifiers the taming table is printed at: a little of everything up to a master's.
 const TAME_EDGES: [i32; 7] = [0, 2, 4, 6, 8, 10, 15];
 
-/// Taming (`world/tame.rs`): the check in words, then every tameable beast by level with its
+/// Taming (`world/allies/tame.rs`): the check in words, then every tameable beast by level with its
 /// difficulty and the chance at a range of modifiers (2d12 + the modifier against it,
 /// `check::ways`).
 pub(super) fn taming(content: &Content) -> String {

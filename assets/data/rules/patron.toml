@@ -1,5 +1,5 @@
 # The craftsperson's patron (spec §8 "Class abilities": Patron; #1421, the craftsperson design
-# §7.4; crates/warlock-core/src/content/patron.rs, world/patron.rs). A character with the Patron
+# §7.4; crates/warlock-core/src/content/patron.rs, world/crafting/patron.rs). A character with the Patron
 # class ability (the craftsperson's, from level 12) has a patron in town (a campaign's town's
 # `servant` entry for `patron`, data/towns/), who commissions graded work from their trades: a
 # chat offers one when none is open, the work drawn from every recipe of the player's trained

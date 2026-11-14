@@ -3,14 +3,14 @@
 //! Water walking's `wades_free` and `ice_holds`, Brand's `blows`; and their spells' lights,
 //! class rows, and scrolls.
 
-use super::caster_tests::{kobold_at, sp};
-use super::*;
 use crate::action::{Action, AttackKind, Event, parse_actions};
 use crate::character::CharacterSpec;
 use crate::content::{ContentFiles, StatusId};
 use crate::dice::Dice;
 use crate::stats::{PerStat, Stats};
 use crate::test_support::{builtin, said_text as said};
+use crate::world::magic::caster_tests::{kobold_at, sp};
+use crate::world::*;
 use std::sync::LazyLock;
 
 const POND: &str = r#"

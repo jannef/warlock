@@ -17,7 +17,7 @@
 //!
 //! The danger is never stored: [`DangerRule::at`] computes it from the depth and, for a
 //! player-scaled area, the player's level. A level without these fields has danger 0 and nothing
-//! comes there. The rules that use it are `world/spawn.rs`.
+//! comes there. The rules that use it are `world/creatures/spawn.rs`.
 //!
 //! The five odds of a draw ([`Odds`]) default to `data/dungeons.toml`'s `[defaults]` table
 //! (required once any area has a danger); a branch or a level may give each of its own. The

@@ -1,10 +1,10 @@
 //! Rooted creatures (#1294, `rooted.rs`): a rooted type never moves, by its own turn or anyone
 //! else's doing, and still strikes and summons from where it stands.
 
-use super::*;
 use crate::content::ContentFiles;
 use crate::geom::Dir;
 use crate::test_support::run;
+use crate::world::*;
 
 const TERRAIN: &str = r##"
 [[terrain]]
@@ -130,7 +130,7 @@ sight = 20
 base_hp = 1000
 "##;
 
-const ALLIES: &str = include_str!("../../../../assets/data/allies.toml");
+const ALLIES: &str = include_str!("../../../../../assets/data/allies.toml");
 
 const ACTIONS: &str = "melee = 1000\ncast = 1000\nwait = 1000\nstep = 1000\n";
 

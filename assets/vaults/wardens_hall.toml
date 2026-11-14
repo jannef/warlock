@@ -4,7 +4,7 @@
 # at its heart and four chests and the hoard about it. Hellegeat's boss row names it, so it is
 # stamped on the fifth floor of every Pit, for certain, and nowhere else. The floor leads nowhere
 # deeper, so it marks no `>`. Once the warden is dead its Pit is sealed, and a fifth floor made
-# again has the hall and a hoard drawn anew, but no warden (`world/pit.rs`).
+# again has the hall and a hoard drawn anew, but no warden (`world/levels/pit.rs`).
 name = "The Warden's hall"
 dungeons = ["hellegeat"]
 map = '''

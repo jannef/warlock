@@ -2,10 +2,10 @@
 //! the profession that works a material, as `data/stock.toml` names it. Salvage and recipes read
 //! it; nothing in code names a group or a skill.
 
-use super::World;
 use crate::content::MaterialId;
 use crate::skills::SkillId;
 use crate::stats::Stat;
+use crate::world::World;
 
 impl World {
     /// The skill that works `material` and the stat its checks are made by: the gems' profession

@@ -5,13 +5,13 @@
 //! prestige class, the Warden, called from a bard capped at 12 (the shipped bard ends at 30;
 //! a short class keeps these tests small).
 
-use super::*;
 use crate::action::parse_actions;
 use crate::character::CharacterSpec;
 use crate::content::{ContentFiles, Factor, Table};
 use crate::dump::{self, Layer};
 use crate::replay::Replay;
 use crate::test_support::{run, said};
+use crate::world::*;
 use std::sync::LazyLock;
 
 /// The bard's cap in this fixture.

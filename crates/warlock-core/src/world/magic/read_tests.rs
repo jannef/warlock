@@ -2,13 +2,13 @@
 //! reader, whose kills are theirs; the scroll of identify; refusals that keep the scroll; deaths
 //! by one's own scroll; loot; saves and replays.
 
-use super::fixture_factions::make_peace;
-use super::*;
 use crate::action::{ReadTarget, SpellShape, parse_actions};
 use crate::content::{ContentFiles, Reading, SpellPurpose};
 use crate::magic::{Affix, LootGrade, Magic, Rarity};
 use crate::replay::Replay;
 use crate::test_support::{builtin, run, said as texts};
+use crate::world::creatures::fixture_factions::make_peace;
+use crate::world::*;
 
 // A training dummy takes a lot and never fights back.
 const DUMMY: &str = "[[creature]]\nid = \"dummy\"\nname = \"training dummy\"\nglyph = \"D\"\n\

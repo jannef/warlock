@@ -23,10 +23,9 @@
 //!   of it. No noise, no alignment.
 //!
 //! [`Action::Craft`]: crate::action::Action::Craft
-//! [`Actor::skill_effect_of`]: super::Actor::skill_effect_of
+//! [`Actor::skill_effect_of`]: crate::world::Actor::skill_effect_of
 
 use super::work::{Job, Task};
-use super::{Spent, World};
 use crate::action::Event;
 use crate::combat;
 use crate::content::{Content, CutId, Cutting, Gems, RecipeId};
@@ -34,6 +33,7 @@ use crate::item_parts::ItemPart;
 use crate::object::{self, Stack};
 use crate::skills::{Effect, Use};
 use crate::stats::Stat;
+use crate::world::{Spent, World};
 
 /// What the check comes to, before the gem's own state is weighed.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -112,7 +112,7 @@ fn refusal(gems: &Gems, cutting: Cutting) -> Option<&'static str> {
 
 /// A cut under way: the recipe and the gem's position.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(super) struct GemWork {
+pub(in crate::world) struct GemWork {
     recipe: RecipeId,
     item: usize,
 }
@@ -206,7 +206,7 @@ impl World {
         let left = cut_outcome(gems, cutting, band);
 
         let at = self.set_apart(work.item);
-        super::outcome::remove_stacks(self.player_mut(), &[at]);
+        crate::world::fixtures::outcome::remove_stacks(self.player_mut(), &[at]);
         let gem_name = &content.material(gem).name;
         let recut = !gems.cut(cutting.cut).rough;
         let line = match (band, recut) {

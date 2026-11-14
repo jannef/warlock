@@ -5,13 +5,7 @@
 //! the dispatch lines.
 
 use super::enter::Entry;
-use super::spawn::Spawner;
-use super::talk::Refusal;
 use super::wriggle::Wriggled;
-use super::{
-    Actor, ActorId, ActorKind, FreeBlows, LevelState, Mind, Patrol, Shop, Spent, Talk, World,
-    WorldError, WorldState,
-};
 use crate::action::{AttackKind, Event};
 use crate::burden;
 use crate::content::{
@@ -23,11 +17,17 @@ use crate::geom::{Dir, Pos};
 use crate::magic::loot::Luck;
 use crate::mapgen::local::arrival;
 use crate::object::Stack;
+use crate::world::creatures::spawn::Spawner;
+use crate::world::people::talk::Refusal;
+use crate::world::{
+    Actor, ActorId, ActorKind, FreeBlows, LevelState, Mind, Patrol, Shop, Spent, Talk, World,
+    WorldError, WorldState,
+};
 use std::borrow::Cow;
 
 impl World {
     /// Whether the player can move under their load; if not, says so (spec §8 "Burden").
-    pub(super) fn can_move(&mut self) -> bool {
+    pub(in crate::world) fn can_move(&mut self) -> bool {
         let movable = self.load_of(self.state.player).penalty().can_move();
         if !movable {
             self.say(burden::MOVE_REFUSED);
@@ -54,7 +54,7 @@ impl World {
     /// Changes terrain on the current level and invalidates light masks it may affect. A lock
     /// stays only on a closed door or a shut chest, a door's trap goes with the door (kicked in), and a secret
     /// door is gone with the wall it looked like.
-    pub(super) fn set_terrain(&mut self, p: Pos, terrain: TerrainId) {
+    pub(in crate::world) fn set_terrain(&mut self, p: Pos, terrain: TerrainId) {
         let def = self.content.terrain(terrain);
         // A lock stays on a closed door or a shut chest (spec §8 "Chests").
         let (closed_door, door) = (def.is_closed_door() || def.is_shut_chest(), def.is_door());
@@ -108,7 +108,7 @@ impl World {
         Spent::Turn(price)
     }
 
-    pub(super) fn player_moves(&mut self, dir: Dir, events: &mut Vec<Event>) -> Spent {
+    pub(in crate::world) fn player_moves(&mut self, dir: Dir, events: &mut Vec<Event>) -> Spent {
         let from = self.player_pos();
         let mut to = from.step(dir);
         let level = self.state.current();
@@ -306,7 +306,11 @@ impl World {
         true
     }
 
-    pub(super) fn take_stairs(&mut self, dir: StairsDir, events: &mut Vec<Event>) -> bool {
+    pub(in crate::world) fn take_stairs(
+        &mut self,
+        dir: StairsDir,
+        events: &mut Vec<Event>,
+    ) -> bool {
         let here = self.player_pos();
         let link = self
             .state
@@ -372,7 +376,7 @@ impl World {
     /// Moves the player to level `to` (generating it on the first visit), arriving at `at` if
     /// given, else on the stairs that lead back, else at the level's start, else on its first
     /// staircase.
-    pub(super) fn travel(&mut self, to: &str, at: Option<Pos>) -> Result<(), WorldError> {
+    pub(in crate::world) fn travel(&mut self, to: &str, at: Option<Pos>) -> Result<(), WorldError> {
         let from = self.state.current_level.clone();
         let old = self.player_pos();
         let new = !self.state.levels.contains_key(to) && self.state.endless.pays(&self.content, to);
@@ -432,10 +436,11 @@ impl World {
         if let Some(line) = self.content.arrival(to) {
             self.say(line.to_string());
         }
-        if let Some(line) = super::rooms::pervade_line(&self.state, &self.content) {
+        if let Some(line) = crate::world::fixtures::rooms::pervade_line(&self.state, &self.content)
+        {
             self.say(line);
         }
-        for line in super::treasury::arrive_lines(&self.state, &self.content) {
+        for line in crate::world::fixtures::treasury::arrive_lines(&self.state, &self.content) {
             self.say(line);
         }
         let _ = self.settle_in();
@@ -453,7 +458,7 @@ impl World {
     }
 
     /// Level `id` as it is now, generating it on the first visit (entered from `from`).
-    pub(super) fn visit(
+    pub(in crate::world) fn visit(
         &mut self,
         id: &str,
         from: Option<&str>,
@@ -498,7 +503,7 @@ impl World {
     }
 
     /// `p` if no actor stands there, else the nearest walkable unoccupied cell (ring search).
-    pub(super) fn free_cell_near(&self, level_id: &str, p: Pos) -> Pos {
+    pub(in crate::world) fn free_cell_near(&self, level_id: &str, p: Pos) -> Pos {
         if self.state.actor_at(level_id, p).is_none() {
             return p;
         }
@@ -510,7 +515,7 @@ impl World {
 
     /// The nearest walkable unoccupied cell around `p` that `allowed` lets in, from one cell
     /// away out to `reach` (ring search, in row order); `None` if there is none.
-    pub(super) fn free_cell_within(
+    pub(in crate::world) fn free_cell_within(
         &self,
         level_id: &str,
         p: Pos,
@@ -539,7 +544,7 @@ impl World {
     /// Actor `id` crosses to level `to` with the player, onto `pos`; what it heard stays behind.
     /// The one way an actor changes level but the player (`World::follow_along`,
     /// `World::followers_arrive`); each says what else it keeps of its mind.
-    pub(super) fn cross_to(&mut self, id: ActorId, to: &str, pos: Pos) {
+    pub(in crate::world) fn cross_to(&mut self, id: ActorId, to: &str, pos: Pos) {
         if let Some(from) = self.state.actors.set_level(id, to)
             && let Some(a) = self.state.actors.get_mut(&id)
         {
@@ -555,7 +560,7 @@ impl World {
 
 /// The first time the player is inside a special room (spec §7 "Special rooms"): marks it
 /// entered and returns what they are told; from then on they know it (look mode names it).
-pub(super) fn enter_room(state: &mut WorldState, content: &Content) -> Option<String> {
+pub(in crate::world) fn enter_room(state: &mut WorldState, content: &Content) -> Option<String> {
     let here = state.player().pos;
     let room = (state.current_mut().rooms.iter_mut()).find(|r| r.contains(here))?;
     if room.entered {
@@ -564,14 +569,18 @@ pub(super) fn enter_room(state: &mut WorldState, content: &Content) -> Option<St
     room.entered = true;
     room.glimpsed = true;
     let room = room.clone();
-    Some(super::shrine::enter_line(&room, state.player(), content))
+    Some(crate::world::fixtures::shrine::enter_line(
+        &room,
+        state.player(),
+        content,
+    ))
 }
 
 /// The template of level `id`: a hand-made level, or one generated from the run seed: a level of
 /// a dungeon branch (`entered_from` is where the up staircase of a branch's first level leads)
 /// or a local area of the overworld, its loot rolled with the player's `luck` as they first come
 /// (Treasure hunter, Hoard sense).
-pub(super) fn level_template<'a>(
+pub(in crate::world) fn level_template<'a>(
     content: &'a Content,
     (campaign, seed): (&str, u64),
     id: &str,
@@ -591,7 +600,7 @@ pub(super) fn level_template<'a>(
 /// Creates the runtime state for a level and spawns its creatures, each with its type's stats,
 /// carrying, wearing, and wielding what the level gives it; its shops are kept by the keepers
 /// spawned at their posts. The food lying there and carried is made now (it rots from now on).
-pub(super) fn instantiate_level(
+pub(in crate::world) fn instantiate_level(
     state: &mut WorldState,
     content: &Content,
     template: &LevelTemplate,
@@ -625,8 +634,8 @@ pub(super) fn instantiate_level(
     }
     state.levels.insert(id.to_string(), level);
     state.endless.made(content, id);
-    super::graveyard::name_statues(state, content, id);
-    super::graves::carve_graves(state, content, id);
+    crate::world::fixtures::graveyard::name_statues(state, content, id);
+    crate::world::fixtures::graves::carve_graves(state, content, id);
     // The hidden locations revealed before the level was made (spec §7 "Hidden locations").
     super::reveal::apply_revealed(state, id);
     // Under the open sky its water has frozen and thawed with the weather of the last weeks.
@@ -640,14 +649,14 @@ pub(super) fn instantiate_level(
         }
     }
     // An escort a quest has waiting here (`escort_waits.rs`).
-    super::escort_waits::place_waiting(state, content, id);
+    crate::world::people::escort_waits::place_waiting(state, content, id);
     // An aristocrat's own servant, in the town that keeps them (`stipend.rs`).
-    super::stipend::place_servant(state, content, id);
+    crate::world::classes::stipend::place_servant(state, content, id);
 }
 
 /// Makes the creature `spawn` places on level `id` (it must exist): one of its type, with the
 /// type's stats, carrying, wearing, and wielding what the spawn gives it, its food made now; a unique type is remembered as met.
-pub(super) fn make_creature(
+pub(in crate::world) fn make_creature(
     state: &mut WorldState,
     content: &Content,
     id: &str,
@@ -696,8 +705,9 @@ pub(super) fn make_creature(
         damage: Default::default(),
         drained: Default::default(),
         weapon_skills,
-        faction_override: (spawn.faction)
-            .or_else(|| super::court::join(content, state.seed, actor_id, spawn.creature)),
+        faction_override: (spawn.faction).or_else(|| {
+            crate::world::creatures::court::join(content, state.seed, actor_id, spawn.creature)
+        }),
         grade: crate::grade::draw(content, state.seed, actor_id, spawn),
         summoner: None,
         split_from: None,
@@ -731,7 +741,7 @@ pub(super) fn make_creature(
             .add(status, content.status(status), degrees, None);
     }
     // What its kind always has (`aura.rs`): Fire-cloaked, a devil's barbs.
-    super::aura::wear_innate(&mut actor, content);
+    crate::world::creatures::aura::wear_innate(&mut actor, content);
     // A mimic is placed disguised as a chest (`mimic.rs`).
     if let Some(disguise) = content.disguise_status().filter(|_| def.mimic.is_some()) {
         actor
@@ -763,7 +773,7 @@ fn placed_gear(
     }
     let key = id.0.to_string();
     let mut rng = crate::rng::Rng::gear(seed, &key);
-    let mut condition = super::gear_condition::stream(seed, &key);
+    let mut condition = crate::world::items::gear_condition::stream(seed, &key);
     let item_level = content.item_level(level);
     let pack = crate::gear::equip(
         content,

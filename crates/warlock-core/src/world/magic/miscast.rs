@@ -34,10 +34,7 @@
 //! gameplay stream, in that order; no draw without `data/miscast.toml`.
 
 use super::cast::Cast;
-use super::fight::Harm;
-use super::pit::Refused;
 use super::spell::Caster;
-use super::{Actor, ActorId, Cause, World};
 use crate::action::{Event, ReadTarget};
 use crate::check::{self, Checked};
 use crate::content::{
@@ -51,10 +48,13 @@ use crate::noise::SoundKind;
 use crate::skills::Effect;
 use crate::stats::Stat;
 use crate::text::capitalized;
+use crate::world::combat::fight::Harm;
+use crate::world::levels::pit::Refused;
+use crate::world::{Actor, ActorId, Cause, World};
 
 /// What a cast was aimed at, so a miscast's echo goes the same way.
 #[derive(Clone, Copy, Debug)]
-pub(super) enum Aim {
+pub(in crate::world) enum Aim {
     /// The player's cast, at its cell or stack (or none).
     Player(Option<ReadTarget>),
     /// A creature's cast at actor `on`.
@@ -111,7 +111,7 @@ pub fn entry_for(table: &[Miscast], total: i32) -> Option<&Miscast> {
 impl World {
     /// `caster`'s cast `cast` went off, aimed by `aim`: its Spellcraft check, and on a failure
     /// the miscast table's entry (module docs). Nothing for a dead caster.
-    pub(super) fn after_cast(
+    pub(in crate::world) fn after_cast(
         &mut self,
         caster: ActorId,
         cast: &Cast<'_>,
@@ -149,7 +149,7 @@ impl World {
     }
 
     /// Miscast `entry` befalls `caster` after `cast` (module docs): said, then done.
-    pub(super) fn miscast(
+    pub(in crate::world) fn miscast(
         &mut self,
         caster: ActorId,
         cast: &Cast<'_>,
@@ -350,7 +350,7 @@ impl World {
         me.hp = me.hp.min(me.max_hp(&content)).max(1);
         me.mana = me.mana.min(me.max_mana(&content));
         if took && caster == self.state.player {
-            self.say(super::stat_deeds::drop_news(stat).to_string());
+            self.say(crate::world::character::stat_deeds::drop_news(stat).to_string());
         }
     }
 
@@ -408,7 +408,12 @@ impl World {
 
     /// A `creature` comes to the first free cell around `here` but `besides`, of its own kind's
     /// faction.
-    pub(super) fn miscast_summon(&mut self, here: Pos, creature: CreatureId, besides: Option<Pos>) {
+    pub(in crate::world) fn miscast_summon(
+        &mut self,
+        here: Pos,
+        creature: CreatureId,
+        besides: Option<Pos>,
+    ) {
         let level = self.state.current();
         let free = (Dir::ALL.iter().map(|&d| here.step(d))).find(|&p| {
             Some(p) != besides
@@ -432,7 +437,7 @@ impl World {
             asleep: false,
             status: Vec::new(),
         };
-        super::travel::make_creature(&mut self.state, &self.content, &id, &spawn);
+        crate::world::levels::travel::make_creature(&mut self.state, &self.content, &id, &spawn);
         self.spawned += 1;
     }
 }

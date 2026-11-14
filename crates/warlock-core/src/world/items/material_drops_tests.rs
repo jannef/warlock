@@ -4,11 +4,11 @@
 //! one material join one stack; the loader refuses what would drop nothing or the wrong thing;
 //! the newly tagged beasts count as beasts; the arena's dead litter stock.
 
-use super::*;
 use crate::action::parse_actions;
 use crate::content::{ContentFiles, Drop, DropFrom, DropGoods, PER_MILLE};
 use crate::object::Stack;
 use crate::test_support::builtin;
+use crate::world::*;
 
 fn rows<'c>(content: &'c Content, id: &str) -> &'c [Drop] {
     let c = content.creature_id(id).unwrap_or_else(|| panic!("{id}"));

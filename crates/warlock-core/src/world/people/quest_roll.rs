@@ -1,6 +1,6 @@
 //! Rolled quests in play (spec §8 "Quests", docs/design/adventurers-guild.md §5, #422): the draw
 //! as a quest is given, what the player can reach, the dev action `quest_roll:ID:TARGET`, and
-//! the bounties system's Quarry sense. The rules of giving are `world/quest.rs`'s; the data is
+//! the bounties system's Quarry sense. The rules of giving are `world/people/quest.rs`'s; the data is
 //! `content/quest_roll.rs`'s.
 //!
 //! **The draw**: one keyed stream per quest, [`Rng::quest`] (`quest/<id>`), made as the quest
@@ -21,9 +21,9 @@
 //! talent is read as the quest is given: the roll is saved, so a talent taken later changes
 //! nothing about a quest given already.
 
-use super::{Spent, World, beast_friend};
 use crate::content::{Candidate, QuestDef, Roll, Rolled, TAG_TARGET};
 use crate::rng::Rng;
+use crate::world::{Spent, World, allies::beast_friend};
 
 impl World {
     /// Whether the player can enter dungeon branch `branch`: no hidden location of the run's
@@ -38,7 +38,7 @@ impl World {
     /// What rolled quest `def` may draw now, in content order: of the branches the player can
     /// enter, nothing their Beast-friend talent calms, and a fallback variant only when no
     /// other is left.
-    pub(super) fn quest_pool(&self, def: &QuestDef) -> Vec<Candidate> {
+    pub(in crate::world) fn quest_pool(&self, def: &QuestDef) -> Vec<Candidate> {
         let mut pool = def.candidates(&self.content, &|b| self.branch_open(b));
         pool.retain(|c| !self.calmed(def, &c.target));
         let fallback = |c: &Candidate| match (&def.roll, c.variant) {
@@ -64,7 +64,7 @@ impl World {
 
     /// Draws rolled quest `def`'s target from its pool, as it is given; `None` when the pool is
     /// empty (it is then not offered) or the quest is not rolled.
-    pub(super) fn roll_quest(&self, def: &QuestDef) -> Option<Roll> {
+    pub(in crate::world) fn roll_quest(&self, def: &QuestDef) -> Option<Roll> {
         let pool = self.quest_pool(def);
         let drawn = Rng::quest(self.state.seed, &def.id).weighted(&pool, |c| c.weight)?;
         Some(roll_of(def, drawn))
@@ -75,7 +75,7 @@ impl World {
     /// hold, wherever the player can go, or a variant's id). Its kills count from now, and a
     /// variant's reveal fires (one revealed before stays: dev only). Takes no time; refused
     /// otherwise.
-    pub(super) fn quest_roll_dev(&mut self, id: &str, target: &str) -> Spent {
+    pub(in crate::world) fn quest_roll_dev(&mut self, id: &str, target: &str) -> Spent {
         let content = self.content.clone();
         let Some(def) = content.quest_id(id).map(|q| content.quest(q)) else {
             self.say(format!("There is no quest `{id}`."));

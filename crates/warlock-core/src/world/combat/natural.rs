@@ -1,15 +1,15 @@
 //! Several natural attacks (spec §8 "Combat": "Natural attacks", #1099): a creature type with
 //! a list of them (`[[creature.attack]]`, a dragon's two claws and a bite) strikes each in turn
 //! in one melee attack, while it wields no weapon. The first is its melee blow as ever
-//! ([`super::Actor::melee`]); the rest follow it here, each rolled on its own against the
+//! ([`crate::world::Actor::melee`]); the rest follow it here, each rolled on its own against the
 //! target's Defence, as every blow is ([`World::attack_with`]), until the target or the
 //! attacker is gone. Each blow's event names the natural attack it was made with, so it is said
 //! by its own words ("The fire drake claws you."). They take no time of their own: the attack's
 //! price is the one melee attack's.
 
 use super::free_blow;
-use super::{ActorId, World};
 use crate::action::{AttackKind, Event};
+use crate::world::{ActorId, World};
 
 impl World {
     /// The natural attacks after the first of `attacker`'s melee attack on `target` (module

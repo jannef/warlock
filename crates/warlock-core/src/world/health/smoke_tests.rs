@@ -1,13 +1,13 @@
-//! Smoke (`world/zone.rs`, Fume) and Flare (`only_sighted`): no eye sees into smoke or through
+//! Smoke (`world/magic/zone.rs`, Fume) and Flare (`only_sighted`): no eye sees into smoke or through
 //! it, the player's and a creature's alike, one inside sees only the cells beside it, Gale tears
 //! it away; a flash stuns those with eyes and passes the eyeless by.
 
-use super::caster_tests::{kobold_at, sp};
-use super::spell_type_tests::{cast, cell, files, start};
-use super::*;
 use crate::content::ZoneKind;
 use crate::stats::{PerStat, Stats};
 use crate::test_support::run;
+use crate::world::magic::caster_tests::{kobold_at, sp};
+use crate::world::magic::spell_type_tests::{cast, cell, files, start};
+use crate::world::*;
 
 fn hall(seed: u64) -> World {
     let mut w = start(Arc::new(Content::load(&files()).expect("content")), seed);

@@ -4,16 +4,16 @@
 //! ([`Actor::spell_to_hit`]), Potent's `spell_bonus`, of Lingering's `spell_duration`, and of
 //! Farcasting's `spell_reach` through the spell hooks ([`Actor::spell_mods`]), and Baleful's
 //! `spell_threat` in [`Actor::spell_threat`]. The tests bring fixture affixes with ranges of
-//! their own, as `world/unique_tests.rs` brings its own unique.
+//! their own, as `world/creatures/unique_tests.rs` brings its own unique.
 
-use super::cast_tests::{cast_at, scores};
-use super::caster_tests::{kobold, reach, sp, world_with};
-use super::*;
 use crate::combat::{DEFAULT_THREAT, Strike, THREATS};
 use crate::content::{ContentFiles, Grip};
 use crate::magic::{Affix, Magic, Rarity};
 use crate::stats::Stat;
 use crate::test_support::run;
+use crate::world::magic::cast_tests::{cast_at, scores};
+use crate::world::magic::caster_tests::{kobold, reach, sp, world_with};
+use crate::world::*;
 
 /// Fixture affixes, one per spellcasting effect, with ranges wide enough for every test.
 const AFFIXES: &str = r#"

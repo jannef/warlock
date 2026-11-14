@@ -12,15 +12,15 @@
 //! The shared sight is the other half of the bond, in `Perception::compute` (the second
 //! viewpoint); the witch's familiar will read that one alone.
 
-use super::{ActorId, World};
 use crate::action::Event;
 use crate::content::{Content, StatusId};
+use crate::world::{ActorId, World};
 
 impl World {
     /// Status `status` at `severity` landed on `id`: with Hunter's bond, a buff crosses to the
     /// other of the player and their companion ([`World::afflict_one`]), said when it begins on
     /// the companion ("Snel is bark-skinned too.").
-    pub(super) fn share_buff(
+    pub(in crate::world) fn share_buff(
         &mut self,
         id: ActorId,
         status: StatusId,

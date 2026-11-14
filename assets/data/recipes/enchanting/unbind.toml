@@ -1,7 +1,7 @@
 # Unbind (docs/design/enchanting.md §8; docs/dev/enchanting.md "The recipes"): every affix off a
 # magic or rare item carried, back to plain, nothing given back. Against `difficulty` + one per
 # `level_step` of the item's own item level (rules/enchanting.toml); failed, the item clings to its
-# magic; a natural 2 warps it. The rules are `world/enchant.rs`.
+# magic; a natural 2 warps it. The rules are `world/crafting/enchant.rs`.
 [[recipe]]
 id = "unbind"
 use = "enchant"

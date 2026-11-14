@@ -4,7 +4,6 @@
 //! the abilities menu lists it; every try takes its time, may train the skill, and replays.
 
 use super::search::Hidden;
-use super::*;
 use crate::ability::{Ability, OwnAbility};
 use crate::action::parse_actions;
 use crate::check::{self, Checked};
@@ -15,6 +14,7 @@ use crate::skills::{Effect, SkillId};
 use crate::stats::Stat;
 use crate::test_support::{run, said as texts};
 use crate::time::Duration;
+use crate::world::*;
 
 /// How far short a failed try must fall to set the trap off (`data/traps.toml`).
 fn springs_short_by() -> i32 {

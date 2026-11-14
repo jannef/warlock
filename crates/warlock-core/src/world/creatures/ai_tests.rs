@@ -2,11 +2,11 @@
 //! to whom, how creatures see, approach, shoot, cast, search, and go back to their routine, and
 //! what the player perceives of it.
 
-use super::*;
 use crate::action::{AttackKind, parse_actions};
 use crate::content::{ContentFiles, Stance};
 use crate::replay::Replay;
 use crate::test_support::{builtin, run, said as messages};
+use crate::world::*;
 use std::sync::LazyLock;
 
 const TERRAIN: &str = r##"
@@ -938,7 +938,7 @@ fn dark_world(level: &str) -> World {
         "data/lights.toml",
         "[[light]]\nid = \"lantern\"\ncolor = [250, 215, 160, 0]\nradius = 5\n",
     );
-    super::lamp_tests::with_lantern(&mut files);
+    crate::world::items::lamp_tests::with_lantern(&mut files);
     files.insert(
         "data/vision.toml",
         "[[vision]]\nid = \"normal\"\nname = \"Normal\"\nthreshold = 40\n\
@@ -1020,7 +1020,7 @@ fn creature_sight_matches_the_players_under_the_sun_and_the_moon() {
     ] {
         let mut w = World::new(builtin(), scenario, None).expect(scenario);
         run(&mut w, actions);
-        super::light_tests::check_creature_sight(&w)
+        crate::world::turn::light_tests::check_creature_sight(&w)
             .unwrap_or_else(|e| panic!("{scenario} after {actions}: {e}"));
     }
 }

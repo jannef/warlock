@@ -1,12 +1,12 @@
-//! The profane gifts' machinery (docs/design/profane-gifts.md §7.3, §7.4; `world/profane.rs`):
+//! The profane gifts' machinery (docs/design/profane-gifts.md §7.3, §7.4; `world/character/profane.rs`):
 //! bestowing a gift, rescinding one, the three relations, the races barred, and a save.
 
-use super::super::World;
 use crate::action::Action;
 use crate::character::CharacterSpec;
 use crate::content::{GiftTier, TalentId};
 use crate::stats::{DRAIN_FLOOR, Stat};
 use crate::test_support::{builtin, said_text as said};
+use crate::world::World;
 
 fn world(character: &str) -> World {
     let content = builtin();

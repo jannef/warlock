@@ -3,12 +3,12 @@
 //! spell writable, the refusals, the wizard's table, the dumps, saves and replays.
 
 use super::caster_tests::sp;
-use super::*;
 use crate::action::parse_actions;
 use crate::content::{ContentFiles, Reading};
 use crate::replay::Replay;
 use crate::test_support::{builtin, last, run};
 use crate::time::Duration;
+use crate::world::*;
 
 /// The pack: a, two blank scrolls; b, a dagger.
 const PACK: &str = "carry = [\"blank_scroll*2\", \"dagger\"]";

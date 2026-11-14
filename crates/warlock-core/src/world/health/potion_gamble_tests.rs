@@ -3,10 +3,10 @@
 //! chance, troll's blood, and the brewer's blunder; the outcome effects they brought (a list of
 //! statuses, `drain_stat`); the loader's checks.
 
-use super::*;
 use crate::content::ContentFiles;
 use crate::stats::Stat;
 use crate::test_support::{run, said};
+use crate::world::*;
 
 /// The test content: a lit hall, the player at `@` carrying `pack`; `more` adds files.
 fn content_with(pack: &str, more: &[(&str, &str)]) -> Result<Content, String> {

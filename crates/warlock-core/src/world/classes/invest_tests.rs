@@ -1,14 +1,14 @@
-//! The merchant's investment (#1407; `world/invest.rs`): the class ability from level 1, the
+//! The merchant's investment (#1407; `world/classes/invest.rs`): the class ability from level 1, the
 //! partner in Cēaptūn only in a merchant's run (by race), the fees, the weekly return and its
 //! catching up over long time, the quests' bonus, the partner's death, the expected yearly
 //! return, a save, and a replay.
 
 use super::invest::{self, Fund, WEEK};
-use super::*;
 use crate::action::parse_actions;
 use crate::character::CharacterSpec;
 use crate::replay::Replay;
 use crate::test_support::{CONTENT, last_text as last, run as act, texts};
+use crate::world::*;
 
 /// The partner's desk in Wulfrun's office, and the cell west of it.
 const DESK: Pos = Pos::new(75, 23);
@@ -45,7 +45,7 @@ fn put_player(world: &mut World, at: Pos) {
 
 fn gold(world: &World) -> u32 {
     let coin = world.content().object_id("gold_coin").expect("gold");
-    super::shop::count_of(&world.state().player().inventory, coin)
+    crate::world::people::shop::count_of(&world.state().player().inventory, coin)
 }
 
 /// Gives the player `n` more gold coins.

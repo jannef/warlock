@@ -22,8 +22,6 @@
 //!
 //! [`Action::Gather`]: crate::action::Action::Gather
 
-use super::rest::Ended;
-use super::{LevelState, Spent, World};
 use crate::action::Event;
 use crate::content::{ActionKind, Content};
 use crate::geom::{Dir, Pos};
@@ -31,6 +29,8 @@ use crate::magic::loot::pick_weighted;
 use crate::object::{self, Stack};
 use crate::skills::{SkillId, Use};
 use crate::time::Duration;
+use crate::world::turn::rest::Ended;
+use crate::world::{LevelState, Spent, World};
 
 /// The ways from `at` on `level` to a cell of the fungus herbs are gathered from, in
 /// [`Dir::ALL`] order: none without `data/herbs.toml`.
@@ -51,7 +51,7 @@ pub const UNTRAINED: &str =
 /// or `None` when they may gather (or nobody gathers, without the file). The one check, read by
 /// [`World::start_gather`] and by the abilities menu
 /// ([`crate::ability::Unavailable::Untrained`]).
-pub fn unskilled(gatherer: &super::Actor, content: &Content) -> Option<SkillId> {
+pub fn unskilled(gatherer: &crate::world::Actor, content: &Content) -> Option<SkillId> {
     let skill = content.herbs()?.skill;
     gatherer.skills.get(skill).is_none().then_some(skill)
 }
@@ -59,7 +59,7 @@ pub fn unskilled(gatherer: &super::Actor, content: &Content) -> Option<SkillId> 
 impl World {
     /// The player begins to gather from the fungus the way `dir`; refused, taking no time, with
     /// none there or untrained in Herbalism ([`unskilled`]).
-    pub(super) fn start_gather(&mut self, dir: Dir) -> Spent {
+    pub(in crate::world) fn start_gather(&mut self, dir: Dir) -> Spent {
         let content = self.content.clone();
         let here = self.player_pos();
         let ways = fungus_ways(&content, self.state.current(), here);
@@ -77,7 +77,7 @@ impl World {
 
     /// Gathers turn after turn until its time is up or something stops it (module docs): its
     /// last turn cut short to end exactly when its time is up, as a forage's is.
-    pub(super) fn gather(&mut self, seconds: u32, events: &mut Vec<Event>) {
+    pub(in crate::world) fn gather(&mut self, seconds: u32, events: &mut Vec<Event>) {
         let until = self.state.time + Duration::seconds(u64::from(seconds));
         let turn = self.price_of(self.state.player, ActionKind::Gather);
         let ended = self.keep_at(

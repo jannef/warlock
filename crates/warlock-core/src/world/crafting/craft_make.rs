@@ -12,9 +12,9 @@
 //!   the cut loose gems carried, with no None); then each input no part's sources name (the
 //!   stacks of an object input; the pieces of a stock input's material or group: a bow's sinew,
 //!   a crossbow's ingot of any metal), then the ornament if the recipe offers one (the cut loose
-//!   gems carried; None may be chosen). Set's two steps are `world/set.rs`'s ([`super::set`]).
+//!   gems carried; None may be chosen). Set's two steps are `world/crafting/set.rs`'s ([`super::set`]).
 //!   A step with one fitting stack is still a step: the player sees what is spent. A
-//!   `count = "fletch"` recipe's wood part has no step on wooded ground (`world/fletch.rs`).
+//!   `count = "fletch"` recipe's wood part has no step on wooded ground (`world/crafting/fletch.rs`).
 //! - **The plan** ([`craft_plan`]): the picks, inventory positions in step order (`None` a
 //!   skipped optional), checked by the rules (the stack exists, fits, and suffices; an ornament
 //!   is a cut gem), and what comes of them: the item to be made, named as it would be ("a
@@ -46,7 +46,7 @@
 //!   jewellery: never an ingot or a brew) bears their mark (`Worked::marked`, the talent's one
 //!   read), whatever its grade.
 //! - **Counted** (a count above 1, or `"fletch"`): no grades. The count is rolled (its dice, or
-//!   `world/fletch.rs`'s), then the margin keeps all of it, half rounded up within
+//!   `world/crafting/fletch.rs`'s), then the margin keeps all of it, half rounded up within
 //!   `half_within`, one within `one_within`, else none ([`batch_made`]; a natural 2 none, a
 //!   natural 24 all), then Fletcher's multiple, at most the batch: what each `per_made` input's
 //!   stack covers. A stock part is priced by the batch's weight at its most for the plan, and
@@ -71,10 +71,8 @@
 use super::craft::{
     RecipeLack, input_fits, known_object, lack, stack_material, stock_only, worked_materials,
 };
-use super::encounter::Watch;
 use super::fletch;
 use super::work::{Job, Task, Work};
-use super::{Actor, LevelState, Spent, World};
 use crate::action::Event;
 use crate::combat;
 use crate::content::{
@@ -89,6 +87,8 @@ use crate::scroll_label::Lore;
 use crate::skills::{Effect, Use};
 use crate::stats::Stat;
 use crate::time::Duration;
+use crate::world::levels::encounter::Watch;
+use crate::world::{Actor, LevelState, Spent, World};
 
 /// The most picks a recipe's work holds (its steps): parts, inputs, and the ornament.
 pub const MAX_PICKS: usize = 8;
@@ -961,7 +961,7 @@ pub(crate) fn craft_plan(
 
 /// A recipe's work under way: which, and with what (positions in step order).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(super) struct Crafting {
+pub(in crate::world) struct Crafting {
     recipe: RecipeId,
     picks: [Option<usize>; MAX_PICKS],
     len: u8,
@@ -1251,7 +1251,7 @@ impl World {
 /// Makes `recipe` with `picks` as a check of natural roll `natural` by `margin` would: the
 /// outcome without the time or the draws of the check (a counted recipe still rolls its count).
 #[cfg(test)]
-pub(super) fn make_out_for_test(
+pub(in crate::world) fn make_out_for_test(
     w: &mut World,
     recipe: &str,
     picks: &[Option<usize>],

@@ -5,8 +5,8 @@
 
 use super::caster_tests::sp;
 use super::learn_tests::kitted;
-use super::*;
 use crate::content::MAX_SPELL_RANK;
+use crate::world::*;
 
 const PART: [&str; 14] = [
     "blight",

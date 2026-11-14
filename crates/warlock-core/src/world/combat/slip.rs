@@ -1,11 +1,11 @@
 //! Slipping past (spec §8 "Surprise and sneak attacks"; `docs/dev/surprise.md`): the one
 //! contest of hiding, because most creatures see a few cells in any darkness.
 //!
-//! - **The moment** ([`looks_at`]): a creature hunting no one ([`super::Mind::last_seen`] unset)
+//! - **The moment** ([`looks_at`]): a creature hunting no one ([`crate::world::Mind::last_seen`] unset)
 //!   that would first see the **player** by its darkvision alone (their cell too dark for its
 //!   eyes) makes a contest, `check::contest` (four gameplay draws): the player's Dexterity
 //!   modifier and their skills' `slip` against its Willpower modifier and its skills' `spot`.
-//!   Made, [`super::Mind::missed`] is the turn and it does not see them; lost, it sees them as
+//!   Made, [`crate::world::Mind::missed`] is the turn and it does not see them; lost, it sees them as
 //!   it would have, and rolls no more while it hunts them. Nothing is said either way.
 //! - **While slipped past**: it does not see the player by darkvision (nor take their noise
 //!   for one it sees, `ai.rs::noise_to_look_into`), and is unaware of them
@@ -18,7 +18,6 @@
 //! Creatures slip past nobody. Without the surprise rules or with `[slip] enabled = false`,
 //! nobody slips past anyone and nothing here draws.
 
-use super::{ActorId, ActorKind, World, WorldState};
 use crate::check;
 use crate::content::{Content, VisionProfile};
 use crate::geom::Pos;
@@ -26,12 +25,13 @@ use crate::light::LightCache;
 use crate::sight::{self, By, LineOfSight};
 use crate::skills::Effect;
 use crate::stats::Stat;
+use crate::world::{ActorId, ActorKind, World, WorldState};
 
 /// Whether creature `id`, with line of sight `los` and `eye`, sees hostile `other` on cell `p`
 /// at its look (`ai.rs::nearest_hostile_in_sight`): by the rules of sight, but for the player
 /// slipping past it (module docs). The contest is rolled here, and only here.
 #[allow(clippy::too_many_arguments)]
-pub(super) fn looks_at(
+pub(in crate::world) fn looks_at(
     state: &mut WorldState,
     content: &Content,
     lights: &mut LightCache,
@@ -126,7 +126,7 @@ impl World {
     }
 
     /// At creature `id`'s turn: a slip past that has lasted its `lasts_turns` is over.
-    pub(super) fn slip_lapses(&mut self, id: ActorId) {
+    pub(in crate::world) fn slip_lapses(&mut self, id: ActorId) {
         let missed = self.state.actors.get(&id).and_then(|a| a.mind.missed);
         if missed.is_some() && !self.slipped_past(id, self.state.player) {
             self.end_slip(id);
@@ -136,7 +136,7 @@ impl World {
     /// `attacker` attacked `target`: when it is the player, every creature on the level they
     /// had slipped past that is the target or whose eyes reach them or it now knows they are
     /// there ([`World::end_slip`]).
-    pub(super) fn attacked_near(&mut self, attacker: ActorId, target: ActorId) {
+    pub(in crate::world) fn attacked_near(&mut self, attacker: ActorId, target: ActorId) {
         if attacker != self.state.player {
             return;
         }

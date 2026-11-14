@@ -3,10 +3,10 @@
 //! player's (`Mods::worn`: `Actor::max_mana`, `World::mana_rate`), and a
 //! summoner spends from the larger pool. A creature without them is unchanged.
 
-use super::*;
 use crate::action::parse_actions;
 use crate::equipment::Equipment;
 use crate::test_support::builtin as content;
+use crate::world::*;
 
 /// The showcase's summoning hall, its goblin wizard stripped of whatever gear it rolled.
 fn hall(content: &Arc<Content>) -> (World, ActorId) {

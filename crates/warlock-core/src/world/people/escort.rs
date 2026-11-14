@@ -21,17 +21,17 @@
 //!   says `done` and pays the reward; the escort is no ally any more (its faction and stance put
 //!   back, its post where it stands).
 //! - **Death** ([`World::escort_dies`], from `fight.rs::creature_dies`): an escort quest whose
-//!   escort dies, joined or not, fails ([`super::Stage::Failed`]). Nothing else is locked out.
+//!   escort dies, joined or not, fails ([`crate::world::Stage::Failed`]). Nothing else is locked out.
 //!
 //! Nothing here draws from any stream.
 
-use super::{Actor, ActorId, Ally, AllySource, Event, Order, Spent, Stage, World};
 use crate::action::Positions;
 use crate::content::{
     ActionKind, CombatStance, Content, DialogueId, Goal, ObjectId, QuestId, SlotId,
 };
 use crate::equipment::{self, Equipment};
 use crate::object::{self, Stack};
+use crate::world::{Actor, ActorId, Ally, AllySource, Event, Order, Spent, Stage, World};
 
 /// The slot an escort wearing `equipment` puts `object` in: the first free one it fits (its own
 /// kind of slot first), else the first it fits, taken; `None` if it fits none.
@@ -117,7 +117,7 @@ impl World {
 
     /// The player stands on a level (the arrival, or an escort joining): each active escort
     /// quest whose target it is and whose escort is on it with them is done (the module docs).
-    pub(super) fn escorts_home(&mut self) {
+    pub(in crate::world) fn escorts_home(&mut self) {
         let content = self.content.clone();
         let here = self.state.current_level.clone();
         let player = self.state.player;
@@ -174,7 +174,7 @@ impl World {
     }
 
     /// `actor` died: an active escort quest whose escort it was fails. The lines to say.
-    pub(super) fn escort_dies(&mut self, actor: &Actor) -> Vec<String> {
+    pub(in crate::world) fn escort_dies(&mut self, actor: &Actor) -> Vec<String> {
         let Some(dialogue) = self.dialogue_of(actor) else {
             return Vec::new();
         };
@@ -191,7 +191,7 @@ impl World {
 
     /// Set on is given to `allies`: the escorts among them are taken out, and what they say of
     /// it is returned, if any were (the module docs).
-    pub(super) fn escorts_refuse(&self, allies: &mut Vec<ActorId>) -> Option<String> {
+    pub(in crate::world) fn escorts_refuse(&self, allies: &mut Vec<ActorId>) -> Option<String> {
         let escorts: Vec<String> = (allies.iter())
             .filter(|id| self.state.actors[id].escorting().is_some())
             .map(|&id| self.ally_subject(id))
@@ -207,7 +207,7 @@ impl World {
 
     /// The player gives one of the stack at `item` to escort `escort` beside them (the module
     /// docs).
-    pub(super) fn give_escort(&mut self, item: usize, escort: ActorId) -> Spent {
+    pub(in crate::world) fn give_escort(&mut self, item: usize, escort: ActorId) -> Spent {
         let content = self.content.clone();
         let name = self.ally_subject(escort);
         let Some(stack) = self.state.player().inventory.get(item).cloned() else {
@@ -226,7 +226,7 @@ impl World {
         }
         let action = content.slot(slot).action;
         let (spent, one) = self.hand_over_one(item, action);
-        let what = super::collar::definite(&self.lore().describe(&one));
+        let what = crate::world::allies::collar::definite(&self.lore().describe(&one));
         self.say(format!("You give {what} to {name}."));
         self.put_on_escort(escort, one, slot, &name, action);
         spent
@@ -271,12 +271,15 @@ impl World {
             ActionKind::Ready => "readies",
             _ => "puts on",
         };
-        self.say(format!("{name} {verb} {}.", super::collar::definite(&what)));
+        self.say(format!(
+            "{name} {verb} {}.",
+            crate::world::allies::collar::definite(&what)
+        ));
         if old.is_empty() {
             return;
         }
         for stack in &old {
-            let what = super::collar::definite(&self.lore().describe(stack));
+            let what = crate::world::allies::collar::definite(&self.lore().describe(stack));
             self.say(format!("{name} drops {what}."));
         }
         let level = self.state.current_mut();

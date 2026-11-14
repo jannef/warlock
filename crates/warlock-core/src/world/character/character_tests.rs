@@ -2,12 +2,12 @@
 //! as the scenario's; its race gives the player's eyes; its rolls, birth date, and sign follow
 //! from the seed, the choices, and the start date; the character is saved and hashed.
 
-use super::*;
 use crate::character::{CharacterSpec, Gender, other_stat};
 use crate::content::Sign;
 use crate::save;
 use crate::stats::Stat;
 use crate::test_support::CONTENT;
+use crate::world::*;
 
 fn spec(text: &str) -> CharacterSpec {
     text.parse().expect("a character")

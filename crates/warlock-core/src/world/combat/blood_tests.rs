@@ -2,13 +2,13 @@
 //! the victim, never water; stains add up, are saved and remembered, and are perceived only
 //! where the player sees them; and they never change what happens in a fight.
 
-use super::*;
 use crate::action::{AttackKind, parse_actions};
 use crate::blood::{CAP, RED, Stain};
 use crate::combat::{Blow, Strike};
 use crate::content::ContentFiles;
 use crate::geom::Dir;
 use crate::time;
+use crate::world::*;
 use std::sync::LazyLock;
 
 /// A lit test level beside the built-in content: the player (`@`), a giant rat (`r`, 12 hit

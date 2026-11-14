@@ -3,11 +3,11 @@
 //! player who sees it is told and learns the flask; up close it fights in melee; nothing of the
 //! throw lands; the three shipped bombers throw and carry flasks; the content check; replays.
 
-use super::*;
 use crate::action::parse_actions;
 use crate::content::{ContentFiles, ZoneKind};
 use crate::replay::Replay;
 use crate::test_support::{builtin, run, said as texts};
+use crate::world::*;
 
 /// A lit hall of `map` (`@` the player, `k` a kobold alchemist, `g` a goblin firebomber, `c` a
 /// cult chymist), the player with plenty of hit points.

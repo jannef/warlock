@@ -2,12 +2,12 @@
 //! everything the player carries for 100 gold per unidentified stack; the count, the refusals,
 //! magic items and scroll types identified, Pious left out, saves, and replays.
 
-use super::*;
 use crate::action::parse_actions;
 use crate::content::ContentFiles;
 use crate::magic::{Affix, Magic, Rarity};
 use crate::replay::Replay;
 use crate::test_support::{run, texts};
+use crate::world::*;
 
 /// The appraiser's words and service, added to the built-in dialogue.
 const APPRAISER: &str = r##"

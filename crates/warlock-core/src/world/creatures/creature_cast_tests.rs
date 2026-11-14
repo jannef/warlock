@@ -2,11 +2,11 @@
 //! casts the spells of its list through the player's spell code while it has the mana and they
 //! go, else fights; low-level casters are rare and know only the weakest spells.
 
-use super::*;
 use crate::action::{AttackKind, Event, parse_actions};
 use crate::content::ContentFiles;
 use crate::replay::Replay;
 use crate::test_support::run;
+use crate::world::*;
 
 /// The built-in content with `map`: the player at `@`, a caster of type `caster` at `k`, a
 /// creature of type `friend` at `f` (of the caster's faction), each hostile by its type.

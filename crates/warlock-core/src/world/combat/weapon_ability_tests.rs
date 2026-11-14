@@ -6,7 +6,6 @@
 //! talents, the menu's rows, and the news of a rank that teaches one.
 
 use super::weapon_ability::Fired;
-use super::*;
 use crate::ability::{Ability, Unavailable};
 use crate::action::AttackKind;
 use crate::combat::{Category, Strike};
@@ -14,6 +13,7 @@ use crate::content::Trigger;
 use crate::equipment;
 use crate::test_support::said;
 use crate::weapon_skills::WeaponSkills;
+use crate::world::*;
 
 // Sure blades that do a point or two, a cleaver that takes a third of a post at once, a foil that
 // parries nearly everything, a staff that threatens on every roll, a shield to block and bash.
@@ -188,7 +188,7 @@ map = '''
 /// The game's content with the test objects, creatures, and `map`; `abilities` false leaves the
 /// weapon abilities out (every file emptied).
 fn content(map: &str, abilities: bool) -> Arc<Content> {
-    let mut files = super::caster_tests::files();
+    let mut files = crate::world::magic::caster_tests::files();
     files.insert("data/objects/zz_wa_test.toml", OBJECTS);
     files.insert("data/creatures/zz_wa_test.toml", CREATURES);
     files.insert("levels/wa_yard.toml", &level(map));
@@ -760,7 +760,7 @@ fn the_menu_lists_what_ranks_teach_greyed_as_firing_by_itself() {
 /// The game's content with the test objects and the wizard's Arcane bolt as `bolt` says (its
 /// shape, resolution, and dice); `abilities` false leaves the weapon abilities out.
 fn spell_content(bolt: &str, abilities: bool) -> Arc<Content> {
-    let mut files = super::caster_tests::files();
+    let mut files = crate::world::magic::caster_tests::files();
     files.insert("data/objects/zz_wa_test.toml", OBJECTS);
     let text = format!(
         "[[spell]]\nid = \"arcane_bolt\"\nname = \"Arcane bolt\"\ndescription = \"x\"\n\
@@ -787,9 +787,9 @@ const RAY: &str = "shape = \"ray\"\nresolution = \"attack\"\nrange = 6\n\
 /// holding a knife and a shield, with Sword and Board at `rank`; the kobold's id. No creature
 /// acts.
 fn reflector(content: Arc<Content>, class: &str, rank: u8) -> (World, ActorId) {
-    let mut w = super::caster_tests::world_with(content, class);
-    super::caster_tests::reach(&mut w, 18);
-    let kobold = super::caster_tests::kobold(&mut w, 2, 10_000);
+    let mut w = crate::world::magic::caster_tests::world_with(content, class);
+    crate::world::magic::caster_tests::reach(&mut w, 18);
+    let kobold = crate::world::magic::caster_tests::kobold(&mut w, 2, 10_000);
     give(&mut w, kobold, "wa_knife");
     give(&mut w, kobold, "wa_shield");
     ranks(
@@ -992,7 +992,7 @@ fn a_reflection_spends_no_more_mana_and_keeps_the_casters_climbed_dice() {
     let bolt = content.spell(content.spell_id("arcane_bolt").expect("bolt"));
     let me = w.state.player();
     let cost = me.spell_cost(&content, bolt);
-    let roll = me.spell_roll(&content, bolt, super::CastBy::Own);
+    let roll = me.spell_roll(&content, bolt, crate::world::CastBy::Own);
     assert_eq!(
         roll.map(|r| r.to_string()).as_deref(),
         Some("4d6"),
@@ -1066,7 +1066,7 @@ fn reflection_draws_nothing_without_a_qualifying_rank() {
 fn a_creature_turns_the_players_wand_back_and_the_replay_verifies() {
     // A champion with a knife, a shield, and Sword and Board 10, who fights; the player zaps a
     // wand of scorching ray at it.
-    let mut files = super::caster_tests::files();
+    let mut files = crate::world::magic::caster_tests::files();
     files.insert("data/objects/zz_wa_test.toml", OBJECTS);
     files.insert(
         "data/creatures/zz_wa_champion.toml",

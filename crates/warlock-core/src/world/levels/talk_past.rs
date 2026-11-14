@@ -16,11 +16,11 @@
 //! owner, B2).
 
 use super::encounter::{Choice, How, Opening, Outcome, Pending};
-use super::{Actor, Spent, World};
 use crate::check;
 use crate::content::{ActionKind, Content, EncounterEntry};
 use crate::skills::{Effect, Use};
 use crate::stats::Stat;
+use crate::world::{Actor, Spent, World};
 
 /// The choices `pending` offers `player`: its outcome's, and Bluff's for a flagged entry met face
 /// to face by one trained in it, between Evade and Fight.

@@ -1,4 +1,4 @@
-//! Background stories in a run (`world/background.rs`): each effect lands where it should, the
+//! Background stories in a run (`world/character/background.rs`): each effect lands where it should, the
 //! story comes after the picks, who has one, and its ids through replays and saves.
 
 use super::*;
@@ -51,7 +51,7 @@ fn kitted(content: &Arc<Content>, character: &str, talents: &[&str]) -> Result<W
 
 fn gold(w: &World) -> u32 {
     let coin = w.content().object_id(crate::content::GOLD).expect("gold");
-    crate::world::shop::count_of(&w.state().player().inventory, coin)
+    crate::world::people::shop::count_of(&w.state().player().inventory, coin)
 }
 
 fn story(w: &World) -> Vec<String> {

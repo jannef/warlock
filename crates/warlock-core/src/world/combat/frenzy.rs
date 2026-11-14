@@ -6,8 +6,8 @@
 //! that burns every status away). `World::set_stance` refuses the frenzy stance, and any change
 //! while it holds.
 
-use super::{Actor, ActorId, Spent, World};
 use crate::content::{CombatStance, Content};
+use crate::world::{Actor, ActorId, Spent, World};
 
 /// Whether `actor` rages with its own Rage: the status its Rage ability brings is on it. A
 /// creature, or anyone without the ability, never is, whatever statuses they suffer.
@@ -30,7 +30,7 @@ pub(super) fn settle(actor: &mut Actor, content: &Content) -> Option<CombatStanc
 impl World {
     /// Settles actor `id`'s stance ([`settle`]), telling the player of theirs (a note: said after
     /// the action's own messages, and it does not stop a rest).
-    pub(super) fn settle_stance(&mut self, id: ActorId) {
+    pub(in crate::world) fn settle_stance(&mut self, id: ActorId) {
         let Some(actor) = self.state.actors.get_mut(&id) else {
             return;
         };
@@ -47,7 +47,7 @@ impl World {
 
     /// Why the player may not take `stance` now, said, if they may not: the frenzy comes
     /// only of rage, and rage holds them in it.
-    pub(super) fn stance_refused(&mut self, stance: CombatStance) -> Option<Spent> {
+    pub(in crate::world) fn stance_refused(&mut self, stance: CombatStance) -> Option<Spent> {
         if raging(self.state.player(), &self.content) {
             self.say("Your rage holds you in the frenzy.");
             return Some(Spent::Nothing);

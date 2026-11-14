@@ -3,7 +3,6 @@
 //! check's modifier and difficulty, what a tamed beast becomes, the refusals' cost, the mark,
 //! the menu's reason, and a replay.
 
-use super::*;
 use crate::ability::{Ability, Unavailable};
 use crate::action::{Action, parse_actions};
 use crate::content::{ContentFiles, Stance};
@@ -12,6 +11,7 @@ use crate::replay::Replay;
 use crate::skills::{Effect, SkillId, Trained};
 use crate::stats::Stat;
 use crate::test_support::{builtin, last_text as last, texts};
+use crate::world::*;
 use std::sync::Arc;
 
 /// A lit nook: the player below a beast walled in on three sides, so it cannot wander off.

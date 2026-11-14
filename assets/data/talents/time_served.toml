@@ -1,5 +1,5 @@
 # The craftsperson's class ability from level 1 (spec §8 "Class abilities": Time served; the
-# craftsperson design §7.1): passive, read once, as each trade is handed down (world/trade.rs).
+# craftsperson design §7.1): passive, read once, as each trade is handed down (world/crafting/trade.rs).
 [[talent]]
 id = "time_served"
 name = "Time served"

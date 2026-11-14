@@ -18,7 +18,6 @@
 //! Holy wrath ([`World::holy_wrathed`]) is no mode but a passive on every blow in `resolve`: one
 //! draw on a hit by its holder on an unholy target (with Avatar, any target).
 
-use super::{ActorId, Spent, World};
 use crate::action::{AttackKind, Event};
 use crate::combat::{Blow, Profile};
 use crate::content::{ActionKind, ClassActive};
@@ -26,6 +25,7 @@ use crate::damage::Damage;
 use crate::geom::Dir;
 use crate::talent::FaithEffect;
 use crate::talent::SmiteRider;
+use crate::world::{ActorId, Spent, World};
 
 /// The modes of smiting: the plain smite, and the smites with a rider.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -84,7 +84,12 @@ impl World {
         {
             self.smite_rider(target, rider, blow, events);
         }
-        self.after_attack(player, target, super::free_blow::parried(blow), events);
+        self.after_attack(
+            player,
+            target,
+            crate::world::combat::free_blow::parried(blow),
+            events,
+        );
         self.exert(ActionKind::Melee);
         Spent::Turn(price)
     }
@@ -165,7 +170,7 @@ impl World {
         self.dies(target, Some(player), None, self.state.time, &mut made);
         self.train_kill((player, target), kind);
         self.siphon(player, (target, at));
-        let fired = super::weapon_ability::Fired {
+        let fired = crate::world::combat::weapon_ability::Fired {
             other: target,
             kind,
             skills,
@@ -194,7 +199,12 @@ impl World {
     /// `blow` by `attacker` on `target` with Holy wrath's die added when it hit and its holder's
     /// wrath falls there (the unholy; with Avatar, any target): of the blow's kind, resisted but
     /// never soaked, as an `extra_damage`'s, and no zeal.
-    pub(super) fn holy_wrathed(&mut self, attacker: ActorId, target: ActorId, blow: Blow) -> Blow {
+    pub(in crate::world) fn holy_wrathed(
+        &mut self,
+        attacker: ActorId,
+        target: ActorId,
+        blow: Blow,
+    ) -> Blow {
         if !blow.strike.is_hit() {
             return blow;
         }
@@ -231,7 +241,7 @@ impl World {
     /// The player's smite at `target`: their melee profile with the smite's dice (its unholy
     /// dice too against an unholy foe) as its extra damage and their `aim` modifier added to
     /// hit; `None` without the Smite talent.
-    pub(super) fn smite_profile(&self, target: ActorId) -> Option<Profile> {
+    pub(in crate::world) fn smite_profile(&self, target: ActorId) -> Option<Profile> {
         let content = &self.content;
         let me = self.state.player();
         let smite = me.talent_mods(content).faith.smite?;
@@ -256,13 +266,13 @@ impl World {
     /// attacker still stands beside them, the cost is spent and their smite (the dice, the aim,
     /// the unholy die; no mode's rider) answers it, free but for one exertion. Unanswered, it is
     /// silent: no line, nothing spent. No draw while deciding.
-    pub(super) fn retribution(
+    pub(in crate::world) fn retribution(
         &mut self,
         attacker: ActorId,
         target: ActorId,
         hit: bool,
         events: &mut Vec<Event>,
-    ) -> Option<super::free_blow::FreeBlow> {
+    ) -> Option<crate::world::combat::free_blow::FreeBlow> {
         let player = self.state.player;
         if !hit || target != player || self.state.death.is_some() {
             return None;
@@ -297,10 +307,10 @@ impl World {
             return None;
         }
         self.exert(ActionKind::Melee);
-        Some(super::free_blow::FreeBlow {
+        Some(crate::world::combat::free_blow::FreeBlow {
             by: player,
             at: attacker,
-            kind: super::free_blow::Free::Retribution,
+            kind: crate::world::combat::free_blow::Free::Retribution,
             with: None,
             profile,
         })

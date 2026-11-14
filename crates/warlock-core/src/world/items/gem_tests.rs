@@ -4,7 +4,6 @@
 //! deterministically, larger and finer deeper; gems survive saves and replays; shops price them
 //! by their gem.
 
-use super::*;
 use crate::action::{Positions, parse_actions};
 use crate::color::Rgb;
 use crate::content::{ContentFiles, Cutting, ObjectId, dull};
@@ -15,6 +14,7 @@ use crate::object::Stack;
 use crate::replay::Replay;
 use crate::rng::Rng;
 use crate::test_support::builtin;
+use crate::world::*;
 
 // A lit room: the player beside a pile with two rubies and a large fine emerald on top.
 const LEVEL: &str = r##"
@@ -142,7 +142,7 @@ fn the_ten_gems_their_sizes_and_cuts_are_data() {
 
 #[test]
 fn bad_gem_data_is_reported() {
-    let gems = include_str!("../../../../assets/data/gems.toml");
+    let gems = include_str!("../../../../../assets/data/gems.toml");
     let cases = [
         (
             "data/gems.toml",
@@ -687,7 +687,7 @@ fn the_general_store_buys_gems_and_sells_them_back_by_their_gem() {
     let pack = &mut w.state.actors.get_mut(&player).expect("player").inventory;
     pack.push(fine.clone());
     pack.push(rough.clone());
-    let f = super::shop::favour(&content, shops, w.state.player());
+    let f = crate::world::people::shop::favour(&content, shops, w.state.player());
     let offer = shops.offer(&content, kind, &fine, f);
     // The store pays its share of the gem's worth, not of a "gem".
     assert!(offer >= 100, "{offer}");

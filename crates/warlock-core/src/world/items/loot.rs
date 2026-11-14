@@ -15,7 +15,6 @@
 //! `gear` at the creature's level (#193: primitive for kobolds, steel only for tougher
 //! creatures).
 
-use super::{Actor, ActorId, Spent, World};
 use crate::action::Positions;
 use crate::content::{Content, MAX_ITEM_LEVEL, ObjectId};
 use crate::gem;
@@ -23,6 +22,7 @@ use crate::magic::{LootGrade, loot};
 use crate::object::Stack;
 use crate::rng::Rng;
 use crate::variant::Source;
+use crate::world::{Actor, ActorId, Spent, World};
 
 /// What came of [`World::identify`].
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -76,7 +76,7 @@ impl World {
 
     /// Dev: identifies the inventory stacks `positions` names (everything with none).
     /// Takes no time; says what each turned out to be, or that there was nothing to learn.
-    pub(super) fn identify_dev(&mut self, positions: &Positions) -> Spent {
+    pub(in crate::world) fn identify_dev(&mut self, positions: &Positions) -> Spent {
         let len = self.state.player().inventory.len();
         let Some(chosen) = self.chosen(positions, len, "You carry no such thing.") else {
             return Spent::Nothing;
@@ -94,7 +94,7 @@ impl World {
     /// What `actor`, a creature that just died, drops besides what it carried: by its type's
     /// `loot` chance, a loose gem (by the gems' chance) or else a magic or rare item at its
     /// [`drop_level`], of a material by the creature's level (its gear), from its own stream.
-    pub(super) fn loot_of(&self, actor: &Actor) -> Option<Stack> {
+    pub(in crate::world) fn loot_of(&self, actor: &Actor) -> Option<Stack> {
         let chance = content_loot(self, actor)?;
         let mut rng = Rng::stream(self.state.seed, &format!("drop/{}", actor.id.0));
         if !rng.chance(u32::from(chance)) {
@@ -119,7 +119,7 @@ impl World {
     /// that raised it, or a status that raised it ends: its lasting maximum
     /// ([`Actor::lasting_max_hp`]), since what a status effect takes off it comes back, or its
     /// maximum now while a status still raises it above that.
-    pub(super) fn keep_hp_within_max(&mut self, id: ActorId) {
+    pub(in crate::world) fn keep_hp_within_max(&mut self, id: ActorId) {
         let content = self.content.clone();
         if let Some(actor) = self.state.actors.get_mut(&id) {
             let max = (actor.lasting_max_hp(&content)).max(actor.max_hp(&content));

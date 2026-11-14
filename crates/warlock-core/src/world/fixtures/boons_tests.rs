@@ -1,8 +1,7 @@
-//! A forgotten altar's great boons and banes (spec §7 "Special rooms"; `world/boons.rs`): Gift
+//! A forgotten altar's great boons and banes (spec §7 "Special rooms"; `world/fixtures/boons.rs`): Gift
 //! and Wrath of the forgotten, Exalted and Unmade (a level gained again gives no choices),
 //! Chosen and Forsaken (kept for life through a save), the relic, the horde, and the great tier's share of the draw.
 
-use super::super::World;
 use crate::Pos;
 use crate::action::Action;
 use crate::content::Content;
@@ -10,6 +9,7 @@ use crate::content::{ContentFiles, OutcomeDef, OutcomeKind, OutcomeTier};
 use crate::magic::Rarity;
 use crate::stats::{PerStat, Stat, Stats};
 use crate::test_support::{builtin, said_text as said};
+use crate::world::World;
 use std::sync::Arc;
 
 /// A room with a forgotten altar at (5, 2), the player beside it at (4, 3).

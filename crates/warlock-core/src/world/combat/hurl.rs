@@ -25,7 +25,6 @@
 
 use super::fight::{End, Guard, Words, attack_message};
 use super::shoot::Flight;
-use super::{Actor, ActorId, World};
 use crate::action::{AttackKind, Event};
 use crate::combat::Strike;
 use crate::content::{ActionKind, Content, DamageTypeId, ObjectId, Throw};
@@ -33,11 +32,12 @@ use crate::fov::radius2;
 use crate::geom::Pos;
 use crate::noise::Act;
 use crate::text::article;
+use crate::world::{Actor, ActorId, World};
 
 impl World {
     /// Whether creature `id` throws at actor `target`, standing at `at`, now: it has a throw,
     /// is not next to it, and has it in range with a clear line of fire.
-    pub(super) fn hurls_at(&self, id: ActorId, target: ActorId, at: Pos) -> bool {
+    pub(in crate::world) fn hurls_at(&self, id: ActorId, target: ActorId, at: Pos) -> bool {
         let me = &self.state.actors[&id];
         let Some(throw) = self.content.creature(me.creature).throw.as_ref() else {
             return false;
@@ -51,7 +51,7 @@ impl World {
 
     /// Creature `id` throws at actor `target` (its AI saw to it that it can). Returns the
     /// price: its throw's cost (priced as the throw begins, as every attack is).
-    pub(super) fn creature_hurls(
+    pub(in crate::world) fn creature_hurls(
         &mut self,
         id: ActorId,
         target: ActorId,
@@ -96,7 +96,7 @@ impl World {
 }
 
 /// The throw of `attacker`'s type, if an attack of `kind` made `with` an object was one.
-pub(super) fn thrown_by<'c>(
+pub(in crate::world) fn thrown_by<'c>(
     content: &'c Content,
     attacker: &Actor,
     kind: AttackKind,
@@ -108,7 +108,7 @@ pub(super) fn thrown_by<'c>(
 
 /// What the player is told of a creature's throw (module docs): by `thrower` (as they see it),
 /// at `target`, what came of it, the kind of damage it did, and the target's guard.
-pub(super) fn throw_messages(
+pub(in crate::world) fn throw_messages(
     content: &Content,
     throw: &Throw,
     (thrower, target): (End<'_>, End<'_>),

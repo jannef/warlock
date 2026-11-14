@@ -33,7 +33,7 @@ beast a start or a calling may draw, `every_kind()`). The load checks: known cre
 the player (`content/familiar.rs`; `[start]` and the names through `content/race_beasts.rs`,
 `FamiliarRules::start` a `RaceBeasts` as the companion's, #1567), a hex `touch` that lays a status, lists and names not empty
 (the draws index them); the rest is the author's (#1205: what shape a beast listed has; a kind
-without an `arrives` line arrives unsaid; `world/familiar_tests.rs` checks the shipped lists have
+without an `arrives` line arrives unsaid; `world/allies/familiar_tests.rs` checks the shipped lists have
 theirs).
 Its growth is `companions.toml`'s `[growth]`, one table. The new creatures are `cat`, `toad`,
 `raven`, `hare` (`docs/dev/creatures/beasts.md`), wildlife in no population: **not** `tameable`,
@@ -57,7 +57,7 @@ ankles."
 `ClassActive::CallFamiliar`, `use:call_familiar`, `Aim::Nothing`, had by whoever holds `familiar`:
 `BeastEffect::Familiar` is its active as well as the passive that brings the first, so
 `Content::class_active` finds the Familiar talent, and `active_name` calls the menu's row "Call
-familiar". `world/familiar.rs`:
+familiar". `world/allies/familiar.rs`:
 
 - `World::start_calling`, from `use_class`, after its checks (the ability, a status blocking `cast`,
   as Scribe's in `Ability::unavailable`): "Nothing comes." without `familiars.toml` or `allies.toml`;
@@ -164,11 +164,11 @@ new creatures and the new action change the content fingerprint: development sav
 
 ## Tests
 
-`world/familiar_tests.rs`: the draw's odds and lists, the start and its words, a restored run, the
+`world/allies/familiar_tests.rs`: the draw's odds and lists, the start and its words, a restored run, the
 touch (giver, degrees, the other hexes kept going), a summoned cat, the harrying, growth and always
-along, both kept beasts at once, the save round trip. `world/familiar_call_tests.rs`: the refusals
+along, both kept beasts at once, the save round trip. `world/allies/familiar_call_tests.rs`: the refusals
 and the menu's reasons, the hour, the interruption, no free cell, the overworld, the draw's odds with
-and without the imp, an imp as a familiar, determinism, the lost familiar back the same (kind, name, grade now, no draw), a first call that draws and is remembered, the memory through a save. `world/bond_tests.rs`, Familiar's sight: the
+and without the imp, an imp as a familiar, determinism, the lost familiar back the same (kind, name, grade now, no draw), a first call that draws and is remembered, the memory through a save. `world/allies/bond_tests.rs`, Familiar's sight: the
 talent at 25, its eyes, the nose through a door and not a wall, its reach by the rules or the kind,
 the retinue, each talent its own beast, no buff. `content/familiar.rs`'s load checks.
 `caster_tests`'s witch table. `input.rs::tend_way`. The screen snapshots `abilities-menu-witch` (the

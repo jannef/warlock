@@ -1,17 +1,17 @@
 //! Maker's mark (#1426; the craftsperson design §7.10): the craftsperson's at level 60, its one
-//! read in `world/craft_make.rs::make_out` (arms, armour, and jewellery made marked, whatever
+//! read in `world/crafting/craft_make.rs::make_out` (arms, armour, and jewellery made marked, whatever
 //! the grade; a kindless result never), and the mark's reads: the worth (`Worked::value`), the
 //! description's line, the capacity, and the patron's bonus. Without the talent nothing is
 //! marked.
 
 use super::craft_make::make_out_for_test;
-use super::*;
 use crate::character::CharacterSpec;
 use crate::content::{ContentFiles, Factor};
 use crate::magic::worked::Quality;
 use crate::object::Stack;
 use crate::skills::{SkillId, Trained};
 use crate::test_support::{CONTENT, run as act};
+use crate::world::*;
 use std::sync::LazyLock;
 
 /// A forge with its anvil at (5, 2), the player beside it at (4, 3).

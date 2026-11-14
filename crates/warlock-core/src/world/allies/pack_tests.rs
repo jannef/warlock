@@ -2,13 +2,13 @@
 //! ranger's melee and the companion's blows, never for a shot; the companion's share of the
 //! favoured prey; the table's row.
 
-use super::*;
 use crate::action::AttackKind;
 use crate::character::CharacterSpec;
 use crate::combat::Profile;
 use crate::content::CreatureSpawn;
 use crate::geom::Pos;
 use crate::test_support::CONTENT as BUILTIN;
+use crate::world::*;
 
 /// A kitted human ranger in the showcase (seed 7), with their companion beside them.
 fn ranger() -> World {
@@ -53,7 +53,7 @@ fn kobold_at(w: &mut World, p: Pos) -> ActorId {
         status: Vec::new(),
     };
     let (content, level) = (w.content.clone(), w.state.current_level.clone());
-    travel::make_creature(&mut w.state, &content, &level, &spawn)
+    crate::world::levels::travel::make_creature(&mut w.state, &content, &level, &spawn)
 }
 
 /// The player at `me`, the companion at `pet`, a kobold at `foe` (positions only: the hook

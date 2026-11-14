@@ -4,22 +4,22 @@
 mod boons;
 mod chest;
 mod collapse;
-mod curse;
+pub(in crate::world) mod curse;
 mod door;
-mod drink;
-mod feature;
-mod graves;
-mod graveyard;
+pub(in crate::world) mod drink;
+pub(in crate::world) mod feature;
+pub(in crate::world) mod graves;
+pub(in crate::world) mod graveyard;
 mod haunt;
 mod hoard;
 mod knock;
 pub(crate) mod mirrors;
-mod outcome;
-mod pray;
-mod rooms;
-mod shrine;
+pub(in crate::world) mod outcome;
+pub(in crate::world) mod pray;
+pub(in crate::world) mod rooms;
+pub(in crate::world) mod shrine;
 mod trap;
-mod treasury;
+pub(in crate::world) mod treasury;
 mod warp;
 cfg_if! {
     if #[cfg(test)] {

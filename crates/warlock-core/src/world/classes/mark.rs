@@ -22,9 +22,9 @@
 //!
 //! Nothing here draws.
 
-use super::{Actor, ActorId, World};
 use crate::content::{Build, ClassActive, Content, ResourceId, possessive};
 use crate::geom::{Dir, Pos};
+use crate::world::{Actor, ActorId, World};
 
 impl World {
     /// The marked pools actor `id` holds (`marked` in data: Openings), in resource order.
@@ -53,7 +53,7 @@ impl World {
 
     /// The player chooses an attack at `target`: the mark rule, before the attack (so its sneak
     /// attack builds in the new mark's pool). Without a marked pool, nothing.
-    pub(super) fn choose_mark(&mut self, target: ActorId) {
+    pub(in crate::world) fn choose_mark(&mut self, target: ActorId) {
         let player = self.state.player;
         if target == player || !self.state.actors.contains_key(&target) {
             return;
@@ -86,7 +86,7 @@ impl World {
     /// The player chooses a shot or a throw at cell `at` (`free`: a free shot, which they did
     /// not choose): [`World::choose_mark`] (or [`World::free_blow_at`]) the creature standing
     /// there, if any. Who the missile meets on its way is not chosen.
-    pub(super) fn choose_at_cell(&mut self, at: Pos, free: bool) {
+    pub(in crate::world) fn choose_at_cell(&mut self, at: Pos, free: bool) {
         let level = &self.state.current().id;
         let Some(target) = self.state.actor_at(level, at).map(|a| a.id) else {
             return;
@@ -100,7 +100,7 @@ impl World {
 
     /// The player strikes a free blow at `target`: it becomes the mark when none stands (there
     /// is nothing to lose), else nothing moves.
-    pub(super) fn free_blow_at(&mut self, target: ActorId) {
+    pub(in crate::world) fn free_blow_at(&mut self, target: ActorId) {
         let player = self.state.player;
         if target == player || self.marked_pools(player).is_empty() {
             return;
@@ -112,14 +112,14 @@ impl World {
 
     /// Whether a marked pool of `holder`'s may build on an attack at `target`: no mark stands,
     /// or `target` is it.
-    pub(super) fn builds_on(&self, holder: ActorId, target: ActorId) -> bool {
+    pub(in crate::world) fn builds_on(&self, holder: ActorId, target: ActorId) -> bool {
         self.mark_of(holder).is_none_or(|m| m == target)
     }
 
     /// Creature `id` dies, killed by `by` (if anyone): the mark's kill builds its killer's
     /// `mark_kill` (Patient blade's two), and then every mark on it is cleared, the pool kept,
     /// whoever killed it. Called from `fight.rs::dies` beside `Build::Kill`.
-    pub(super) fn mark_dies(&mut self, id: ActorId, by: Option<ActorId>) {
+    pub(in crate::world) fn mark_dies(&mut self, id: ActorId, by: Option<ActorId>) {
         if let Some(by) = by.filter(|&b| self.mark_of(b) == Some(id)) {
             self.gain_resource(by, Build::MarkKill);
         }
@@ -128,7 +128,7 @@ impl World {
 
     /// Creature `id` leaves the game (it died, or departed): the player's mark on it is
     /// cleared, the pool kept.
-    pub(super) fn unmark(&mut self, id: ActorId) {
+    pub(in crate::world) fn unmark(&mut self, id: ActorId) {
         let player = self.state.player;
         if let Some(me) = self.state.actors.get_mut(&player)
             && me.mark == Some(id)
@@ -139,7 +139,7 @@ impl World {
 
     /// The player changes level: the mark is cleared, the pool kept (a mark on another floor
     /// would make the first fight downstairs empty it for no reason they can see).
-    pub(super) fn unmark_on_travel(&mut self) {
+    pub(in crate::world) fn unmark_on_travel(&mut self) {
         let player = self.state.player;
         if let Some(me) = self.state.actors.get_mut(&player) {
             me.mark = None;
@@ -182,7 +182,7 @@ impl World {
 
 /// Time passed for `actor` (`World::live`): its mark is cleared once every marked pool it
 /// holds has decayed to 0. The one place time touches the mark.
-pub(super) fn faded(actor: &mut Actor, content: &Content) {
+pub(in crate::world) fn faded(actor: &mut Actor, content: &Content) {
     if actor.mark.is_none() {
         return;
     }

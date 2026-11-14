@@ -1,6 +1,6 @@
 //! The dead of past runs, as statues' names (spec §8 "Statues"; #1137, design
 //! `docs/design/monster-dread.md` §9.5) and on gravestones (spec §7 "Graves"; #1258,
-//! `world/graves.rs`).
+//! `world/fixtures/graves.rs`).
 //!
 //! The app keeps the graveyard file (every character who has died, `crates/warlock/src/
 //! graveyard.rs`); the core never reads it. When a run begins the app gives the run all of
@@ -17,10 +17,10 @@
 //! statue's name are left out of the state hash (`hash.rs::unhashed`), so a replay made on a
 //! machine with another graveyard verifies. Saves keep them.
 
-use super::{World, WorldState};
 use crate::content::Content;
 use crate::geom::Pos;
 use crate::rng::Rng;
+use crate::world::{World, WorldState};
 
 pub use crate::statue::Fallen;
 
@@ -45,7 +45,7 @@ impl World {
 }
 
 /// Names the unnamed statues of level `id` from the run's graveyard (module docs).
-pub(super) fn name_statues(state: &mut WorldState, content: &Content, id: &str) {
+pub(in crate::world) fn name_statues(state: &mut WorldState, content: &Content, id: &str) {
     if !state.graveyard.iter().any(|f| f.petrified) {
         return;
     }

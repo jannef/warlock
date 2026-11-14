@@ -1,10 +1,8 @@
 //! Waste not (#1420; the craftsperson design §7.3): the craftsperson's at level 6, and its three
-//! reads: salvage's yield (`world/salvage.rs::salvage_percent`), a failed recipe's stock and
-//! inputs all back (`world/craft_make.rs::failed_percent`), and a failed Temper or Whittle that
-//! damages nothing (`world/temper.rs`), its attempt counted. Without the talent each is as ever.
+//! reads: salvage's yield (`world/crafting/salvage.rs::salvage_percent`), a failed recipe's stock and
+//! inputs all back (`world/crafting/craft_make.rs::failed_percent`), and a failed Temper or Whittle that
+//! damages nothing (`world/crafting/temper.rs`), its attempt counted. Without the talent each is as ever.
 
-use super::craft_make::make_out_for_test;
-use super::*;
 use crate::action::parse_actions;
 use crate::character::CharacterSpec;
 use crate::content::{ContentFiles, Factor};
@@ -13,6 +11,8 @@ use crate::object::Stack;
 use crate::rng::Rng;
 use crate::skills::{SkillId, Trained};
 use crate::test_support::{builtin, said_text as said};
+use crate::world::crafting::craft_make::make_out_for_test;
+use crate::world::*;
 use std::sync::LazyLock;
 
 /// A forge with its anvil at (5, 2), the player beside it at (4, 3).

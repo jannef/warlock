@@ -11,11 +11,11 @@
 //!   ([`World::rot_away`], like burnt-out fires), and those of another level when the player
 //!   arrives there.
 
-use super::{ActorId, World};
 use crate::action::Positions;
 use crate::object::Stack;
 use crate::rot::{self, Stage};
 use crate::time::GameTime;
+use crate::world::{ActorId, World};
 
 impl World {
     /// How `stack` is by its age now: `None` for anything that is no food (or without hunger).
@@ -26,7 +26,7 @@ impl World {
     /// Food that has rotted away by `now` leaves actor `id`'s pack, the equipment following the
     /// positions; the player is told of each ("Your loaf of bread has rotted away.", logged without
     /// stopping a rest).
-    pub(super) fn rot_pack(&mut self, id: ActorId, now: GameTime) {
+    pub(in crate::world) fn rot_pack(&mut self, id: ActorId, now: GameTime) {
         let content = &self.content;
         let Some(actor) = self.state.actors.get_mut(&id) else {
             return;
@@ -64,7 +64,7 @@ impl World {
 
     /// Food that has rotted away leaves the piles of the level the player is on. Checked as
     /// perception runs; food lying elsewhere goes when the player comes there.
-    pub(super) fn rot_away(&mut self) {
+    pub(in crate::world) fn rot_away(&mut self) {
         let content = self.content.clone();
         let now = self.state.time;
         if content.hunger().is_none() {
@@ -88,7 +88,7 @@ impl World {
 
 /// How long from `now`, in seconds, until the first food in `inventory` rots away (0 when some
 /// already has); `None` when none will.
-pub(super) fn until_rots(
+pub(in crate::world) fn until_rots(
     inventory: &[Stack],
     content: &crate::content::Content,
     now: GameTime,

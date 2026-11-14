@@ -2,12 +2,12 @@
 //! none), a hit soaked to nothing does nothing else and glances off what soaked it, weapons and
 //! missiles carry their penetration, and fights against protected targets still replay.
 
-use super::*;
 use crate::action::{AttackKind, Event};
 use crate::combat::Strike;
 use crate::content::{ContentFiles, Role};
 use crate::magic::{Affix, Magic, Rarity};
 use crate::object::Stack;
+use crate::world::*;
 use std::sync::LazyLock;
 
 /// A lit test level beside the built-in content: the player (`@`) next to an iron tortoise

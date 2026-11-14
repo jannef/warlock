@@ -15,12 +15,12 @@
 //! (scores, skills, the class's level 1 abilities, the sign's gifts).
 
 use super::talent::Due;
-use super::{World, WorldError};
 use crate::character::CharacterSpec;
 use crate::content::{Content, TalentId};
 use crate::rng::Rng;
 use crate::talent;
 use crate::text::article;
+use crate::world::{World, WorldError};
 use std::sync::Arc;
 
 /// A creation pick as written: `id` or `id:choice`.
@@ -166,7 +166,7 @@ impl World {
     }
 
     /// Opens the creation picks as a choice due at level 1 (a character the player chose).
-    pub(super) fn open_creation(&mut self) {
+    pub(in crate::world) fn open_creation(&mut self) {
         let Some(spec) = self.state.character.as_ref().map(|c| &c.spec) else {
             return;
         };
@@ -188,7 +188,10 @@ impl World {
     /// character's (`scenario`, its `talents`, none for another character) and then the Random
     /// picks for the rest, and records them in the character. Fails when a named pick cannot be
     /// taken, or when they are too few or too many.
-    pub(super) fn take_creation(&mut self, scenario: &[String]) -> Result<(), WorldError> {
+    pub(in crate::world) fn take_creation(
+        &mut self,
+        scenario: &[String],
+    ) -> Result<(), WorldError> {
         let Some(spec) = self.state.character.as_ref().map(|c| c.spec.clone()) else {
             return Ok(());
         };
@@ -227,7 +230,10 @@ impl World {
     /// A run of the scenario's own character without the starting kit (a dev launch, tests,
     /// golden walks): its creation picks are opened, the scenario's named `picks` taken, and
     /// the rest dropped (no Random picks: such a run takes nothing it is not told to).
-    pub(super) fn take_scenario_picks(&mut self, picks: &[String]) -> Result<(), WorldError> {
+    pub(in crate::world) fn take_scenario_picks(
+        &mut self,
+        picks: &[String],
+    ) -> Result<(), WorldError> {
         self.open_creation();
         self.take_named(picks)?;
         self.state.progress.due.retain(|d| d.level != 1);

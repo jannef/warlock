@@ -1,12 +1,12 @@
 //! Hearing in the turn pipeline (spec §5 "Hearing"): who hears what, what the player perceives,
 //! messages, and resting.
 
-use super::*;
 use crate::action::parse_actions;
 use crate::content::ContentFiles;
 use crate::noise::{Act, Heard, RECALL_TURNS, SoundKind};
 use crate::replay::Replay;
 use crate::test_support::builtin;
+use crate::world::*;
 
 const TERRAIN: &str = r##"
 [[terrain]]

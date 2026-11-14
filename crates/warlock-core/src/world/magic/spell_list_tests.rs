@@ -3,11 +3,11 @@
 //! and Haste; the list's content checks (one scroll a spell, the classes' guaranteed spells,
 //! mana for everyone).
 
-use super::*;
 use crate::action::parse_actions;
 use crate::content::{ActionKind, ContentFiles, Reading, SpellPurpose, TalentEffect};
 use crate::talent::MagicEffect;
 use crate::test_support::{builtin, run, said};
+use crate::world::*;
 
 /// The pack: a, two scrolls of magic missile; b, one of haste; c, one of web; d, one of sleep;
 /// e, one of fireball.

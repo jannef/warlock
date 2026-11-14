@@ -4,11 +4,11 @@
 //! and its blade at the victim; creatures set it off as they open the door; searching finds it;
 //! levels may not put a pit on a door nor a trap on a secret one.
 
-use super::*;
 use crate::action::{SpellShape, parse_actions};
 use crate::content::ContentFiles;
 use crate::replay::Replay;
 use crate::test_support::{builtin, run, said as texts};
+use crate::world::*;
 
 const TERRAIN: &str = r##"
 [[terrain]]

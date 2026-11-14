@@ -32,7 +32,6 @@
 //! draws.
 
 use super::work::{Job, Task};
-use super::{Actor, Spent, World};
 use crate::action::Event;
 use crate::combat;
 use crate::content::{ActionKind, ClassActive, Content, LevelKind, RigDef, RigId, RigTakes, Trap};
@@ -42,10 +41,11 @@ use crate::skills::Effect;
 use crate::stats::Stat;
 use crate::text::article;
 use crate::time::Duration;
+use crate::world::{Actor, Spent, World};
 
 /// A rig under way: which, and on which cell.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(super) struct Rigging {
+pub(in crate::world) struct Rigging {
     rig: RigId,
     at: Pos,
 }
@@ -175,7 +175,7 @@ pub fn takes_words(content: &Content, def: &RigDef) -> String {
 
 /// Whether a wall stands within `reach` cells of `at` along one of the eight directions, on
 /// `level`: where a shot trap's slit would be.
-fn wall_near(content: &Content, level: &super::LevelState, at: Pos, reach: u8) -> bool {
+fn wall_near(content: &Content, level: &crate::world::LevelState, at: Pos, reach: u8) -> bool {
     Dir::ALL.iter().any(|&d| {
         let mut p = at;
         (0..reach).any(|_| {
@@ -275,7 +275,7 @@ impl World {
 
     /// `rig:ID:DIR`: the player begins to rig a trap of rig `name` on the cell `dir` of them
     /// (module docs), or is refused.
-    pub(super) fn start_rig(&mut self, name: &str, dir: Option<Dir>) -> Spent {
+    pub(in crate::world) fn start_rig(&mut self, name: &str, dir: Option<Dir>) -> Spent {
         if !self.may_use_class(ClassActive::Rig) {
             return Spent::Nothing;
         }

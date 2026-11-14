@@ -1,4 +1,4 @@
-//! Setting a gem and making jewellery (docs/design/recipes.md §5, §6; `world/set.rs`): a cut gem
+//! Setting a gem and making jewellery (docs/design/recipes.md §5, §6; `world/crafting/set.rs`): a cut gem
 //! set and the name following, the wizard's steps (no uncut gem, no item set already), a failure
 //! chipping the gem and leaving the item, a natural 2 shattering it, the refusals with no time,
 //! the twenty minutes and the mark, each ring and amulet made of its own material and never
@@ -6,7 +6,6 @@
 
 use super::craft_make::make_out_for_test;
 use super::set::set_out_for_test;
-use super::*;
 use crate::action::parse_actions;
 use crate::content::{ContentFiles, RecipeId};
 use crate::item_parts::ItemPart;
@@ -15,6 +14,7 @@ use crate::replay::Replay;
 use crate::skills::{SkillId, Trained};
 use crate::stats::{PerStat, Stats};
 use crate::test_support::{last_text as last, run as apply, said_text as said, texts};
+use crate::world::*;
 use std::sync::LazyLock;
 
 const ROOM: &str = "\

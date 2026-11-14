@@ -2,12 +2,12 @@
 //! pipeline: chatting, topics, non-answers, mutters heard and seen, swapping places and the
 //! refusals, patrols carrying on, rests, saves, and replays.
 
-use super::*;
 use crate::action::parse_actions;
 use crate::content::ContentFiles;
 use crate::noise::SoundKind;
 use crate::replay::Replay;
 use crate::test_support::{builtin, last_text as last_message, run, texts};
+use crate::world::*;
 
 const TERRAIN: &str = r##"
 [[terrain]]

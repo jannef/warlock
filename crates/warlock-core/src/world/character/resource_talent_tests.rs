@@ -6,11 +6,11 @@
 //! `World::resource_rate`, and `World::gain_resource`.
 
 use super::talent::Due;
-use super::*;
 use crate::character::CharacterSpec;
 use crate::content::{Build, ContentFiles, ResourceId};
 use crate::light::Light;
 use crate::test_support::run;
+use crate::world::*;
 use std::sync::LazyLock;
 
 /// A pitch-dark corridor: the player at its west end, a giant rat beside them.

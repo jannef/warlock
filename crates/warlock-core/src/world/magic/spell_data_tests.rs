@@ -4,8 +4,8 @@
 
 use super::caster_tests::{kobold_at, sp};
 use super::spell_type_tests::{cast, cell, files, put_back, start, status};
-use super::*;
 use crate::stats::{PerStat, Stat, Stats};
+use crate::world::*;
 
 fn hall() -> World {
     let mut w = start(Arc::new(Content::load(&files()).expect("content")), 7);

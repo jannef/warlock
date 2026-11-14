@@ -1,9 +1,9 @@
 //! Services haggle a little (#1031): a healer's and a sage's price follows the player's favour,
 //! a temple's stays flat, and every service paid trains Negotiation.
 
-use super::*;
 use crate::action::parse_actions;
 use crate::content::ContentFiles;
+use crate::world::*;
 
 const FOLK: &str = r##"
 [[dialogue]]
@@ -91,7 +91,7 @@ fn a_healers_and_a_sages_price_follow_favour_and_a_temples_stays_flat() {
     let at = |name: &str, list: &[(String, u32)]| list.iter().find(|p| p.0 == name).expect(name).1;
     negotiation(&mut w, 100);
     let content = w.content().clone();
-    let favour = shop::haggling(&content, content.shops().expect("shops"), w.state.player());
+    let favour = super::shop::haggling(&content, content.shops().expect("shops"), w.state.player());
     assert!(favour >= 20, "Negotiation 100 gives 20: {favour}");
     let haggled = prices(&w);
     let less = |price: u32| (u64::from(price) * (100 - favour as u64)).div_ceil(100) as u32;

@@ -11,7 +11,7 @@
 # two sconces, stools for pews, and the altar between two lamps. Old Dudda the sexton (K) walks
 # his rounds of the stones.
 #
-# The stones (spec §7 "Graves"; `world/graves.rs`): each gravestone cell gets an inscription as
+# The stones (spec §7 "Graves"; `world/fixtures/graves.rs`): each gravestone cell gets an inscription as
 # the yard is made, from the `[graves]` words at the end: one stone in ten names one of the
 # graveyard's fallen (every character who has died, as the game's graveyard file remembers them),
 # the rest the town's own dead, a name and a byname of Cēaptūn's folk and plausible years before

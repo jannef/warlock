@@ -2,11 +2,11 @@
 //! boulders from afar, fights in melee up close, closes in when out of range or blocked, and
 //! nothing it throws lands.
 
-use super::*;
 use crate::action::{AttackKind, parse_actions};
 use crate::content::ContentFiles;
 use crate::replay::Replay;
 use crate::test_support::{run, said};
+use crate::world::*;
 
 const TERRAIN: &str = r##"
 [[terrain]]

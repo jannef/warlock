@@ -6,7 +6,6 @@
 //! materials are found, and the built-in materials and lists are #193's and #194's: thousands of
 //! generated items across seeds and depths are each on their base item's list.
 
-use super::*;
 use crate::action::parse_actions;
 use crate::color::Rgb;
 use crate::content::{ContentFiles, ObjectId, PartRole, VERY_RARE};
@@ -16,6 +15,7 @@ use crate::magic::{Affix, LootGrade, Magic, Mods, Rarity, loot};
 use crate::object::Stack;
 use crate::test_support::builtin;
 use crate::variant::Source;
+use crate::world::*;
 
 // A lit room: the player beside a bronze long sword, and a pile of a tin chain mail shirt on a
 // steel dagger.
@@ -788,7 +788,7 @@ fn adamantium_rolls_a_die_more_and_doubles_armour_and_shields() {
     };
     assert!(said("long_sword").contains("2d9"), "{}", said("long_sword"));
     // Wielded: the inventory's numbers and the attacks (the character screen's) roll 2d9.
-    let mut w = super::class_active_tests::world("warrior");
+    let mut w = crate::world::classes::class_active_tests::world("warrior");
     let me = w.player_mut();
     me.inventory.clear();
     me.equipment = Default::default();

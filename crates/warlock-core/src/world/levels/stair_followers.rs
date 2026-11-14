@@ -25,7 +25,7 @@
 //! **What it keeps**: hit points, statuses, gear, and its awareness. It hunts on: its
 //! `last_seen` is the player's arrival; what it heard, its noise and post (cells of the old
 //! level) are gone, and so is its patrol route (it walks no beat here, nor back home).
-//! [`super::Actor::home`] remembers the level it first left: its death counts for a kill quest
+//! [`crate::world::Actor::home`] remembers the level it first left: its death counts for a kill quest
 //! there (`fight.rs`), so a quest's quarry that follows the player out of its place still counts
 //! (a fixed band, as the arena's rats, could otherwise fall short; a unique type's goal is met
 //! by `slain` wherever it dies).
@@ -34,15 +34,15 @@
 //! it gets no blow out of their climb: at equal speed the player acts first on arrival, and a
 //! fast creature comes at its own speed. No draws at all, so replays stay deterministic.
 
-use super::ally::few;
-use super::{ActorId, ActorKind, Mind, World, beast_friend};
 use crate::content::{ActionKind, Budge, CreatureId, LevelKind, Stance, the};
 use crate::text::{and_list, capitalized};
+use crate::world::allies::ally::few;
+use crate::world::{ActorId, ActorKind, Mind, World, allies::beast_friend};
 
 impl World {
     /// The creatures that follow the player if they take a staircase now (module docs), in id
     /// order. Asked on the level they are leaving.
-    pub(super) fn stair_followers(&mut self) -> Vec<ActorId> {
+    pub(in crate::world) fn stair_followers(&mut self) -> Vec<ActorId> {
         let (player, here) = (self.state.player, self.player_pos());
         let level = self.state.current_level.clone();
         let beside: Vec<ActorId> = (self.state.actors.values())

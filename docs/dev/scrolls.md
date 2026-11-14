@@ -26,7 +26,7 @@ no scroll's any more; the cast path shares their structs for its bursts and line
 `magic::loot::roll` draws among both, leaves objects without a `kind` out of loot that must be
 magic, and draws no rarity for them).
 
-The rules are `world/read.rs`: `Action::Read { item, target: Option<ReadTarget> }` (`read:b`,
+The rules are `world/magic/read.rs`: `Action::Read { item, target: Option<ReadTarget> }` (`read:b`,
 `read:b:12,5` a cell, `read:b:c` a stack; `ReadTarget::{Cell, Item}`), one arm in
 `player_acts`, priced `ActionKind::Read` (`read` in `data/actions.toml`; `read_price` scales it
 by `MagicMods::read_percent`, Scroll savant's and Scroll adept's halves, never below
@@ -35,7 +35,7 @@ used up (`use_up`, which follows the equipment's letters; it reports the Read st
 `Use::Read`, Decipher script's 50 % mark, #1270: all reading trains it). Refusals take no time
 and keep the scroll. A read is a cast (`World::read_cast`, below): a damage spell checks `can_loose_here`
 and `within_reach` (`shoot.rs`, shared with missiles), then casts its shape through **the one
-shared spell code** in `world/spell.rs`: `World::cast_burst(caster,
+shared spell code** in `world/magic/spell.rs`: `World::cast_burst(caster,
 (origin, center), burst)` and `World::cast_bolt(caster, origin, path, bolt)` (the effect's
 `Event::Spell`, one damage roll for everyone reached in actor-id order, typed by the burst's or
 bolt's `kind` (`damage_type` in data) and resisted by each target through `World::resisted`
@@ -57,7 +57,7 @@ fireball"). The scroll of identify casts Identify through the cast path
 scroll used up, and `World::identify` on the stack named, one place up if the used-up scroll
 stack was before it).
 
-**The Decipher ability** (#1025; `world/decipher.rs`): `Ability::Decipher` (Decipher script's use,
+**The Decipher ability** (#1025; `world/magic/decipher.rs`): `Ability::Decipher` (Decipher script's use,
 skill source, `Aim::Item`; `Unavailable::NoUnknownScroll` from the perception when no stack
 passes `undeciphered`) sends `Action::Decipher { item }` (`decipher:b`). `start_decipher` refuses a
 stack that is no unidentified scroll (no time) and answers `Spent::Decipher`; `decipher` keeps turns
@@ -65,7 +65,7 @@ of `ActionKind::Decipher` for `DecipherRules::seconds` as a forage does (`keep_a
 calls `deciphers` with the scroll's spell and level (`Reading::Cast`, else none and 0), and on success
 `learn_scroll`s the type without using the scroll up. The UI list is `ObjectList::Decipher`.
 
-**Making out a scroll** (#1024, `world/decipher.rs`, `content/decipher.rs`,
+**Making out a scroll** (#1024, `world/magic/decipher.rs`, `content/decipher.rs`,
 `data/rules/decipher.toml`; the skill uses design §6.6): `World::deciphers(spell, level)` stands between a
 reading's refusals and its `use_up`. A spell the player knows (`Actor::knows_spell`, a scroll they
 wrote too): true, no draw, and `Use::Decipher` still marks (a trained skill only). Else trained in Decipher script (the skill of learning, #1270) with `Actor::learning` at
@@ -84,20 +84,20 @@ failure saves nothing new; the labels stay as they were, because `say_read` neve
 Under this rule **the scroll of identify** still lists and refuses as it did (`cast_identify`'s
 refusals come before `pay_cast`, so a stack with nothing to tell draws nothing); read and failed, it
 is kept and identifies nothing. It is a spell of level 6, so a character trained in Decipher script below
-learning 6 makes the check. **Scribe** (`world/scribe.rs`, below) reads nothing and asks no check:
+learning 6 makes the check. **Scribe** (`world/magic/scribe.rs`, below) reads nothing and asks no check:
 it needs the spell known, the blank, and the mana, as before, and its scroll is an ordinary scroll,
 which reads by this rule for its writer too (the spell is known, so it reads at once, whatever their learning).
 The dev `identify` and F8 are not reads. Wands, rods, and spells cast for mana never ask. The file
 is optional (`Content::decipher`): without it every scroll simply reads; fixtures whose tests are
 about what a read does remove it (`files.remove("data/rules/decipher.toml")`) rather than draw a check.
-Tests: `world/decipher_tests.rs`.
+Tests: `world/magic/decipher_tests.rs`.
 
 **The scroll of restoration** (#887, the priest design §11) is the one scroll with no spell
 behind it: `read` of kind `cleanse` (`Reading::Cleanse(Cleansing { mends, restores })`; one of
 the two at least, neither with `spell` or `rungs`, nor they on a `spell` reading). `spell()`
 is `None`, `scroll()` (the `SpellScroll`) is `None`, `range()` and `on_item()` are a cast's
 only, so the read list reads it at once, it has no grimoire, and the aiming mode never sees it. `World::read` sends it
-to `World::read_cleanse` (`world/restore.rs`): refused, no time, with a target or with nothing to
+to `World::read_cleanse` (`world/magic/restore.rs`): refused, no time, with a target or with nothing to
 mend (no stat damage while `mends`, no drained point while `restores`, and no status
 `cured_by` `restore::RESTORATION`, Stiffening: "There is nothing to restore."); otherwise `deciphers(None, 0)` (above), `use_up` (Scroll savant's keep, the Read stat training), `say_read`, then
 `World::restore` (shared with the potion of restoration, docs/dev/potions.md):
@@ -116,7 +116,7 @@ wand words. `read_tests.rs::the_scroll_of_restoration_mends_and_restores`;
 label) and known on sight; `content/object.rs` lets a scrolls-class object without a `read` be
 loot (`level`, `frequency`: a `frequency` given makes it loot, so the sealed letter, which has
 none, stays out). `World::read` refuses it before anything else ("There is nothing written on
-it."). **Writing scrolls** is `world/scribe.rs`, the
+it."). **Writing scrolls** is `world/magic/scribe.rs`, the
 wizard's Scribe (`scribe` talent at 12, `MagicEffect::Scribe { mana_times }`,
 `MagicMods::scribe`): `Action::Scribe { spell }` (`scribe:fireball`, its own action, as the
 active asks for a spell: `ClassActive::aims_spell`, `Aim::Spell`), `World::start_scribe`
@@ -129,7 +129,7 @@ letters followed), `Stack::one(scroll_of)` added, `learn_scroll`, `StatUse::Scri
 new is saved (the writing runs inside one action); no draws but the spend's training. The
 scribe list is `ui/scribe_screen.rs` (`ScreenName::Scribe`, `--screen scribe`), from
 `PerceptionView::scribes` (each spell's price and nominal time, `OwnScribe`) and
-`blank_scrolls`. Tests: `world/scribe_tests.rs`; the list's snapshots `scribe-list` and
+`blank_scrolls`. Tests: `world/magic/scribe_tests.rs`; the list's snapshots `scribe-list` and
 `scribe-list-none`.
 
 **Unidentified scrolls** (#393, `scroll_label.rs`): every readable object type (`read`) has a
@@ -148,7 +148,7 @@ identify: "You read the scroll labelled ZUNBAR." then "It is a scroll of firebal
 `identify` and F8 too), and `World::begin` puts every labelled type of the starting pack in the set
 (`kit::known_types`, #1173: a chosen character of any class knows their kit, the casters' random
 spell scrolls too, #1104, a scenario's own pack is known the same way, and a background story's
-things, `world/background.rs::story_item`; `kit.rs::every_starting_scroll_and_potion_is_known`,
+things, `world/character/background.rs::story_item`; `kit.rs::every_starting_scroll_and_potion_is_known`,
 `a_scenarios_own_pack_is_known_by_type_too`). Wand types (#398) are labelled
 the same way from `data/wand_labels.toml` ("an oak wand"), drawn after the scrolls from the
 same stream, and learned by `World::use_charge` (docs/dev/spells.md "Wands"). Potion types
@@ -168,7 +168,7 @@ is (tests, starting-kit summaries). Dev dumps (`actors`) keep `describe_truth`. 
 `read` (a spell is aimed, identify's opens the identify list: `Reading::on_item`), so the prompt that follows tells a
 spell from identify; the design's "no cancelling once the target is known" belongs to the spells
 work (#395/#396). The identify list (`ObjectList::Identify`) lists the stacks `Lore::knows`
-is false for. Tests: `world/scroll_label_tests.rs`.
+is false for. Tests: `world/magic/scroll_label_tests.rs`.
 
 Presentation: `r` is `KeyCommand::Read` (id `read`, next to Eat), opening `ScreenName::Read`
 (`ObjectList::Read`, the paged list of readable stacks). A spell scroll answers
@@ -187,7 +187,7 @@ draws `Event::Spell`; a burst's origin is the reader, so it flies there first).
 **Scrolls of spells** (#397): a `read` table of kind `spell` names a spell of `data/spells/`
 (`Reading::Cast(SpellScroll { spell, rungs, reach, on_item })`, resolved as objects load, spells
 loading first; only `spell` and `rungs` may be given, `rungs` 0 to the spell's roll ladder's
-length, default 0). Reading one is `World::read_cast` (`world/cast.rs`): the one cast path with
+length, default 0). Reading one is `World::read_cast` (`world/magic/cast.rs`): the one cast path with
 `Pay::Scroll(item, rungs)` instead of mana, its roll at the scroll's `rungs` plus the reader's
 `scroll_rungs` (Scroll adept; `CastBy::Scroll`, no stats), the reader's other hooks (a reroll,
 a rider, a die more) applying, and the reader's reach and degrees, never asking whether the
@@ -211,7 +211,7 @@ title is plain words), so `Lore`, `kit::is_labelled`, decipher, and the identify
 it. The read list (`ObjectList::Read`) lists it with the scrolls (`ObjectDef::grimoire` as well
 as `read`).
 
-Spells (the one cast path, `world/cast.rs`, docs/dev/spells.md) share this code: a burst spell
+Spells (the one cast path, `world/magic/cast.rs`, docs/dev/spells.md) share this code: a burst spell
 goes through `burst_center` and `cast_burst`, a line through `bolt_line` and `cast_bolt`, and
 both are said with `say_spell` (`Cause::Spell` for a caster killed by their own, `Cause::Scroll`
 for a reader). Their roll is the cast's (`Burst::damage`, a `Roll`, with `Burst::reroll`, a
@@ -225,7 +225,7 @@ the spell scrolls' 20 to 60 by spell level (level, frequency, and value each the
 by the objects' README convention, the older three too: docs/dev/spells.md "The first list"). The
 wiki's table is `xtask/src/wiki/scrolls.rs` (`scrolls.md`), sharing `ice_text`/`sound_text`
 with the traps' table; its "Casts at" column is the roll at the scroll's rung
-(`SpellData::roll_at`). Tests: `world/read_tests.rs` (the three older scrolls at their rungs,
+(`SpellData::roll_at`). Tests: `world/magic/read_tests.rs` (the three older scrolls at their rungs,
 bursts and bolts, kills and experience, refusals, identify, death, saves and replays, loot,
-the `burst` and `bolt` readings refused), `world/spell_talent_tests.rs` (Scroll adept's rung), the read
+the `burst` and `bolt` readings refused), `world/character/spell_talent_tests.rs` (Scroll adept's rung), the read
 and identify lists in `ui/object_screen.rs`, aiming in `ui/target.rs`.

@@ -2,11 +2,11 @@
 //! floor, its hidden way down, the boss's death opening it, the boss made again until it is
 //! slain, an ordinary floor after, and the content's checks.
 
-use super::*;
 use crate::action::{Action, parse_actions};
 use crate::content::{Content, ContentFiles, StairsDir};
 use crate::mapgen;
 use crate::test_support::CONTENT;
+use crate::world::*;
 
 const BRANCH: &str = "grundleas";
 
@@ -206,7 +206,7 @@ fn a_boss_slain_away_from_its_lair_opens_nothing_and_stays_slain() {
         asleep: false,
         status: Vec::new(),
     };
-    let boss = travel::make_creature(&mut w.state, &CONTENT, &floor(9), &spawn);
+    let boss = super::travel::make_creature(&mut w.state, &CONTENT, &floor(9), &spawn);
     let stairs = w.state.current().stairs.len();
     kill(&mut w, boss);
     assert_eq!(w.state.current().stairs.len(), stairs);

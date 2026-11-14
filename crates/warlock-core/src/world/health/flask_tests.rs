@@ -3,12 +3,12 @@
 //! thrower's; an unknown flask is learned only when its breaking is seen; refusals; saves and
 //! replays; the content checks.
 
-use super::fixture_factions::make_peace;
-use super::*;
 use crate::action::{MissileEnd, SpellShape, parse_actions};
 use crate::content::{ContentFiles, ZoneKind};
 use crate::replay::Replay;
 use crate::test_support::{builtin, run, said as texts};
+use crate::world::creatures::fixture_factions::make_peace;
+use crate::world::*;
 
 // A training dummy takes a lot and never fights back.
 const DUMMY: &str = "[[creature]]\nid = \"dummy\"\nname = \"training dummy\"\nglyph = \"D\"\n\

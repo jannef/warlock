@@ -6,9 +6,9 @@
 //! Dark adaptation's darkvision, Rune sight's UV) and is what perception reads.
 //! Creatures see with their types' profiles, bettered the same way by a unique item they wear.
 
-use super::{World, WorldState};
 use crate::content::{Content, VisionProfile};
 use crate::talent::TalentMods;
+use crate::world::{World, WorldState};
 
 impl WorldState {
     /// The player's eyes: the base profile, bettered by a unique item's Vision power they wear

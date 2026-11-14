@@ -45,7 +45,6 @@
 //! casting, not learning, trains Spellcraft (#1270).
 
 use super::spell::Caster;
-use super::{Actor, Cause, Ended, Spent, World};
 use crate::action::Event;
 use crate::character::Character;
 use crate::check;
@@ -56,6 +55,7 @@ use crate::content::{
 use crate::geom::Dir;
 use crate::skills::{Effect, Use};
 use crate::stats::Stat;
+use crate::world::{Actor, Cause, Ended, Spent, World};
 use std::cell::Cell;
 
 /// What a character not trained in Decipher script is told when they would read a grimoire.
@@ -64,7 +64,7 @@ pub const UNTRAINED: &str = "You have no training in Decipher script; you cannot
 /// A study under way: the grimoire read (its position and object as the study began), the
 /// spell it teaches, the rank it is read for (`None`: to learn it), and the turns it takes.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(super) struct Lesson {
+pub(in crate::world) struct Lesson {
     pub(super) item: usize,
     pub(super) object: ObjectId,
     pub(super) spell: SpellId,
@@ -255,7 +255,7 @@ impl World {
     }
 
     /// Studies turn after turn until the lesson is done or something interrupts (module docs).
-    pub(super) fn study(&mut self, lesson: Lesson, events: &mut Vec<Event>) {
+    pub(in crate::world) fn study(&mut self, lesson: Lesson, events: &mut Vec<Event>) {
         let left = Cell::new(lesson.turns);
         let ended = self.keep_at(
             events,
@@ -407,7 +407,7 @@ impl World {
             }
             MishapEffect::Summon { creature } => self.summon(creature),
             MishapEffect::Learn => self.learn_spell(lesson.spell),
-            // The miscast's only (`world/miscast.rs`): the loader keeps them off the study's table.
+            // The miscast's only (`world/magic/miscast.rs`): the loader keeps them off the study's table.
             MishapEffect::Harm { .. }
             | MishapEffect::StatDamage { .. }
             | MishapEffect::RankLoss { .. }
@@ -488,7 +488,7 @@ impl World {
             asleep: false,
             status: Vec::new(),
         };
-        super::travel::make_creature(&mut self.state, &self.content, &id, &spawn);
+        crate::world::levels::travel::make_creature(&mut self.state, &self.content, &id, &spawn);
         self.spawned += 1;
     }
 }

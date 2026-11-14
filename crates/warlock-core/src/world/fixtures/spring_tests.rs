@@ -1,11 +1,11 @@
-//! Healing springs (spec §7 "Special rooms"; the design's §9.10; `world/drink.rs`): Drink is
+//! Healing springs (spec §7 "Special rooms"; the design's §9.10; `world/fixtures/drink.rs`): Drink is
 //! listed only beside a spring, a drink takes ten seconds, a broken one gives nothing, each
 //! outcome's hook, the shares of the draw, and a spring that never runs dry.
 
-use super::*;
 use crate::ability::Ability;
 use crate::content::{ContentFiles, OutcomeDef, OutcomeKind, OutcomeTable};
 use crate::test_support::{builtin, said_text as said};
+use crate::world::*;
 
 /// A room with a spring at (5, 2), the player beside it at (4, 3), and at `k` a kobold (also
 /// beside it), when asked for.

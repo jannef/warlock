@@ -3,7 +3,7 @@
 //! fingered's extra ring). [`SlotEffect`] is the data (a talent's `[[effect]]` of one of
 //! [`SlotEffect::KINDS`]), [`SlotMods`] the sum every rule reads (`TalentMods::slots`). A new
 //! effect of the area is a variant here, its field and its arm in [`SlotMods::add`] here, its
-//! wiki text in `xtask/src/wiki/talents/slots.rs`, and its one read (`world/body_slots.rs`).
+//! wiki text in `xtask/src/wiki/talents/slots.rs`, and its one read (`world/items/body_slots.rs`).
 //!
 //! The slots are named by id and resolved as the sum is made: a talent table is read before the
 //! slots, so the loader checks them once both are in (`content::talent::check_slots`).
@@ -55,9 +55,9 @@ pub struct Barred {
 /// What an actor's slot talents do, summed: one field per effect kind, read by one rule each.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct SlotMods {
-    /// The slots it cannot use, the first talent's words for each (`world/body_slots.rs`).
+    /// The slots it cannot use, the first talent's words for each (`world/items/body_slots.rs`).
     pub barred: Vec<Barred>,
-    /// The class-gated slots it has too (`world/body_slots.rs`).
+    /// The class-gated slots it has too (`world/items/body_slots.rs`).
     pub opens: Vec<SlotId>,
 }
 

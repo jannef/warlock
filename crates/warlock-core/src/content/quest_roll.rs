@@ -13,13 +13,13 @@
 //!   with `loot` only those loot can hold (a bring quest).
 //! - `[[quest.variant]]` (`id`, `target`, `weight`, `fallback`, `reveals`, `where`, and any of the
 //!   texts): an authored option, drawn by weight; what it gives replaces the quest's own. A
-//!   `fallback` variant is drawn only when no other can be (`world/quest_roll.rs`).
+//!   `fallback` variant is drawn only when no other can be (`world/people/quest_roll.rs`).
 //!
 //! A kill the player's Beast-friend talent forbids (a creature type of an animal faction, or a
-//! tag one carries) is left out of the pool as the quest is given (`world/quest_roll.rs`).
+//! tag one carries) is left out of the pool as the quest is given (`world/people/quest_roll.rs`).
 //!
 //! The pool is in content order (creature, object, and tag order; variants in file order), never
-//! a hash order; the draw is the world's (`world/quest_roll.rs`).
+//! a hash order; the draw is the world's (`world/people/quest_roll.rs`).
 
 use super::Content;
 use super::creature::CreatureId;

@@ -2,14 +2,12 @@
 //! talents of the `stars` tree): the two actives, Horn's grace and the Transfixing stare, used
 //! from the abilities menu's Birth sign group ([`crate::ability::Ability::Sign`]) as
 //! [`Action::Gift`]; Relentless's streak of blows at one creature ([`Streak`], on
-//! [`Actor::streak`](super::Actor)); Barbed hide's barbs; and Slip away's cheaper step out of
+//! [`Actor::streak`](crate::world::Actor)); Barbed hide's barbs; and Slip away's cheaper step out of
 //! reach. Each refuses or does nothing for an actor without its talent. Nothing here draws at
 //! random.
 //!
 //! [`Action::Gift`]: crate::action::Action::Gift
 
-use super::fight::Harm;
-use super::{ActorId, Spent, World};
 use crate::ability::{Ability, Unavailable};
 use crate::action::{AttackKind, Event};
 use crate::combat::{Profile, Strike};
@@ -18,10 +16,12 @@ use crate::damage::{Damage, Rider};
 use crate::geom::Pos;
 use crate::status::Effect;
 use crate::text::capitalized;
+use crate::world::combat::fight::Harm;
+use crate::world::{ActorId, Spent, World};
 use serde::{Deserialize, Serialize};
 
 /// A streak of melee blows at one creature (Relentless): who they were at, how many in a row,
-/// and the player's turn of the last ([`super::WorldState::turn`]). A blow continues it while
+/// and the player's turn of the last ([`crate::world::WorldState::turn`]). A blow continues it while
 /// it is at the same creature in the same turn or the next; anything else starts it over.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Streak {
@@ -34,7 +34,7 @@ impl World {
     /// `use:ID[:X,Y]` ([`Action::Gift`](crate::action::Action::Gift)): the player uses the
     /// birth sign's active `active`, at cell `at` if it asks for one. Refused, taking no time,
     /// without it, while its cooldown lasts, and without a cell it asks for.
-    pub(super) fn use_gift(
+    pub(in crate::world) fn use_gift(
         &mut self,
         active: SignActive,
         at: Option<Pos>,
@@ -165,7 +165,7 @@ impl World {
     /// each blow before it in the streak at `target`, to the talent's most. The blow continues
     /// the streak (or starts one), hit or miss. Melee only; an actor without the talent keeps
     /// no streak.
-    pub(super) fn relentless(
+    pub(in crate::world) fn relentless(
         &mut self,
         attacker: ActorId,
         target: ActorId,
@@ -207,7 +207,7 @@ impl World {
     /// Barbed hide: `target`, hit in melee by `attacker` and alive, cuts it for its talent's
     /// damage. Not a blow: no roll, no noise, and if it kills, no one earns anything. A status
     /// that strikes back ([`World::retaliate`]) answers first.
-    pub(super) fn barbed(
+    pub(in crate::world) fn barbed(
         &mut self,
         attacker: ActorId,
         target: ActorId,
@@ -284,7 +284,7 @@ impl World {
 
     /// `price`, actor `id`'s step to `to`, as Slip away makes it: its percent off when some
     /// hostile stands beside it and the step takes it out of reach of every one.
-    pub(super) fn slipped(&self, id: ActorId, to: Pos, price: i64) -> i64 {
+    pub(in crate::world) fn slipped(&self, id: ActorId, to: Pos, price: i64) -> i64 {
         let Some(me) = self.state.actors.get(&id) else {
             return price;
         };

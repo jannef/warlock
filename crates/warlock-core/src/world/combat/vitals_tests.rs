@@ -3,11 +3,11 @@
 //! like anyone; Anatomist finds them in bones and constructs; without the surprise rules
 //! everything has them.
 
-use super::*;
 use crate::action::{AttackKind, Event};
 use crate::combat::Strike;
 use crate::content::ContentFiles;
 use crate::skills::Trained;
+use crate::world::*;
 
 /// A creature that says it has no vitals (`vitals = false`), none of the rules' kinds.
 const STONE: &str = r##"
@@ -86,7 +86,7 @@ pub(super) fn lull(w: &mut World, id: ActorId) {
 }
 
 /// The player trained in `skill` to `value`.
-pub(super) fn train(w: &mut World, skill: &str, value: u16) {
+pub(in crate::world) fn train(w: &mut World, skill: &str, value: u16) {
     let id = w.content().skill_id(skill).expect("skill");
     let skills = &mut w.player_mut().skills;
     let mut all: Vec<(crate::skills::SkillId, Trained)> =

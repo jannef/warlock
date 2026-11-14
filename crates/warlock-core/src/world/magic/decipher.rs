@@ -28,14 +28,14 @@
 //! Only reading asks. Studying a scroll has its own check (`learn.rs`), writing one reads
 //! nothing (`scribe.rs`), and casting a spell one knows needs no scroll.
 
-use super::work::{Job, Task, Work};
-use super::{Spent, World};
 use crate::action::Event;
 use crate::content::{ActionKind, Content, Reading, SpellId};
 use crate::object::Stack;
 use crate::scroll_label::Lore;
 use crate::skills::{Effect, Use};
 use crate::stats::Stat;
+use crate::world::crafting::work::{Job, Task, Work};
+use crate::world::{Spent, World};
 
 /// What the player is told when they fail to make a scroll out.
 const SWIMS: &str = "The writing swims before your eyes.";
@@ -87,7 +87,7 @@ impl Job for Deciphering {
     }
 
     fn found(&mut self, now: &[Option<usize>]) {
-        self.item = super::work::one(now);
+        self.item = crate::world::crafting::work::one(now);
     }
 
     fn leave(&self) -> String {
@@ -112,7 +112,7 @@ pub fn undeciphered(content: &Content, lore: &Lore<'_>, stack: &Stack) -> bool {
 impl World {
     /// The player sets to making out a scroll of the pack (module docs); refused, taking no
     /// time, for a stack that is not an unidentified scroll.
-    pub(super) fn start_decipher(&mut self, item: usize) -> Spent {
+    pub(in crate::world) fn start_decipher(&mut self, item: usize) -> Spent {
         let content = self.content.clone();
         let Some(rules) = content.decipher() else {
             return Spent::Nothing;

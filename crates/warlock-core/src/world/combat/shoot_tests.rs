@@ -2,12 +2,12 @@
 //! as far as their range, attack whoever stands in the way, spend ammunition, and come down to be
 //! picked up again; burning arrows light the level until they burn out.
 
-use super::*;
 use crate::action::{AttackKind, MissileEnd, Positions, parse_actions};
 use crate::content::ContentFiles;
 use crate::replay::Replay;
 use crate::sight::{self, LineOfSight};
 use crate::test_support::{last as last_message, run};
+use crate::world::*;
 
 const TERRAIN: &str = r##"
 [[terrain]]

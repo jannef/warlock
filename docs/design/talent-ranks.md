@@ -70,7 +70,7 @@ Each entry: what the file does now rank by rank, what the single talent keeps, a
 
 | | Now |
 |---|---|
-| Effect per rank | `max_hp_per_levels { per_levels = 4, at_least = 3 }`: hit points, one per 4 character levels, at least 3, handed out at the pick and grown each level (`talent.rs` 2346–2350 `per_levels_at`; `world/talent.rs` 292–296) |
+| Effect per rank | `max_hp_per_levels { per_levels = 4, at_least = 3 }`: hit points, one per 4 character levels, at least 3, handed out at the pick and grown each level (`talent.rs` 2346–2350 `per_levels_at`; `world/character/talent.rs` 292–296) |
 | Rank needs | Toughness 11 / 14 / 17 |
 
 **Keeps**: rank 1 (Toughness 11). **Ranks 2 and 3: dropped.** More of the same number; Vigour already has the different things that build on Hardy (Unbowed needs it; Second wind, Fast healer, Clotting are the tree's other hit-point talents). A follow-up that is not "more hit points" would be a new hit-point mechanic, and none earns its place beside those.
@@ -97,7 +97,7 @@ Each entry: what the file does now rank by rank, what the single talent keeps, a
 
 | | Now |
 |---|---|
-| Effect per rank | `train_skill { dice = "1d6+4" }`: the chosen skill trained at the roll, or raised by it, from the `levels` stream (`World::train_chosen`, `world/talent.rs` 315–332) |
+| Effect per rank | `train_skill { dice = "1d6+4" }`: the chosen skill trained at the roll, or raised by it, from the `levels` stream (`World::train_chosen`, `world/character/talent.rs` 315–332) |
 | Rank needs | none; three ranks per skill (`docs/dev/progression.md` 642–643); the Scholar tree's one talent without prerequisites |
 
 **Removed whole** (the owner), with `train_skill`, the effect kind it alone uses (`grep train_skill assets/data`: Apprentice and the README). Taking skills up by talent is gone; a skill is trained by a class, a race, a background, and the level-up rolls (docs/dev/skills.md). What replaces it:
@@ -112,7 +112,7 @@ Each entry: what the file does now rank by rank, what the single talent keeps, a
 | Choice | `choice = "skill"`, kept, with its meaning narrowed to **a skill you are trained in**: Apprentice was the choice's only user, so `Choice::Skill`'s words change ("a skill" → "a skill you are trained in", `content/talent.rs` 124) and `talent::may_take` (2506–2527) refuses an untrained one as a `Refusal::BadChoice` ("`stealth` is not a skill you are trained in."), the way a hidden style is a bad choice for Stylist today (`docs/dev/weapon-skills.md` 91–92). The screens list what `may_take` allows. One pick per skill, as every talent with a choice (`Talents::rank_of(id, choice)`) |
 | Needs | none |
 | Effect | `skill { value = 25 }`: the **existing** kind `skill { skill, value }` ("that skill counts that much higher", README 238; `TalentEffect::Skill`, `content/talent.rs` 562), which no talent uses yet, with `skill` made optional: left out, it is the chosen skill, as `weapon` without `skill` or `role` reads the choice (README 244–248). `TalentMods::add` already takes the choice (`talent.rs` 1323) and the Skill arm (1505–1512) resolves `skill.or(choice)`; the loader (`content/talent.rs` 1703–1707) asks for `skill` or a `skill` choice |
-| The one hook | `Actor::skill_effect_above` (`world/actor.rs` 466–490), which every rule that reads a skill's benefit goes through (docs/dev/skills.md 73–75): `TalentMods::skills` is already put in the bonus list that `Skills::effect_above` (`skills.rs` 829–860) adds to a skill's value before its benefits are read. Nothing new is read anywhere |
+| The one hook | `Actor::skill_effect_above` (`world/turn/actor.rs` 466–490), which every rule that reads a skill's benefit goes through (docs/dev/skills.md 73–75): `TalentMods::skills` is already put in the bonus list that `Skills::effect_above` (`skills.rs` 829–860) adds to a skill's value before its benefits are read. Nothing new is read anywhere |
 | Past 100 | 100 is the **soft cap on growth**, not a ceiling on the value: a level-up roll past it adds half (`Skills::roll`, `skills.rs` 13, 792, `soft_cap`); a value runs 0 to `MAX_VALUE` 999 (47), and `effect_above` holds the value plus bonuses to 999, not 100. So a skill at 100 with Skill focus is read at 125, and the benefits keep paying there: every curve in `data/skills.toml` runs to 150 or 200 (`[[0, 0], [100, 8], [200, 12]]` for most uses; quiet `[100, 60], [150, 75]`; identify `[100, 12], [200, 20]`; mana regen `[100, 40], [200, 60]`), level only after the last point (`Benefit::at`, 558–583), and Tumble's Dodge steps go on every 25 past 100. A skill the affixes already push past 100 (the same bonus list) proves the path |
 | With Master of none | both are bonuses in the one list, and `effect_above` sums every bonus a skill has: a bard at 25 with Skill focus (Stealth) reads Stealth 30 higher, a magic affix on top |
 | Shown | as an affix's bonus is: the Skills screen shows the trained value (`own_skills`, `perception.rs` 1707–1716), the Talents page the talent with its choice, the wiki the number |
@@ -179,7 +179,7 @@ For scale: a skill affix gives 5–10 at item level 1 and 20–30 at 12 (`affixe
 
 | | Armour training +2 |
 |---|---|
-| Read | `Actor::defence` (`world/actor.rs` 617–623): each worn piece's `max_dex`, plus its affix's and the talents', then the burden's cap (Unburdened none, Burdened 3, Strained 1, Overloaded 0: `Burden::max_dex`, `burden.rs` 112) chained after them, and the lowest wins; the Dexterity modifier (`floor((score − 10) / 2)`) is held to it |
+| Read | `Actor::defence` (`world/turn/actor.rs` 617–623): each worn piece's `max_dex`, plus its affix's and the talents', then the burden's cap (Unburdened none, Burdened 3, Strained 1, Overloaded 0: `Burden::max_dex`, `burden.rs` 112) chained after them, and the lowest wins; the Dexterity modifier (`floor((score − 10) / 2)`) is held to it |
 | What +2 buys | the armours' caps: padded coat 8, leather jerkin 6, studded leather 5, chain mail 4, scale mail 3, tower shield 2, banded mail 1, plate 1 (`data/objects/*.toml`). Plate or banded mail 1 → 3: a Dexterity 16 fighter (+3) keeps the whole modifier in plate, where +1 kept Dexterity 14's; scale 3 → 5, chain 4 → 6. Nothing for Dexterity 13 or less, whose +1 fits every cap but a tower shield's over banded mail or plate, nor against the Overloaded cap of 0 |
 | Heavy armour mastery | needs Armour training (one pick; rank 2's Strength 13 goes) and level 12 (§3.1): the pair is two picks for cap +2 and Protection +1 in heavy armour, where rank 1, rank 2, and the mastery were three. Stalwart needs Armour training as before |
 | Alike | no other talent has `max_dex` (Nimble is `burden_dex`, the burden's cap); the affix table's row naming it (`xtask/src/wiki/magic.rs` 359) stays |
@@ -211,7 +211,7 @@ For scale: a skill affix gives 5–10 at item level 1 and 20–30 at 12 (`affixe
 | Rank 1 | `kick_die { sides = 6 }`, `door_kick { value = 4 }`; no needs (the Might tree's free talent) |
 | Rank 2 | `door_kick { value = 4 }` again, `dig_percent { value = 25 }`; Strength 14 |
 
-**Keeps**: rank 1 as Mighty kick, the free talent. **Rank 2 → Breaker** (Might; needs Mighty kick, Strength 14; decided, with the kick-back): *"Your kicks send a foe reeling: one your kick lands on is driven a cell back, when there is room; and you dig a quarter faster."* Effects: `dig_percent 25` (exists) and **`kick_back` (new)**: a kick at a creature that hits drives it one cell along the kick's direction when that cell is free. The code exists: `World::knock_back` (`world/weapon_active.rs` 376–405, Hip throw's and Shield rush's `knockback` weapon abilities) moves a hit foe one cell when the cell is walkable, untrapped, unfrozen, and empty, no draw. The new kind is a `TalentEffect` variant, a `TalentMods` bool, and one read where a kick's blow resolves (`world/fight.rs`, the `Action::Kick` arm, after the strike), calling `knock_back` with no status. Its second `door_kick 4` is dropped: a bigger number of rank 1's thing. Why not drop Breaker whole: a "dig faster" talent alone is Tunneler (Delver, `dig_percent 50`, no needs) under another name; the kick-back is what makes it a different talent, and it reuses a mechanic the game already has.
+**Keeps**: rank 1 as Mighty kick, the free talent. **Rank 2 → Breaker** (Might; needs Mighty kick, Strength 14; decided, with the kick-back): *"Your kicks send a foe reeling: one your kick lands on is driven a cell back, when there is room; and you dig a quarter faster."* Effects: `dig_percent 25` (exists) and **`kick_back` (new)**: a kick at a creature that hits drives it one cell along the kick's direction when that cell is free. The code exists: `World::knock_back` (`world/combat/weapon_active.rs` 376–405, Hip throw's and Shield rush's `knockback` weapon abilities) moves a hit foe one cell when the cell is walkable, untrapped, unfrozen, and empty, no draw. The new kind is a `TalentEffect` variant, a `TalentMods` bool, and one read where a kick's blow resolves (`world/combat/fight.rs`, the `Action::Kick` arm, after the strike), calling `knock_back` with no status. Its second `door_kick 4` is dropped: a bigger number of rank 1's thing. Why not drop Breaker whole: a "dig faster" talent alone is Tunneler (Delver, `dig_percent 50`, no needs) under another name; the kick-back is what makes it a different talent, and it reuses a mechanic the game already has.
 
 ### Old delver — `old_delver.toml`
 
@@ -266,8 +266,8 @@ For scale: a skill affix gives 5–10 at item level 1 and 20–30 at 12 (`affixe
 
 | Talent | Tree; needs | What it did | What references it | Replaced by |
 |---|---|---|---|---|
-| **Anvil and hammer** | Weaponcraft; Two Shields 6 (above Shield expert, Shield block 2, the entry: Shield +1 and every style's bash 10 likelier) | `weapon { skill = "two_shields", bash = 15 }`: the second shield's follow-up blow 15 points likelier (`World::other_shield`); `systems = ["styles"]` | `wiki/src/fighting-styles.md` 77; `docs/dev/weapon-skills.md` 92–93; `spec/08i-character.md` 1650–1651; `world/two_shield_tests.rs` 228–236 (`the_styles_talents_and_the_stylists_choice_wait_for_its_first_marks`, `ours = ["anvil_and_hammer"]`: the hidden style's talents stay unlisted until marks; the test keeps its Stylist half and loses its talent half); the generated wiki rows. No class, race, sign, or campaign names it | nothing |
-| **Second blade's rend** | Finesse; Twin Blades 6 (above Two-weapon training, Twin Blades 2, the entry: both two-weapon penalties eased by 2) | `rend_off_hand`: Rend, Twin Blades' rank ability, rolls the off hand's dice too (`world/weapon_ability.rs` 279); `systems = ["weapon_abilities", "styles"]` | the kind `rend_off_hand`, its only user: `content/talent.rs` 940, `talent.rs` 522, README; `world/weapon_ability_tests.rs` 326 (`second_blades_rend_rolls_the_off_hand_too`); `world/body_talent_tests.rs` 459 (a comment); `xtask/src/wiki/weapon_abilities.rs` 184 (the Rend row's words); `docs/dev/weapon-abilities.md` 97, 205; `assets/data/talents.toml` 173 (the system's comment); `docs/balance.md` 910 (the `weapon_abilities` count, 5 → 4: Early mastery, Brace of steel, Practised technique, Drillmaster); `docs/design/combat-progression.md` 605, 655 (the record, untouched). No class, race, sign, or campaign names it | nothing |
+| **Anvil and hammer** | Weaponcraft; Two Shields 6 (above Shield expert, Shield block 2, the entry: Shield +1 and every style's bash 10 likelier) | `weapon { skill = "two_shields", bash = 15 }`: the second shield's follow-up blow 15 points likelier (`World::other_shield`); `systems = ["styles"]` | `wiki/src/fighting-styles.md` 77; `docs/dev/weapon-skills.md` 92–93; `spec/08i-character.md` 1650–1651; `world/combat/two_shield_tests.rs` 228–236 (`the_styles_talents_and_the_stylists_choice_wait_for_its_first_marks`, `ours = ["anvil_and_hammer"]`: the hidden style's talents stay unlisted until marks; the test keeps its Stylist half and loses its talent half); the generated wiki rows. No class, race, sign, or campaign names it | nothing |
+| **Second blade's rend** | Finesse; Twin Blades 6 (above Two-weapon training, Twin Blades 2, the entry: both two-weapon penalties eased by 2) | `rend_off_hand`: Rend, Twin Blades' rank ability, rolls the off hand's dice too (`world/combat/weapon_ability.rs` 279); `systems = ["weapon_abilities", "styles"]` | the kind `rend_off_hand`, its only user: `content/talent.rs` 940, `talent.rs` 522, README; `world/combat/weapon_ability_tests.rs` 326 (`second_blades_rend_rolls_the_off_hand_too`); `world/character/body_talent_tests.rs` 459 (a comment); `xtask/src/wiki/weapon_abilities.rs` 184 (the Rend row's words); `docs/dev/weapon-abilities.md` 97, 205; `assets/data/talents.toml` 173 (the system's comment); `docs/balance.md` 910 (the `weapon_abilities` count, 5 → 4: Early mastery, Brace of steel, Practised technique, Drillmaster); `docs/design/combat-progression.md` 605, 655 (the record, untouched). No class, race, sign, or campaign names it | nothing |
 
 **Kept**: Stylist, Two-weapon training, Shield expert (the entry talents), Fencing (the class's), Forge-born, Grasping arms, Tentacles (the stars'; the horoscope is kept whole, #776). The `styles` system keeps its talents, so the coverage bar holds. The rework and expansion of weapon and style feats comes later (the owner) and is not designed here.
 
@@ -291,13 +291,13 @@ No other talent needs a rank above 1 (`grep -E 'talents = \{[^}]*= [2-9]' assets
 | The bard's table | `assets/data/classes/02-bard.toml:47` | `{ level = 25, talent = "jack_of_all_trades", rank = 2 }` | the row names `master_of_none` (§2); comment at 36–37 |
 | Class tables' `rank` field | `assets/data/classes/README.toml:97–101`; `content/class.rs:110–117` (`rank: u8`), 155–167 (rank 0, twice, after a higher rank), 219–237 (`check_table`: a rank past the talent's), 557–560 (`ranks_to`) | the one row above is the only user | field removed (§5) |
 | Prestige tables | `assets/data/prestige/README.toml:26`; `content/prestige.rs:75, 253–254, 281–289` (`Table::abilities` `(level, talent, rank)`, `ranks_to`) | the Hunter's one row names no rank (`hunter.toml`) | with the class field |
-| `class::grant`, `held_already`, the news | `world/class.rs:5–8, 20–25 (hand_out(rank)), 61, 73–92 (every missing rank below), 106–122 (held at the rank named or higher), 142–153 ("Your Jack of all trades grows.")` | | collapse to one rank; the "grows" line goes |
-| Races | `assets/data/races.toml` | grant `versatile` only, rank 1 (`world/racial.rs`) | nothing |
-| Birth signs | `assets/data/horoscope.toml` `grants`; `world/stars.rs`; `Talents::regrant` (`talent.rs` 117–131, each at rank 1) | none of the 17 | nothing |
-| Background stories | `assets/data/background/05-trial.toml:131–135` (`the_flux`: `{ talent = "hardy" }`, a boon at rank 1, `world/boons.rs` 171–185); `03-childhood.toml:27` `tags = ["quick"]` is a line tag, not the talent; `04-youth.toml` 105–201 "apprentice" ids and the `apprenticed` tag are story lines, not the talent | Hardy at rank 1 stays Hardy; the comment at 131 ("never told to one who holds it already") still holds | nothing |
+| `class::grant`, `held_already`, the news | `world/classes/class.rs:5–8, 20–25 (hand_out(rank)), 61, 73–92 (every missing rank below), 106–122 (held at the rank named or higher), 142–153 ("Your Jack of all trades grows.")` | | collapse to one rank; the "grows" line goes |
+| Races | `assets/data/races.toml` | grant `versatile` only, rank 1 (`world/character/racial.rs`) | nothing |
+| Birth signs | `assets/data/horoscope.toml` `grants`; `world/character/stars.rs`; `Talents::regrant` (`talent.rs` 117–131, each at rank 1) | none of the 17 | nothing |
+| Background stories | `assets/data/background/05-trial.toml:131–135` (`the_flux`: `{ talent = "hardy" }`, a boon at rank 1, `world/fixtures/boons.rs` 171–185); `03-childhood.toml:27` `tags = ["quick"]` is a line tag, not the talent; `04-youth.toml` 105–201 "apprentice" ids and the `apprenticed` tag are story lines, not the talent | Hardy at rank 1 stays Hardy; the comment at 131 ("never told to one who holds it already") still holds | nothing |
 | Campaign data | `assets/campaigns/` | names none of the 17, nor the three removed (grep) | nothing |
-| Creation picks, `--talents` | `world/creation.rs`; `CharacterSpec::talents` | a pick is `id` or `id:choice`, never a rank | nothing (Skill focus, no needs, is offered as Apprentice was) |
-| `Actor::boons`, altars | `world/boons.rs:132, 154, 171–185` | rank 1 | nothing |
+| Creation picks, `--talents` | `world/character/creation.rs`; `CharacterSpec::talents` | a pick is `id` or `id:choice`, never a rank | nothing (Skill focus, no needs, is offered as Apprentice was) |
+| `Actor::boons`, altars | `world/fixtures/boons.rs:132, 154, 171–185` | rank 1 | nothing |
 | The story's conditions | `background.rs:94–95, 155` (`has(t, 1)`, `rank_of > 0`) | held or not | nothing (the `1` goes with the field) |
 
 ### 3.3 Talents a follow-up or a new talent would crowd
@@ -319,8 +319,8 @@ No other talent needs a rank above 1 (`grep -E 'talents = \{[^}]*= [2-9]' assets
 | `Need::Talent(id, rank)` and its words | `content/talent.rs:2514, 2551–2556` ("{name} {rank}"); `talent.rs:2405–2411` |
 | The alike check | `content/talent_alike.rs:23–28` (effects per rank), `30, 40–53` (clone per rank), `65–75` (`needed`: every rank's needs), `105–122` (**the chain rule**: "make it that talent's next rank") |
 | Runtime | `talent.rs:36–41` (`Taken { id, rank, choice }`, saved and hashed), `80–89` (`rank_of`, `has`), `92–104` (`take`: one rank more), `108–115` (`hold`), `154–161` (mods summed `1..=taken.rank`), `223, 233, 244` (per-rank hp/mana/caster-level entries), `2452, 2465` (`Refusal::AtTop`, "You already have all of {name}."), `2491–2538` (`unmet`, `may_take`: the rank it would reach) |
-| The pick | `world/talent.rs:288–311` (`take_talent`: `hand_out(rank)`, `effects_at(rank)`, "You learn {name} ({rank})."), `315–332` (`train_chosen`: goes with Apprentice) |
-| Other per-rank readers | `world/spell_mods.rs:63–66` (`1..=taken.rank`); `ability.rs:369–372` and `content/weapon_ability.rs:497` (`effects_at(rank_count())`: the top rank's effects) |
+| The pick | `world/character/talent.rs:288–311` (`take_talent`: `hand_out(rank)`, `effects_at(rank)`, "You learn {name} ({rank})."), `315–332` (`train_chosen`: goes with Apprentice) |
+| Other per-rank readers | `world/magic/spell_mods.rs:63–66` (`1..=taken.rank`); `ability.rs:369–372` and `content/weapon_ability.rs:497` (`effects_at(rank_count())`: the top rank's effects) |
 | Perception | `perception.rs:165–176` (`OwnTalent { rank, ranks }`), `220–236` (`TalentView { ranks, held, needs }`: the *next* rank's needs), `2144–2152, 2187–2202` |
 | Dumps | `dump.rs:79–80, 1012–1019` (`Hardy 2/3`), `2023–2024` (JSON `rank`, `ranks`); `crates/warlock-cli/src/main.rs:93` (help) |
 | Screens | `crates/warlock/src/ui/talents_screen.rs:3–5, 33–34, 101, 108–112, 130–132, 215–229, 239–243` ("2/3"); `level_up_screen.rs:67, 201–204, 356` ("2/3" beside the name); `chargen_talents_screen.rs:152` ("listed even when their last rank is taken") |
@@ -331,29 +331,29 @@ No other talent needs a rank above 1 (`grep -E 'talents = \{[^}]*= [2-9]' assets
 
 | Test | File:line | What it does | After |
 |---|---|---|---|
-| `ranks_come_one_at_a_time_and_hardy_grows_with_the_levels` | `world/talent_tests.rs:157` | takes Hardy rank by rank | one Hardy, grown with the levels |
-| (the perception test) `(hardy.held, hardy.ranks) == (1, 3)` | `world/talent_tests.rs:543` | reads `TalentView` | held or not |
-| `each_talent_changes_the_rule_it_names`'s fixture | `world/talent_tests.rs:232–245` | gates Apprentice to elves (its three ranks per skill would keep a pick open to the last level) by rewriting its file text | the gate moves to Skill focus (one pick per trained skill keeps picks open the same way) |
-| `weapon_focus_and_its_kind_sharpen_only_the_chosen_skill_rank_by_rank` | `world/talent_arms_tests.rs:94` | rank 2's damage | Weapon specialization's rank |
-| `guard_talents_change_defence_and_protection` | `world/talent_arms_tests.rs:203–213` | two Armour training gives raise plate's cap 1 → 3 | one give does |
-| `elemental_ward_resists_the_chosen_element_by_rank` | `world/talent_arms_tests.rs:283` | rank 2's 50 % | gone |
-| `mighty_kick_and_crusher_change_kicks_and_its_second_rank_digs_faster` | `world/body_talent_tests.rs:222` | rank 2 | Breaker |
-| `old_delver_lifts_one_stack_before_it_seals_at_its_second_rank` | `world/hoard_tests.rs:212` | rank 2 | Old hand |
-| `old_delver_quickens_a_room_s_quickening_half_again_at_its_second_rank` | `world/room_tests.rs:581` | rank 2 | Old hand |
-| `pious_at_its_second_rank_turns_a_great_bane_into_nothing_but_not_the_explosion` | `world/boons_tests.rs:348` | rank 2 | **deleted** with the `penitent` kind |
-| `scroll_savant_now_and_then_keeps_the_scroll_at_its_second_rank` | `world/talent_wits_tests.rs:98` | rank 2 | Spell recall |
-| `apprentice_trains_the_chosen_skill_at_the_pick` | `world/talent_wits_tests.rs:2, 194–220` | the pick trains Appraise | a Skill focus test: the chosen skill's benefit read 25 higher, past 100 too; an untrained choice refused; the sum with Master of none |
-| `a_restored_bard_past_both_ranks_is_given_each_and_a_skill_added_later_is_taken_up` | `world/class_rogue_tests.rs:740, 760` | the bard's two ranks | Master of none at 25 |
-| the Stalwart pick | `world/class_active_tests.rs:199–200` | "You learn Armour training (1)." | without the number |
-| `second_blades_rend_rolls_the_off_hand_too` | `world/weapon_ability_tests.rs:326` | the cut talent | **deleted** with `rend_off_hand` |
-| `the_styles_talents_and_the_stylists_choice_wait_for_its_first_marks` | `world/two_shield_tests.rs:228–236` | `ours = ["anvil_and_hammer"]` | the Stylist half stays, the talent half goes |
+| `ranks_come_one_at_a_time_and_hardy_grows_with_the_levels` | `world/character/talent_tests.rs:157` | takes Hardy rank by rank | one Hardy, grown with the levels |
+| (the perception test) `(hardy.held, hardy.ranks) == (1, 3)` | `world/character/talent_tests.rs:543` | reads `TalentView` | held or not |
+| `each_talent_changes_the_rule_it_names`'s fixture | `world/character/talent_tests.rs:232–245` | gates Apprentice to elves (its three ranks per skill would keep a pick open to the last level) by rewriting its file text | the gate moves to Skill focus (one pick per trained skill keeps picks open the same way) |
+| `weapon_focus_and_its_kind_sharpen_only_the_chosen_skill_rank_by_rank` | `world/character/talent_arms_tests.rs:94` | rank 2's damage | Weapon specialization's rank |
+| `guard_talents_change_defence_and_protection` | `world/character/talent_arms_tests.rs:203–213` | two Armour training gives raise plate's cap 1 → 3 | one give does |
+| `elemental_ward_resists_the_chosen_element_by_rank` | `world/character/talent_arms_tests.rs:283` | rank 2's 50 % | gone |
+| `mighty_kick_and_crusher_change_kicks_and_its_second_rank_digs_faster` | `world/character/body_talent_tests.rs:222` | rank 2 | Breaker |
+| `old_delver_lifts_one_stack_before_it_seals_at_its_second_rank` | `world/fixtures/hoard_tests.rs:212` | rank 2 | Old hand |
+| `old_delver_quickens_a_room_s_quickening_half_again_at_its_second_rank` | `world/fixtures/room_tests.rs:581` | rank 2 | Old hand |
+| `pious_at_its_second_rank_turns_a_great_bane_into_nothing_but_not_the_explosion` | `world/fixtures/boons_tests.rs:348` | rank 2 | **deleted** with the `penitent` kind |
+| `scroll_savant_now_and_then_keeps_the_scroll_at_its_second_rank` | `world/character/talent_wits_tests.rs:98` | rank 2 | Spell recall |
+| `apprentice_trains_the_chosen_skill_at_the_pick` | `world/character/talent_wits_tests.rs:2, 194–220` | the pick trains Appraise | a Skill focus test: the chosen skill's benefit read 25 higher, past 100 too; an untrained choice refused; the sum with Master of none |
+| `a_restored_bard_past_both_ranks_is_given_each_and_a_skill_added_later_is_taken_up` | `world/classes/class_rogue_tests.rs:740, 760` | the bard's two ranks | Master of none at 25 |
+| the Stalwart pick | `world/classes/class_active_tests.rs:199–200` | "You learn Armour training (1)." | without the number |
+| `second_blades_rend_rolls_the_off_hand_too` | `world/combat/weapon_ability_tests.rs:326` | the cut talent | **deleted** with `rend_off_hand` |
+| `the_styles_talents_and_the_stylists_choice_wait_for_its_first_marks` | `world/combat/two_shield_tests.rs:228–236` | `ours = ["anvil_and_hammer"]` | the Stylist half stays, the talent half goes |
 | `talent.rs` unit tests | `talent.rs:2646–2658` (`take("hardy") == 2`, the JSON `"rank":2`) | the serialized form | with the field |
 | `content/class.rs` table checks | `content/class.rs:1166–1175` ("fencing rank 2, but it has 1", "rank 0") | | with the field |
 | `talent_alike.rs` tests | `content/talent_alike.rs:207, 234` (the chain rule's cases) | | with the rule |
 | The level-up screen's choice test | `crates/warlock/src/ui/level_up_screen.rs:568–580` (picks Apprentice, the choice list opens); `screen_snapshots.rs:812` (Apprentice's letter) | | Skill focus (the list: trained skills) |
 | The dependents' tests | `talent_wits_tests.rs:228` (Porter), `talent_arms_tests.rs:221–236` (Heavy armour mastery), `:255` (Immune to pain), `body_talent_tests.rs:145` (Unbowed): each `give`s the talent straight onto `Actor::talents` (`talent_arms_tests.rs:50–52`: `talents.take`), no prerequisite taken | | nothing |
 | Screen snapshots | `ui/snapshots/…talents-screen.snap:15` ("Hardy 1/3"), `…talents-screen-story.snap:18`, `…talents-screen-spellcraft.snap:15, 17` ("Pious 1/2", "Scroll savant 1/2"), `…level-up-talent.snap:11, 12, 19, 21, 25, 28, 37` (Brawn, Mighty kick, Weapon focus, Armour training, Pious, Apprentice "1/3", Pack mule), `…level-up-choice.snap:9` (Apprentice's choice list), `…chargen-talents-marked.snap:37` and `…chargen-talents-screen.snap:36` (Apprentice among the creation picks), `…scribe-list.snap:5–6` and `…abilities-menu-merchants-eye.snap:5–6` (`levelup:auto`'s "You learn Apprentice (appraise) (1)…(3)": the auto-picks move on) | | re-accepted: no fraction, Skill focus in Apprentice's place |
-| The balance probe | `world/balance_probe.rs:66–67` (`levelup:auto` "takes the first it may") | its auto-picks change (Apprentice (appraise) was the first it took; a Hardy at rank 1 is no longer offered again; Armour training is worth +2), so the probe's tables move a little; rerun and update `docs/balance.md` (the issue asks it) | |
+| The balance probe | `world/combat/balance_probe.rs:66–67` (`levelup:auto` "takes the first it may") | its auto-picks change (Apprentice (appraise) was the first it took; a Hardy at rank 1 is no longer offered again; Armour training is worth +2), so the probe's tables move a little; rerun and update `docs/balance.md` (the issue asks it) | |
 
 ### 3.6 Docs, spec, and wiki prose
 
@@ -364,12 +364,12 @@ No other talent needs a rank above 1 (`grep -E 'talents = \{[^}]*= [2-9]' assets
 | Removed | Its only user | Where it lives | What happens |
 |---|---|---|---|
 | Apprentice | — | `assets/data/talents/apprentice.toml`; §3.5's tests and snapshots; `spec/08i-character.md` 883–885, `spec/06-input-and-ui.md` 537–538; `docs/dev/progression.md` 642–643; `wiki/src/talents.md` 36, 57, 113; `docs/design/progression.md` 767, 869, 991, 1043 (the record, untouched) | deleted; Skill focus in its place; prose names Skill focus |
-| `train_skill` kind | Apprentice | `README.toml` 177–178; `content/talent.rs` 425–428 (the variant), 1758–1763 (its checks: a `skill` choice, dice 1 to 100); `world/talent.rs` 315–332 (`train_chosen`, the `levels` draw at the pick) and its call in `take_talent`; `xtask/src/wiki/talents.rs` 853 (its words) | removed |
+| `train_skill` kind | Apprentice | `README.toml` 177–178; `content/talent.rs` 425–428 (the variant), 1758–1763 (its checks: a `skill` choice, dice 1 to 100); `world/character/talent.rs` 315–332 (`train_chosen`, the `levels` draw at the pick) and its call in `take_talent`; `xtask/src/wiki/talents.rs` 853 (its words) | removed |
 | Penitent (Pious's rank 2) | — | `pious.toml` 13–16; `docs/dev/progression.md` 475–479; `docs/dev/special-rooms.md` 404, 777–780; `spec/08i-character.md` 970–974; `spec/07d-shops-and-rooms.md` 742; `wiki/src/special-rooms.md` 175, 325; `docs/design/special-rooms.md` 416, 610, 628 (the record, untouched) | the rank goes; prose says Pious has no second rank |
-| `penitent` kind | Pious's rank 2 | `README.toml` 218; `content/talent.rs` 545, 2439; `talent.rs` 418 (`TalentMods::penitent`), 1494; `world/pray.rs` 117–121 (the one read, in `prayer_answered`); `xtask/src/wiki/talents.rs` 979; `world/boons_tests.rs` 348 | removed, with the test |
+| `penitent` kind | Pious's rank 2 | `README.toml` 218; `content/talent.rs` 545, 2439; `talent.rs` 418 (`TalentMods::penitent`), 1494; `world/fixtures/pray.rs` 117–121 (the one read, in `prayer_answered`); `xtask/src/wiki/talents.rs` 979; `world/fixtures/boons_tests.rs` 348 | removed, with the test |
 | Anvil and hammer | — | §2 "Fighting styles" | deleted; the `weapon { bash }` field stays (Shield expert's) |
 | Second blade's rend | — | §2 "Fighting styles" | deleted |
-| `rend_off_hand` kind | Second blade's rend | `README.toml`; `content/talent.rs` 940; `talent.rs` 522 (`TalentMods::rend_off_hand`); `world/weapon_ability.rs` 279 (the one read, Rend's extra damage); `xtask/src/wiki/weapon_abilities.rs` 184; `world/weapon_ability_tests.rs` 326 | removed, with the test |
+| `rend_off_hand` kind | Second blade's rend | `README.toml`; `content/talent.rs` 940; `talent.rs` 522 (`TalentMods::rend_off_hand`); `world/combat/weapon_ability.rs` 279 (the one read, Rend's extra damage); `xtask/src/wiki/weapon_abilities.rs` 184; `world/combat/weapon_ability_tests.rs` 326 | removed, with the test |
 
 Saves: a talent removed is one a saved character may hold by id; saves are pinned to the game version (`docs/dev/saves.md`, #840; the memory rule), so no shim, as §5 says for `Taken::rank`.
 
@@ -430,7 +430,7 @@ No budget gets tight enough to leave a pick unspendable: the smallest pair of bo
 
 Saves and hashes: `Taken` is saved and hashed (`talent.rs` 5–7), so every run with a talent hashes differently and no old save loads; saves are pinned to the game version (`docs/dev/saves.md`, #840; the memory rule), so this is the ordinary cost of a release and needs no shim. The golden manifests build their replays from action text at run time (`cargo xtask golden`), so they need nothing, and the repository holds no `runs/` replay files (none to re-create).
 
-Between T1 and T5 everything works: every talent at `ranks = 1`, which the loader accepts today, and the machinery shows nothing for a single-rank talent (`talents_screen.rs` 239–243 prints nothing for `ranks == 1`; `world/talent.rs` 309 says "You learn X." without the number).
+Between T1 and T5 everything works: every talent at `ranks = 1`, which the loader accepts today, and the machinery shows nothing for a single-rank talent (`talents_screen.rs` 239–243 prints nothing for `ranks == 1`; `world/character/talent.rs` 309 says "You learn X." without the number).
 
 ## 6. Implementation issues
 

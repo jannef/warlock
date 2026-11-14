@@ -28,11 +28,11 @@
 //! Determinism: nothing here draws; a teleport's landing cell is the teleport trap's hash.
 
 use super::spell::burst_cells;
-use super::{Actor, ActorId, Spent, World};
 use crate::action::{Breach, Event};
 use crate::content::{ActionKind, Content, Rod, RodDoes, RodEffect, RodShape};
 use crate::geom::Pos;
 use crate::text::capitalized;
+use crate::world::{Actor, ActorId, Spent, World};
 
 impl Actor {
     /// Where in its inventory the rod it has ready is: the first stack in a `ready` slot (the
@@ -70,7 +70,12 @@ impl Actor {
 
 impl World {
     /// The player uses the rod in inventory stack `item` at cell `at` (module docs).
-    pub(super) fn use_rod(&mut self, item: usize, at: Pos, events: &mut Vec<Event>) -> Spent {
+    pub(in crate::world) fn use_rod(
+        &mut self,
+        item: usize,
+        at: Pos,
+        events: &mut Vec<Event>,
+    ) -> Spent {
         let content = self.content.clone();
         let player = self.state.player;
         let Some(stack) = self.state.player().inventory.get(item) else {

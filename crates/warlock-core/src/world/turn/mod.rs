@@ -1,24 +1,24 @@
 //! The run, the turn, and time (docs/dev/time.md, saves.md, rendering.md's perception).
 
-mod actor;
-mod actors;
+pub(in crate::world) mod actor;
+pub(in crate::world) mod actors;
 mod dev;
 mod eyes;
 mod glare;
-mod hash;
+pub(in crate::world) mod hash;
 mod hearing;
-mod level;
+pub(in crate::world) mod level;
 mod perceive;
-mod rest;
+pub(in crate::world) mod rest;
 mod run;
 mod schedule;
-mod stride;
+pub(in crate::world) mod stride;
 mod voice;
 cfg_if! {
     if #[cfg(test)] {
         mod cost_tests;
         mod hearing_tests;
-        mod light_tests;
+        pub(in crate::world) mod light_tests;
         mod moon_tests;
         mod numbers_tests;
         mod rest_close_tests;

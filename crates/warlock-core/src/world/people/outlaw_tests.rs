@@ -4,12 +4,12 @@
 //! hostile to each other, by type and in a fight left to run; named monsters are called by their
 //! proper names; Brother Osrick's file keeps its note about spells.
 
-use super::*;
 use crate::action::parse_actions;
 use crate::content::{ContentFiles, Stance};
 use crate::gear;
 use crate::rng::Rng;
 use crate::test_support::CONTENT;
+use crate::world::*;
 
 /// The four criminals and the unique item each carries.
 const CRIMINALS: [(&str, &str); 4] = [

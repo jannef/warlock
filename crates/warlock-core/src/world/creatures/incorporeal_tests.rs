@@ -3,11 +3,11 @@
 //! there when seen, striking out of it, setting off no trap, dropping what it carried outside,
 //! and replaying exactly.
 
-use super::*;
 use crate::action::parse_actions;
 use crate::combat::Category;
 use crate::content::ContentFiles;
 use crate::test_support::{last as last_message, run};
+use crate::world::*;
 
 const TERRAIN: &str = r##"
 [[terrain]]

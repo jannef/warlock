@@ -10,18 +10,18 @@
 //! there is always a way round), and is Staggered unless it killed. Creatures never fall. Nothing
 //! new is saved: the fall is a level change like the stairs'.
 
-use super::fight::Harm;
-use super::{LevelState, World};
 use crate::action::Event;
 use crate::burden::Burden;
 use crate::content::{Content, StairsDir};
 use crate::geom::{Dir, Pos};
+use crate::world::combat::fight::Harm;
+use crate::world::{LevelState, World};
 use std::collections::BTreeSet;
 
 impl World {
     /// The player has just stepped onto `at`: on a collapsed floor it may give way under them
     /// (module docs). Returns whether they fell.
-    pub(super) fn collapse_step(&mut self, at: Pos, events: &mut Vec<Event>) -> bool {
+    pub(in crate::world) fn collapse_step(&mut self, at: Pos, events: &mut Vec<Event>) -> bool {
         let content = self.content.clone();
         let level = self.state.current();
         let Some(collapse) = level.effects_at(&content, at).collapse() else {
@@ -96,7 +96,7 @@ fn level_below(level: &LevelState) -> Option<String> {
 /// level is entered without a locked or secret door (so never inside a vault behind one).
 pub(super) fn landing(
     level: &LevelState,
-    state: &super::WorldState,
+    state: &crate::world::WorldState,
     content: &Content,
 ) -> Vec<Pos> {
     let Some(start) = level.start.or_else(|| level.stairs.first().map(|s| s.pos)) else {

@@ -16,14 +16,14 @@
 //!   speaker `to` and handed in there.
 //! - `escort`: `target` a level id, `escort` a unique character (an npc id with a dialogue):
 //!   chatted with while the quest is active, they fall in behind the player saying `joins`
-//!   (`world/escort.rs`); the quest is done when they stand on the target level with the
+//!   (`world/people/escort.rs`); the quest is done when they stand on the target level with the
 //!   player: they say `thanks` (optional), and the giver, if on that level, else the escort,
 //!   says `done` and pays. `waits` places the escort as the quest is given
-//!   (`world/escort_waits.rs`). Their death fails it.
+//!   (`world/people/escort_waits.rs`). Their death fails it.
 //! - `lure`: `target` a unique creature type, `level` the hand-made level it is lured to,
 //!   `waits` the place the quest makes it on as it is given and again whenever the player comes
 //!   to that level and it is nowhere (killed, it forms anew), and `[quest.binding]`: what becomes
-//!   of it once it stands on `level` with the player and the giver (`world/lure.rs`).
+//!   of it once it stands on `level` with the player and the giver (`world/people/lure.rs`).
 //!
 //! Asking the giver about a quest **gives** it (there is no accepting or declining, #422): the
 //! giver says `offer`, then `accept` (optional) in the same reply, and it is active at once.
@@ -75,7 +75,7 @@ pub enum QuestKind {
     Deliver,
     Escort,
     Lure,
-    /// A patron's commission (`world/patron.rs`): never in a quest file, only in the log while
+    /// A patron's commission (`world/crafting/patron.rs`): never in a quest file, only in the log while
     /// one is open, and counted as no quest (no experience, rank, or record).
     #[serde(skip_deserializing)]
     Commission,
@@ -170,7 +170,7 @@ struct WaitsSpec {
     at: String,
 }
 
-/// A lure quest's `[quest.binding]` (`world/lure.rs`).
+/// A lure quest's `[quest.binding]` (`world/people/lure.rs`).
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 struct BindingSpec {
@@ -190,7 +190,7 @@ struct BoonSpec {
     bonus: i32,
 }
 
-/// What becomes of a lure quest's creature once it is brought home (`world/lure.rs`): bound by
+/// What becomes of a lure quest's creature once it is brought home (`world/people/lure.rs`): bound by
 /// the giver, it carries `status` for good (a circled one: its spell circle shows it), joins
 /// `faction`, walks to `post` on the quest's level and stays there, and gives its `boon`.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -212,7 +212,7 @@ pub struct Binding {
     pub boon: Option<Boon>,
 }
 
-/// A bound creature's help (`world/lure.rs`): `bonus` to the player's checks of skill `skill`'s
+/// A bound creature's help (`world/people/lure.rs`): `bonus` to the player's checks of skill `skill`'s
 /// recipes (Jewelcraft's Cut and Set) made on its level.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Boon {
@@ -220,7 +220,7 @@ pub struct Boon {
     pub bonus: i32,
 }
 
-/// Where an escort quest places its escort as it is given (`world/escort.rs`, [`Waits`]): a
+/// Where an escort quest places its escort as it is given (`world/people/escort.rs`, [`Waits`]): a
 /// creature of type `creature` that is the escort, on the named place `at` of level `level`.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Waits {
@@ -345,20 +345,20 @@ pub enum Goal {
     Reach { level: String },
     /// Carry the object the giver hands over to `to`.
     Deliver { object: ObjectId, to: DialogueId },
-    /// Bring `escort`, a unique character, to `level` (`world/escort.rs`): chatted with while
+    /// Bring `escort`, a unique character, to `level` (`world/people/escort.rs`): chatted with while
     /// the quest is active, they say `joins` and follow the player.
     Escort {
         escort: DialogueId,
         level: String,
         joins: String,
         /// What the escort says as they come home, before whoever thanks the player says
-        /// `done` (`world/escort.rs`).
+        /// `done` (`world/people/escort.rs`).
         thanks: Option<String>,
         /// Where the quest places the escort as it is given; `None`: a level places them.
         waits: Option<Waits>,
     },
     /// Lure `creature`, a unique type the quest makes on `waits`, to `level`, a hand-made level,
-    /// where the giver binds it (`world/lure.rs`).
+    /// where the giver binds it (`world/people/lure.rs`).
     Lure {
         creature: CreatureId,
         level: String,
@@ -374,7 +374,7 @@ pub struct Reward {
     pub gold: u32,
     pub xp: u32,
     pub items: Vec<Stack>,
-    /// The skills it teaches (`world/quest.rs`): a skill the player is untrained in is trained
+    /// The skills it teaches (`world/people/quest.rs`): a skill the player is untrained in is trained
     /// at `start`, a trained one gets `marks`.
     pub skills: Vec<SkillReward>,
 }
@@ -511,7 +511,7 @@ impl QuestDef {
         place.into_iter()
     }
 
-    /// A lure quest's creature, its level, where it waits, and its binding (`world/lure.rs`).
+    /// A lure quest's creature, its level, where it waits, and its binding (`world/people/lure.rs`).
     pub fn lure(&self) -> Option<(CreatureId, &str, &Waits, &Binding)> {
         match &self.goal {
             Goal::Lure {
@@ -557,7 +557,7 @@ impl QuestDef {
             .chain(self.escort())
     }
 
-    /// The unique character an escort quest brings home (`world/escort.rs`).
+    /// The unique character an escort quest brings home (`world/people/escort.rs`).
     pub fn escort(&self) -> Option<DialogueId> {
         match self.goal {
             Goal::Escort { escort, .. } => Some(escort),

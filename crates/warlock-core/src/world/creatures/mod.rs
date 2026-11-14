@@ -1,27 +1,27 @@
 //! Creatures (docs/dev/creatures.md, summoning.md, animated.md).
 
-mod ai;
+pub(in crate::world) mod ai;
 mod animated;
-mod aura;
+pub(in crate::world) mod aura;
 mod avert;
 mod blink;
 mod breath;
-mod court;
+pub(in crate::world) mod court;
 mod creature_burst;
 mod creature_cast;
 mod den;
 mod first_sight;
 mod gaze;
 mod incorporeal;
-mod mimic;
+pub(in crate::world) mod mimic;
 mod path;
 mod rooted;
 mod snatch;
-mod spawn;
-mod split;
-mod statue;
+pub(in crate::world) mod spawn;
+pub(in crate::world) mod split;
+pub(in crate::world) mod statue;
 mod summon;
-mod unseen;
+pub(in crate::world) mod unseen;
 cfg_if! {
     if #[cfg(test)] {
         mod ai_tests;
@@ -41,7 +41,7 @@ cfg_if! {
         mod den_tests;
         mod dwell_tests;
         mod first_sight_tests;
-        mod fixture_factions;
+        pub(in crate::world) mod fixture_factions;
         mod gaze_tests;
         mod incorporeal_tests;
         mod mimic_tests;

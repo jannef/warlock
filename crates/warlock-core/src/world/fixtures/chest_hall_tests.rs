@@ -3,9 +3,9 @@
 //! rooms are hinted on arrival; the secret door leads into the treasure room, and the pick-axe
 //! beside the breach digs into the greater one.
 
-use super::*;
 use crate::chest::ChestState;
 use crate::test_support::{builtin, run, said_text as said};
+use crate::world::*;
 
 const COFFER: Pos = Pos::new(4, 4);
 const LOCKED: Pos = Pos::new(8, 4);

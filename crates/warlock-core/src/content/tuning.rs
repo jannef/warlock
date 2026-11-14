@@ -16,41 +16,41 @@ use serde::Deserialize;
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Tuning {
-    /// Wriggling past a creature in the way (`world/wriggle.rs`).
+    /// Wriggling past a creature in the way (`world/levels/wriggle.rs`).
     pub wriggle: Difficulty,
-    /// A step onto slick ground (`world/zone.rs`).
+    /// A step onto slick ground (`world/magic/zone.rs`).
     pub slick: Difficulty,
-    /// Keeping afloat after a plunge through the ice (`world/ice.rs`).
+    /// Keeping afloat after a plunge through the ice (`world/levels/ice.rs`).
     pub plunge: Difficulty,
-    /// Throwing one's voice (`world/voice.rs`).
+    /// Throwing one's voice (`world/turn/voice.rs`).
     pub throw_voice: Range,
-    /// The on-kill affixes (`world/siphon.rs`).
+    /// The on-kill affixes (`world/items/siphon.rs`).
     pub siphon: Range,
-    /// A Pit's mouth (`world/pit.rs`).
+    /// A Pit's mouth (`world/levels/pit.rs`).
     pub pit: PitRules,
-    /// The quick leave (`world/quick_leave.rs`).
+    /// The quick leave (`world/levels/quick_leave.rs`).
     pub quick_leave: QuickLeave,
-    /// What stops a long action (`world/rest.rs`).
+    /// What stops a long action (`world/turn/rest.rs`).
     pub long_action: LongAction,
-    /// Where a creature that comes may appear (`world/spawn.rs`).
+    /// Where a creature that comes may appear (`world/creatures/spawn.rs`).
     pub spawn: SpawnRules,
-    /// The unseen (`world/unseen.rs`).
+    /// The unseen (`world/creatures/unseen.rs`).
     pub unseen: UnseenRules,
-    /// Averted eyes (`world/avert.rs`).
+    /// Averted eyes (`world/creatures/avert.rs`).
     pub averted: ToHit,
-    /// A flurry's second blow (`world/free_blow.rs`).
+    /// A flurry's second blow (`world/combat/free_blow.rs`).
     pub flurry: ToHit,
-    /// Holding on to a weapon a blow would knock away (`world/knock_away.rs`).
+    /// Holding on to a weapon a blow would knock away (`world/combat/knock_away.rs`).
     pub knock_away: KnockAway,
-    /// Gravestones naming the fallen (`world/graves.rs`).
+    /// Gravestones naming the fallen (`world/fixtures/graves.rs`).
     pub graves: GraveRules,
-    /// A read's price under talents (`world/read.rs`).
+    /// A read's price under talents (`world/magic/read.rs`).
     pub read: Floor,
-    /// A weapon active's time under talents (`world/weapon_active.rs`).
+    /// A weapon active's time under talents (`world/combat/weapon_active.rs`).
     pub weapon_active: Floor,
-    /// A listen at a door (`world/listen.rs`).
+    /// A listen at a door (`world/skills/listen.rs`).
     pub listen: ListenRules,
-    /// The chance a potion drunk is kept (`world/potion.rs`).
+    /// The chance a potion drunk is kept (`world/health/potion.rs`).
     pub potion_kept: PotionKept,
 }
 

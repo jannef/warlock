@@ -25,13 +25,11 @@
 //! - **Made**: the beast is the player's companion where it stands ([`World::adopt`]: their
 //!   side, its mind cleared, graded at their level, named); "The wolf comes to your hand. You
 //!   call it Græg." **Failed**: "The wolf snaps at you and backs away."; a hostile one has seen
-//!   the player now ([`super::Mind::last_seen`]), so it may not be tried again until it loses
+//!   the player now ([`crate::world::Mind::last_seen`]), so it may not be tried again until it loses
 //!   them, and one not hostile may be tried again at once (no cooldown: time is the price). A
 //!   sleeper wakes either way.
 //! - **Marks**: Handle animal ([`Use::Handle`], the training stream), made or failed.
 
-use super::rest::Ended;
-use super::{ActorId, Spent, World};
 use crate::action::Event;
 use crate::check;
 use crate::content::{ActionKind, Stance};
@@ -39,11 +37,13 @@ use crate::geom::Dir;
 use crate::skills::{Effect, Use};
 use crate::stats::Stat;
 use crate::text::capitalized;
+use crate::world::turn::rest::Ended;
+use crate::world::{ActorId, Spent, World};
 use std::cell::Cell;
 
-/// A try at taming under way ([`super::Spent::Tame`]).
+/// A try at taming under way ([`crate::world::Spent::Tame`]).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(super) struct Taming {
+pub(in crate::world) struct Taming {
     /// The beast.
     beast: ActorId,
 }
@@ -51,7 +51,7 @@ pub(super) struct Taming {
 impl World {
     /// [`crate::Action::Tame`]: the player begins to tame the beast toward `dir`; refused,
     /// taking no time, as the module docs say.
-    pub(super) fn start_tame(&mut self, dir: Dir) -> Spent {
+    pub(in crate::world) fn start_tame(&mut self, dir: Dir) -> Spent {
         let content = self.content.clone();
         let player = self.state.player;
         let trained = crate::ability::Ability::Tame.had_by(self.state.player(), &content);
@@ -98,7 +98,7 @@ impl World {
     /// Tames turn after turn until the turns are done or something stops it (the module docs).
     /// The check is the last turn's action, so that turn's creatures and perception know what
     /// came of it.
-    pub(super) fn tame(&mut self, taming: Taming, events: &mut Vec<Event>) {
+    pub(in crate::world) fn tame(&mut self, taming: Taming, events: &mut Vec<Event>) {
         let Some(rules) = self.content.companions().map(|r| r.tame) else {
             return;
         };

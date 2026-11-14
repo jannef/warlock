@@ -3,10 +3,10 @@
 //! or rare by the tier's odds, wielded with a rank by its level), how it shows, and the family
 //! read as one kind by first kills, kill quests, and tag objectives.
 
-use super::fight::Harm;
-use super::*;
 use crate::content::ContentFiles;
 use crate::magic::Rarity;
+use crate::world::combat::fight::Harm;
+use crate::world::*;
 
 // A lit hall: the player between a blade of level 5 (west) and one of 12 (east), one of 20
 // further on.

@@ -2,7 +2,6 @@
 //! changes the one rule it names; Versatile, the humans', is granted and adds a pick at
 //! creation and at level 30.
 
-use super::*;
 use crate::action::parse_actions;
 use crate::character::CharacterSpec;
 use crate::combat::Category;
@@ -10,6 +9,7 @@ use crate::content::{ContentFiles, Role};
 use crate::stats::{PerStat, Stats};
 use crate::talent;
 use crate::test_support::{CONTENT, run};
+use crate::world::*;
 
 fn spec(text: &str) -> CharacterSpec {
     text.parse().expect("a character")
@@ -301,7 +301,7 @@ fn half_orcs_hit_harder_when_badly_hurt_and_have_a_thicker_hide() {
 #[test]
 fn a_race_grants_only_a_known_talent() {
     let mut files = ContentFiles::builtin();
-    let races = include_str!("../../../../assets/data/races.toml");
+    let races = include_str!("../../../../../assets/data/races.toml");
     let wrong = races.replacen("talents = [\"versatile\"]", "talents = [\"versatiler\"]", 1);
     assert_ne!(wrong.as_str(), races);
     files.insert("data/races.toml", &wrong);

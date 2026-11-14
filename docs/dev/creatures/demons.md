@@ -14,7 +14,7 @@ hezrou's stench `poisoned`, the vrock's screech and the nalfeshnee's horror `fri
 glabrezu's pincers and the balor's whip `held` (difficulty 12 + level ÷ 5), the quasit's venom
 `poisoned` and `weakened`. Several attacks a turn do not exist: the marilith's six blades are
 `attack_cost = 500` and the balor's sword and whip `attack_cost = 700` (it wields a great sword
-from its gear, so its natural whip is a fallback); `world/cost_tests.rs` lists them as the only
+from its gear, so its natural whip is a fallback); `world/turn/cost_tests.rs` lists them as the only
 types with an attack cost. Only the dretch and the quasit are in a population (Fyrdelf's); the
 rest wait for deep places.
 
@@ -31,9 +31,9 @@ fire (the balor is immune), and from level 24 resist cold and electricity a litt
 ichor for blood.
 
 The balor bursts when it dies (the dread design §5.3, #1127: `[creature.burst]` `when =
-"dies"`, `8d12` fire, radius 2, 50 % `burning`; `world/creature_burst.rs`), and is made with its Fire cloak
+"dies"`, `8d12` fire, radius 2, 50 % `burning`; `world/creatures/creature_burst.rs`), and is made with its Fire cloak
 (innate, #1128, below).
-Presence (#1128, `world/aura.rs`): the hezrou's stench (`poisoned`, radius 2, Toughness 16, every 30 s); the chasme's drone (`drowsy`, heard, radius 3, loudness 50, Willpower 16, every 18 s, a buzzing cry); fear auras on the vrock (radius 2, 17, a scream cry for its screech) and the nalfeshnee (radius 3, 19); the balor innate `fire_cloaked` (its burst is D3's). `content::aura_roster_tests` lists every row.
+Presence (#1128, `world/creatures/aura.rs`): the hezrou's stench (`poisoned`, radius 2, Toughness 16, every 30 s); the chasme's drone (`drowsy`, heard, radius 3, loudness 50, Willpower 16, every 18 s, a buzzing cry); fear auras on the vrock (radius 2, 17, a scream cry for its screech) and the nalfeshnee (radius 3, 19); the balor innate `fire_cloaked` (its burst is D3's). `content::aura_roster_tests` lists every row.
 
 The quasit (#1132, docs/dev/creatures.md "The unseen"): `[creature.invisible] cooldown =
 300`, it stings and is gone from sight, not from the room; its poison kept.

@@ -21,7 +21,7 @@ in its sword and its boulders; immune to electricity), giant jarl 50 (very rare,
 its belt).
 
 The giants fight with a natural attack named for their giant-sized weapon (no loot to carry off)
-and throw (`[creature.throw]`, `world/hurl.rs`, `docs/dev/ranged-combat.md`); the ogres carry
+and throw (`[creature.throw]`, `world/combat/hurl.rs`, `docs/dev/ranged-combat.md`); the ogres carry
 mauls and throw nothing. A creature's throw is `World::hurls_at` in the AI's fight step, before
 the melee/ranged/caster choice, `World::creature_hurls`, said by `hurl::throw_messages`.
 Fyrdelf's population adds the ogre mauler (the ogre mage, 18, left it when its danger was

@@ -2,10 +2,10 @@
 //! the living ones (the fallback variant), the talent read as the quest is given; and no rolled
 //! kill quest of any campaign draws a creature type the talent calms, or a tag one carries.
 
-use super::*;
 use crate::character::CharacterSpec;
 use crate::content::{ContentFiles, Goal};
 use crate::test_support::run as act;
+use crate::world::*;
 use std::sync::LazyLock;
 
 const LEOFRIC: Pos = Pos::new(60, 26);

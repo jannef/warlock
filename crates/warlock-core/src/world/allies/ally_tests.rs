@@ -1,12 +1,12 @@
 //! Allies (spec §8 "Allies", `ally.rs`): the side, the mind, the three orders, following across
 //! levels and the retinue, the clock, experience, Beast-bond, saves, and replays.
 
-use super::*;
 use crate::action::{Command, parse_actions};
 use crate::content::{ContentFiles, Stance};
 use crate::noise::SoundKind;
 use crate::replay::Replay;
 use crate::test_support::{builtin, last as last_said, run, said};
+use crate::world::*;
 
 const TERRAIN: &str = r##"
 [[terrain]]
@@ -173,8 +173,8 @@ map = '''
 "<" = { terrain = "stairs_up", to = "hall" }
 "##;
 
-const ALLIES: &str = include_str!("../../../../assets/data/allies.toml");
-const EXPERIENCE: &str = include_str!("../../../../assets/data/experience.toml");
+const ALLIES: &str = include_str!("../../../../../assets/data/allies.toml");
+const EXPERIENCE: &str = include_str!("../../../../../assets/data/experience.toml");
 
 fn files(hall: &str, allies: Option<&str>) -> ContentFiles {
     let mut files = ContentFiles::default();

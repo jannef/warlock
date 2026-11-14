@@ -8,10 +8,10 @@
 //!
 //! [`Content::full_moon_reach`]: crate::content::Content::full_moon_reach
 
-use super::{ActorId, World};
 use crate::action::Event;
 use crate::content::StatusId;
 use crate::time::{DAWN, DAY, GameTime};
+use crate::world::{ActorId, World};
 
 /// What the player is told on their birthday.
 pub const BIRTHDAY: &str = "It is your birthday.";
@@ -27,7 +27,7 @@ impl World {
 
     /// The percent of its healing pace actor `id` has at `now` for the calendar: the flavour's
     /// `birthday_healing` on the player's birthday, else 100 ([`World::healing_rate_at`]).
-    pub(super) fn birthday_healing(&self, id: ActorId, now: GameTime) -> u32 {
+    pub(in crate::world) fn birthday_healing(&self, id: ActorId, now: GameTime) -> u32 {
         match self.content.flavour() {
             Some(f) if self.birthday_on(id, now) => f.birthday_healing,
             _ => 100,
@@ -37,7 +37,7 @@ impl World {
     /// Seconds from `now` until actor `id`'s healing pace changes with the calendar (the
     /// birthday's midnight, at its start or end), if one is near: only the coming midnight
     /// matters, so a day that is neither the birthday nor its eve has none.
-    pub(super) fn until_birthday_turns(&self, id: ActorId, now: GameTime) -> Option<u64> {
+    pub(in crate::world) fn until_birthday_turns(&self, id: ActorId, now: GameTime) -> Option<u64> {
         if self
             .content
             .flavour()
@@ -53,7 +53,7 @@ impl World {
     /// The player's birthday note at the dawn of the day ([`World::perceive`]): said when the
     /// time since the last perception, after `before` up to now, passed the birthday's dawn.
     /// A note: it never stops a rest.
-    pub(super) fn birthday_news(&mut self, before: GameTime) {
+    pub(in crate::world) fn birthday_news(&mut self, before: GameTime) {
         let now = self.state.time;
         if self.content.flavour().is_none() || now <= before {
             return;
@@ -65,7 +65,7 @@ impl World {
     }
 
     /// The note on arrival: a run that begins on the player's birthday says so.
-    pub(super) fn birthday_welcome(&self) -> Option<&'static str> {
+    pub(in crate::world) fn birthday_welcome(&self) -> Option<&'static str> {
         let player = self.state.player;
         (self.content.flavour().is_some() && self.birthday_on(player, self.state.time))
             .then_some(BIRTHDAY)

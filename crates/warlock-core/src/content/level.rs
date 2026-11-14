@@ -561,14 +561,14 @@ pub struct HiddenLocation {
 pub struct Place {
     pub name: String,
     /// A sentence look mode adds about it (and the line an announced terrain's arrival says
-    /// after its description, `world/feature.rs`).
+    /// after its description, `world/fixtures/feature.rs`).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub note: Option<String>,
 }
 
 /// The words a hand-made level's gravestones are cut with (spec §7 "Graves"; a level file's
 /// `[graves]`): every cell of a `grave` terrain gets one inscription as the level is made
-/// (`world/graves.rs`), a stranger of these folk's or one of the run's graveyard.
+/// (`world/fixtures/graves.rs`), a stranger of these folk's or one of the run's graveyard.
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Graves {
@@ -666,7 +666,7 @@ pub struct LevelTemplate {
     /// vaults' until they are drawn (`mapgen/population.rs`). Empty on levels.
     pub monsters: Vec<VaultMonsters>,
     /// A generated level: the cells of the creatures the spawner's cap does not count (those of
-    /// its vaults' monster pools, `world/spawn.rs`).
+    /// its vaults' monster pools, `world/creatures/spawn.rs`).
     pub outside_cap: BTreeSet<Pos>,
     /// The temperature underground (spec §5 "Temperature"); `None`: the dungeon default (or,
     /// under the open sky, the weather's).

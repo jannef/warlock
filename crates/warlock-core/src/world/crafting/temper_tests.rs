@@ -1,16 +1,16 @@
-//! The anvil (spec §7 "Special rooms"; `world/temper.rs`, `magic/worked.rs`): Temper listed only
+//! The anvil (spec §7 "Special rooms"; `world/crafting/temper.rs`, `magic/worked.rs`): Temper listed only
 //! beside an anvil and only for metal arms and armour, ten minutes' work that an interruption
 //! spoils, every row of the one action's table, the rising difficulty, the numbers, the names and
 //! the worth of a worked item, identification, the mark, and an anvil that is never spent.
 
 use super::temper::check_made;
-use super::*;
 use crate::ability::Ability;
 use crate::content::ContentFiles;
 use crate::magic::{Affix, Aspect, Effect, Magic, Mods, Numbers, Rarity, Worked, may_roll};
 use crate::object::{Stack, add_to_inventory};
 use crate::rng::Rng;
 use crate::test_support::said_text as said;
+use crate::world::*;
 
 /// A forge with its anvil at (5, 2), the player beside it at (4, 3), and at `k` a kobold (also
 /// beside it), when asked for.
@@ -467,13 +467,16 @@ fn damaged_it_is_repaired_or_destroyed() {
 }
 
 /// Item damage of `harm` on stack 0 until it takes (fate tried over on other draws): what came.
-fn harmed(w: &mut World, harm: crate::content::ItemHarm) -> super::item_damage::Harmed {
+fn harmed(
+    w: &mut World,
+    harm: crate::content::ItemHarm,
+) -> crate::world::combat::item_damage::Harmed {
     let saved = w.state.clone();
     for n in 0..500 {
         w.state = saved.clone();
         w.state.rng = Rng::stream(n, "temper_tests_harm");
         let came = w.harm_item(0, harm);
-        if came != super::item_damage::Harmed::Withstood {
+        if came != crate::world::combat::item_damage::Harmed::Withstood {
             return came;
         }
     }
@@ -482,8 +485,8 @@ fn harmed(w: &mut World, harm: crate::content::ItemHarm) -> super::item_damage::
 
 #[test]
 fn acid_and_a_failed_attempt_leave_the_one_state_the_anvil_mends() {
-    use super::item_damage::Harmed;
     use crate::content::ItemHarm;
+    use crate::world::combat::item_damage::Harmed;
     // #1168: acid damages a fine sword exactly as a failure does, but for its word.
     let mut w = world(false);
     give(&mut w, "long_sword");

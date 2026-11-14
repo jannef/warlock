@@ -139,7 +139,7 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   (§8 "Quests", `reveals`) the cell is the plain terrain it shows in every way: a swamp cell, its
   travel time, its local area, no stairs link; the view, memory, look mode, and every
   perception-built dump show the swamp, as a secret door is the wall it looks like. Revealed
-  (`World::reveal_location`, `world/reveal.rs`), the cell becomes `terrain` (stairs down) leading
+  (`World::reveal_location`, `world/levels/reveal.rs`), the cell becomes `terrain` (stairs down) leading
   `to`, the location goes by `name` (look mode, "The way into Fennmynster is here.", "You enter
   Fennmynster."), and it is **marked on the player's map** (their memory of the overworld holds
   the entrance) wherever they are; revealed before the overworld is made, it is applied as it is

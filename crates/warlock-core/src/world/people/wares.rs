@@ -23,16 +23,16 @@
 //! Saved: [`WorldState::wares`] (by trader) and [`WorldState::uniques_offered`], each left out
 //! while empty, so runs that never ask a trader hash as before.
 //!
-//! [`WorldState::wares`]: super::WorldState
-//! [`WorldState::uniques_offered`]: super::WorldState
+//! [`WorldState::wares`]: crate::world::WorldState
+//! [`WorldState::uniques_offered`]: crate::world::WorldState
 
 use super::shop::count_of;
-use super::{ActorId, Spent, World};
 use crate::action::Event;
 use crate::content::{ActionKind, DialogueId, MAX_ITEM_LEVEL, TradeOffer};
 use crate::magic::describe::{self, LineKind};
 use crate::object::{self, Stack};
 use crate::rng::Rng;
+use crate::world::{ActorId, Spent, World};
 use serde::{Deserialize, Serialize};
 
 /// What a trader offers: the item while it is for sale, and its price.
@@ -104,11 +104,11 @@ impl World {
         &self,
         id: ActorId,
         dialogue: DialogueId,
-    ) -> Option<super::TopicView> {
+    ) -> Option<crate::world::TopicView> {
         let offer = self.offer_of(dialogue)?;
         let wares = self.state.wares.get(&id);
         let item = wares.and_then(|w| w.item.as_ref());
-        Some(super::TopicView {
+        Some(crate::world::TopicView {
             id: offer.id.clone(),
             name: offer.name.clone(),
             price: item.and(wares.map(|w| w.price)),

@@ -3,10 +3,10 @@
 //! `flask.rs`'s (`flask_tests.rs`); these check that each file casts what it says and harms its
 //! drinker as the design's §6 table says.
 
-use super::fixture_factions::make_peace;
-use super::*;
 use crate::content::{ContentFiles, ZoneKind};
 use crate::test_support::{builtin, run, said as texts};
+use crate::world::creatures::fixture_factions::make_peace;
+use crate::world::*;
 
 // A training dummy takes a lot and never fights back; a dead one is undead.
 const DUMMIES: &str = "[[creature]]\nid = \"dummy\"\nname = \"training dummy\"\nglyph = \"D\"\n\

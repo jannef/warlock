@@ -1,25 +1,25 @@
 //! Classes and their abilities (docs/dev/progression.md, openings.md, prayer.md).
 
 mod ascetic;
-mod calling;
+pub(in crate::world) mod calling;
 mod charge;
-mod class;
+pub(in crate::world) mod class;
 mod class_ability;
 mod consecrate;
 mod dark_face;
-mod focus;
-mod invest;
+pub(in crate::world) mod focus;
+pub(in crate::world) mod invest;
 mod jack;
-mod mark;
+pub(in crate::world) mod mark;
 mod merchants_eye;
 mod openings;
-mod orison;
+pub(in crate::world) mod orison;
 mod rage;
-mod sanctuary;
+pub(in crate::world) mod sanctuary;
 mod smite;
 mod song;
-mod spirit_weapon;
-mod stipend;
+pub(in crate::world) mod spirit_weapon;
+pub(in crate::world) mod stipend;
 mod thief;
 mod volley;
 mod war_cry;
@@ -29,7 +29,7 @@ cfg_if! {
         mod ascetic_tests;
         mod calling_tests;
         mod charge_tests;
-        mod class_active_tests;
+        pub(in crate::world) mod class_active_tests;
         mod class_rogue_tests;
         mod class_tests;
         mod dark_face_tests;
@@ -48,7 +48,7 @@ cfg_if! {
         mod song_tests;
         mod spirit_weapon_tests;
         mod stipend_tests;
-        mod war_cry_tests;
+        pub(in crate::world) mod war_cry_tests;
         mod witch_tests;
     }
 }

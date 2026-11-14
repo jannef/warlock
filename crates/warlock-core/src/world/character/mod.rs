@@ -1,25 +1,25 @@
 //! The character: creation, progression, stats (docs/dev/character-creation.md, background.md,
 //! progression.md, experience.md, stats.md, skills.md, alignment.md, resources.md).
 
-mod alignment;
+pub(in crate::world) mod alignment;
 mod background;
-mod creation;
+pub(in crate::world) mod creation;
 mod element_gifts;
-mod experience;
+pub(in crate::world) mod experience;
 mod flavour;
-mod gifts;
+pub(in crate::world) mod gifts;
 mod heirloom;
 mod lucky;
 mod profane;
 mod racial;
-mod resource;
+pub(in crate::world) mod resource;
 mod second_wind;
 mod sign_picks;
-mod skill_roll;
-mod stars;
-mod stat_deeds;
-mod stat_training;
-mod talent;
+pub(in crate::world) mod skill_roll;
+pub(in crate::world) mod stars;
+pub(in crate::world) mod stat_deeds;
+pub(in crate::world) mod stat_training;
+pub(in crate::world) mod talent;
 mod train;
 cfg_if! {
     if #[cfg(test)] {

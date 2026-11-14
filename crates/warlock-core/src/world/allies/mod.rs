@@ -1,15 +1,15 @@
 //! Allies (docs/dev/allies.md, companion.md, familiar.md).
 
-mod ally;
-mod beast_friend;
+pub(in crate::world) mod ally;
+pub(in crate::world) mod beast_friend;
 mod bond;
 mod charm;
-mod collar;
-mod companion;
-mod familiar;
+pub(in crate::world) mod collar;
+pub(in crate::world) mod companion;
+pub(in crate::world) mod familiar;
 mod pack;
 mod sic;
-mod tame;
+pub(in crate::world) mod tame;
 cfg_if! {
     if #[cfg(test)] {
         mod ally_tests;

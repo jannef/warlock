@@ -30,7 +30,6 @@
 //! "Weapon skills"), which also adds to their to-hit and damage.
 
 use super::fight::{End, Guard, Words, attack_message, death_message};
-use super::{ActorId, Fire, Spent, World};
 use crate::action::{AttackKind, Event, MissileEnd, Positions};
 use crate::combat::Profile;
 use crate::content::{ActionKind, Content, Effect, LevelKind, ObjectId};
@@ -40,32 +39,33 @@ use crate::magic::Mods;
 use crate::magic::mods::less;
 use crate::noise::Act;
 use crate::object::{self, Stack};
+use crate::world::{ActorId, Fire, Spent, World};
 
 /// A missile about to be loosed: a shot or a throw (`kind`), from inventory stack `item`, what
 /// its attack does, and how far it flies.
 #[derive(Clone, Debug)]
-pub(super) struct Loose {
-    pub(super) kind: AttackKind,
-    pub(super) item: usize,
-    pub(super) profile: Profile,
-    pub(super) range: i32,
+pub(in crate::world) struct Loose {
+    pub(in crate::world) kind: AttackKind,
+    pub(in crate::world) item: usize,
+    pub(in crate::world) profile: Profile,
+    pub(in crate::world) range: i32,
 }
 
 /// A missile in flight ([`World::fly`]): a shot's, a throw's, or a creature's throw's.
 #[derive(Clone, Debug)]
-pub(super) struct Flight {
-    pub(super) kind: AttackKind,
+pub(in crate::world) struct Flight {
+    pub(in crate::world) kind: AttackKind,
     /// What its attacks are made with (an arrow, a dagger, a giant's boulder).
-    pub(super) with: ObjectId,
+    pub(in crate::world) with: ObjectId,
     /// What flies, as it flies (a flaming arrow flies burning).
-    pub(super) flies: ObjectId,
-    pub(super) profile: Profile,
+    pub(in crate::world) flies: ObjectId,
+    pub(in crate::world) profile: Profile,
     /// How far it flies, in cells.
-    pub(super) range: i32,
+    pub(in crate::world) range: i32,
     /// What comes down where it stops, unless it broke; `None`: nothing (a creature's throw).
-    pub(super) lands: Option<Stack>,
+    pub(in crate::world) lands: Option<Stack>,
     /// The chance in percent that it breaks on a hit.
-    pub(super) breaks: u32,
+    pub(in crate::world) breaks: u32,
 }
 
 /// What ammunition of the kind missile weapon `launcher` shoots is called, in the plural:
@@ -78,7 +78,7 @@ fn ammunition_name(content: &Content, launcher: ObjectId) -> String {
 
 /// The chance in percent that `missile` breaks when it hits: its `breaks`, less what a durability
 /// affix takes off (spec §8 "Magic items").
-pub(super) fn break_chance(missile: &Stack, content: &Content) -> u32 {
+pub(in crate::world) fn break_chance(missile: &Stack, content: &Content) -> u32 {
     let def = content.object(missile.object);
     let sturdier = Mods::local(missile, content).get(Effect::Durability);
     u32::try_from(less(u64::from(def.breaks), sturdier)).unwrap_or(0)
@@ -86,7 +86,7 @@ pub(super) fn break_chance(missile: &Stack, content: &Content) -> u32 {
 
 impl World {
     /// The player shoots at cell `at` with the missile weapon and ammunition they have ready.
-    pub(super) fn fire(&mut self, at: Pos, events: &mut Vec<Event>) -> Spent {
+    pub(in crate::world) fn fire(&mut self, at: Pos, events: &mut Vec<Event>) -> Spent {
         let content = self.content.clone();
         if !self.can_loose_here() {
             return Spent::Nothing;
@@ -136,7 +136,7 @@ impl World {
     /// What a shot from missile weapon `launcher` costs actor `id`: `shoot`, and `reload` too
     /// for one that needs it, less what its ranks in the launcher's skill and its fighting style
     /// take off.
-    pub(super) fn shot_price(&self, id: ActorId, launcher: ObjectId) -> i64 {
+    pub(in crate::world) fn shot_price(&self, id: ActorId, launcher: ObjectId) -> i64 {
         let shot = self.skills_of(id, AttackKind::Ranged, None);
         let with = self.state.actors[&id].launcher_item(&self.content);
         let mut price = self.attack_price(id, ActionKind::Shoot, with, shot);
@@ -148,7 +148,12 @@ impl World {
 
     /// The player throws one of inventory stack `item`, a throwing weapon, at cell `at`; any
     /// other weapon is thrown whole, with a penalty to hit ([`Profile::improvised`]).
-    pub(super) fn throw(&mut self, item: usize, at: Pos, events: &mut Vec<Event>) -> Spent {
+    pub(in crate::world) fn throw(
+        &mut self,
+        item: usize,
+        at: Pos,
+        events: &mut Vec<Event>,
+    ) -> Spent {
         let content = self.content.clone();
         if !self.can_loose_here() {
             return Spent::Nothing;
@@ -193,7 +198,7 @@ impl World {
     }
 
     /// Whether missiles fly here: not on the overworld, a map of the land.
-    pub(super) fn can_loose_here(&mut self) -> bool {
+    pub(in crate::world) fn can_loose_here(&mut self) -> bool {
         let here = self.state.current().kind != LevelKind::Overworld;
         if !here {
             self.say("You cannot do that on the overworld.");
@@ -203,7 +208,7 @@ impl World {
 
     /// Whether the player may `verb` ("shoot", "throw") at cell `at` with a missile that flies
     /// `range` cells: not at themselves, and not out of range. Says why not.
-    pub(super) fn within_reach(&mut self, at: Pos, range: i32, verb: &str) -> bool {
+    pub(in crate::world) fn within_reach(&mut self, at: Pos, range: i32, verb: &str) -> bool {
         let here = self.player_pos();
         if at == here {
             self.say(format!("You cannot {verb} at yourself."));
@@ -220,7 +225,12 @@ impl World {
     /// as they shoot (as their melee blows are); one that reaches nobody is said as it is
     /// loosed ("You shoot an arrow."). The missile's flight goes to presentation (cut to what
     /// the player sees as the turn is perceived), its attacks on creatures they see too.
-    pub(super) fn player_looses(&mut self, at: Pos, loose: Loose, events: &mut Vec<Event>) {
+    pub(in crate::world) fn player_looses(
+        &mut self,
+        at: Pos,
+        loose: Loose,
+        events: &mut Vec<Event>,
+    ) {
         let content = self.content.clone();
         let kind = loose.kind;
         let stack = self.state.player().inventory[loose.item].single();
@@ -307,7 +317,7 @@ impl World {
     /// Creature `id` shoots at actor `target` with the missile weapon and ammunition it has
     /// ready (its AI saw to it that it has them). Returns the price: `shoot`, and `reload` too
     /// for a missile weapon that needs it.
-    pub(super) fn creature_shoots(
+    pub(in crate::world) fn creature_shoots(
         &mut self,
         id: ActorId,
         target: ActorId,
@@ -386,7 +396,7 @@ impl World {
     /// whoever stands in its way until it hits, and what lands comes down, unless it broke.
     /// Pushes the [`Event::Missile`] (the whole flight; perception cuts it to what the player
     /// saw), then the attacks it made and the deaths they caused.
-    pub(super) fn fly(
+    pub(in crate::world) fn fly(
         &mut self,
         shooter: ActorId,
         at: Pos,
@@ -496,7 +506,7 @@ impl World {
 
     /// One `missile` comes down on cell `p` of the current level, on top of the pile there. If
     /// it burns, it starts a fire there, or the fire there burns on until it has burned out too.
-    pub(super) fn come_down(&mut self, p: Pos, missile: Stack) {
+    pub(in crate::world) fn come_down(&mut self, p: Pos, missile: Stack) {
         let object = missile.object;
         let content = self.content.clone();
         let now = self.state.time;
@@ -527,7 +537,7 @@ impl World {
     /// Fires on the current level that have burned out go out, and what burned there is gone.
     /// (Until then a fire past its time gives no light: [`crate::light::LightCache`] lights only
     /// fires still burning.)
-    pub(super) fn burn_out(&mut self) {
+    pub(in crate::world) fn burn_out(&mut self) {
         let now = self.state.time;
         let out: Vec<Pos> = (self.state.current().fires.iter())
             .filter(|(_, f)| f.until <= now)
@@ -539,7 +549,7 @@ impl World {
     }
 
     /// The fire on cell `p` goes out: it and the burning objects there are gone.
-    pub(super) fn put_out(&mut self, p: Pos) {
+    pub(in crate::world) fn put_out(&mut self, p: Pos) {
         let content = self.content.clone();
         let level = self.state.current_mut();
         level.fires.remove(&p);

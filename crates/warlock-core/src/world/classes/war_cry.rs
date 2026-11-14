@@ -21,13 +21,13 @@
 //! and the nerve check with its outcome ([`World::cow`]) are shared with the Intimidate skill's
 //! single-target use (`intimidate.rs`, #868).
 
-use super::{ActorId, Spent, World};
 use crate::action::Event;
 use crate::check;
 use crate::content::{ActionKind, Stance, StatusId};
 use crate::noise::{self, Act};
 use crate::skills::{Effect, Use};
 use crate::stats::Stat;
+use crate::world::{ActorId, Spent, World};
 
 impl World {
     /// War cry (module docs), for the time of a wait; its rage was spent by `use_class`.
@@ -61,7 +61,7 @@ impl World {
 
     /// The difficulty of a threat of the player's (War cry's, Intimidate's): `base` + their
     /// Strength modifier + their Intimidate ([`Effect::Intimidate`], read here and nowhere else).
-    pub(super) fn threat_difficulty(&self, base: i32) -> i32 {
+    pub(in crate::world) fn threat_difficulty(&self, base: i32) -> i32 {
         let content = &self.content;
         let me = self.state.player();
         base + me.effective_stats(content).modifier(Stat::Strength)
@@ -70,7 +70,7 @@ impl World {
 
     /// Who would hear the noise of the player's `act`, asked before it is made: in actor-id
     /// order.
-    pub(super) fn heard_by(&self, act: Act) -> Vec<ActorId> {
+    pub(in crate::world) fn heard_by(&self, act: Act) -> Vec<ActorId> {
         let content = &self.content;
         let me = self.state.player();
         let burden = self.state.load(content, me).penalty();
@@ -88,7 +88,7 @@ impl World {
     /// draws: its Willpower modifier (and its talents' Willpower checks). Failed, it suffers
     /// `degrees` of `status`, caused by the player; the player is told how it took it if they
     /// see it. Whether it quailed.
-    pub(super) fn cow(
+    pub(in crate::world) fn cow(
         &mut self,
         id: ActorId,
         difficulty: i32,

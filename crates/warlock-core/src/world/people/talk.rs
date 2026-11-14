@@ -24,13 +24,13 @@
 //! stood as its post and walks back there (waiting beside it while someone stands on it), then
 //! carries on with its routine.
 
-use super::{Actor, ActorId, ActorKind, Spent, World};
 use crate::action::Event;
 use crate::content::StatUse;
 use crate::content::{ActionKind, Budge, Dialogue, DialogueId, Service, Stance, Topic};
 use crate::geom::{Dir, Pos};
 use crate::noise::{self, Act, Heard, SoundKind, Volume};
 use crate::text::capitalized;
+use crate::world::{Actor, ActorId, ActorKind, Spent, World};
 use serde::{Deserialize, Serialize};
 
 /// How near the player a creature mutters, in cells (Chebyshev): as far as its voice carries.
@@ -99,7 +99,7 @@ pub struct Conversation {
 /// A line muttered during the current turn (not saved): said when perception runs, if the
 /// player heard it.
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub(super) struct Mutter {
+pub(in crate::world) struct Mutter {
     actor: ActorId,
     at: Pos,
     verb: String,
@@ -152,7 +152,7 @@ fn shuffle(key: u64, round: u32, n: usize) -> Vec<usize> {
 impl World {
     /// The key of `actor`'s rotation of `what` (its one-liners or its mutters): the run's seed
     /// and the actor, so each speaker has an order of its own.
-    pub(super) fn rotation_key(&self, actor: ActorId, what: &[u8]) -> u64 {
+    pub(in crate::world) fn rotation_key(&self, actor: ActorId, what: &[u8]) -> u64 {
         let label = [what, &actor.0.to_le_bytes()].concat();
         crate::weather::draw(self.state.seed, &label, 0)
     }
@@ -160,7 +160,7 @@ impl World {
     /// What `actor` is called in messages: "the gardener", a shop's keeper by its name
     /// ("Grimbold"; spec §7 "Shops"), a unique character by its proper name ("Sister Hild"), or
     /// a kept beast (a companion, a familiar) by its own ("Snel"; spec §8 "Allies").
-    pub(super) fn called(&self, actor: &Actor) -> String {
+    pub(in crate::world) fn called(&self, actor: &Actor) -> String {
         if let Some(data) = actor.kept() {
             return data.name.clone();
         }
@@ -185,13 +185,13 @@ impl World {
     }
 
     /// The dialogue `actor` speaks: its npc's, else its type's.
-    pub(super) fn dialogue_of(&self, actor: &Actor) -> Option<DialogueId> {
+    pub(in crate::world) fn dialogue_of(&self, actor: &Actor) -> Option<DialogueId> {
         self.content
             .dialogue_of(actor.creature, actor.npc.as_deref())
     }
 
     /// The creature the player sees on `at`, if any.
-    pub(super) fn seen_creature_at(&self, at: Pos) -> Option<ActorId> {
+    pub(in crate::world) fn seen_creature_at(&self, at: Pos) -> Option<ActorId> {
         let level = &self.state.current_level;
         let actor = self.state.actor_at(level, at)?;
         (actor.kind == ActorKind::Creature && self.perception.sees_actors_at(at))
@@ -201,7 +201,7 @@ impl World {
     /// Whether `actor` stops a rest by coming close in view (spec §8 "Rest", `rest.rs`): a
     /// creature hostile to the player. Neutral and peaceful ones (the showcase's people, a deer)
     /// and the player's allies never do; the player sees who they are.
-    pub(super) fn disturbs_rest(&self, actor: &Actor) -> bool {
+    pub(in crate::world) fn disturbs_rest(&self, actor: &Actor) -> bool {
         actor.kind == ActorKind::Creature
             && actor.ally.is_none()
             && self.stance(self.state.player, actor.id) == Stance::Hostile
@@ -246,7 +246,7 @@ impl World {
 
     /// Chats with the creature in `dir` (see the module docs). Refused, taking no time, when the
     /// player sees no one there.
-    pub(super) fn chat(&mut self, dir: Dir, events: &mut Vec<Event>) -> Spent {
+    pub(in crate::world) fn chat(&mut self, dir: Dir, events: &mut Vec<Event>) -> Spent {
         let at = self.player_pos().step(dir);
         let Some(id) = self.seen_creature_at(at) else {
             self.say("You see no one there to talk to.");
@@ -301,7 +301,12 @@ impl World {
     /// Asks the creature in `dir` about `topic` (see the module docs; quest topics are answered
     /// in `quest.rs`, services done in `service.rs`, which takes time). Takes no time; refused when the player sees no one there or it knows
     /// nothing of the topic.
-    pub(super) fn ask(&mut self, dir: Dir, topic: &str, events: &mut Vec<Event>) -> Spent {
+    pub(in crate::world) fn ask(
+        &mut self,
+        dir: Dir,
+        topic: &str,
+        events: &mut Vec<Event>,
+    ) -> Spent {
         let at = self.player_pos().step(dir);
         let Some(id) = self.seen_creature_at(at) else {
             self.say("You see no one there to talk to.");
@@ -367,7 +372,7 @@ impl World {
     }
 
     /// Says what creature `id` answered and records the conversation for presentation.
-    pub(super) fn answer(
+    pub(in crate::world) fn answer(
         &mut self,
         id: ActorId,
         line: String,
@@ -398,7 +403,7 @@ impl World {
 
     /// The `k`-th one-liner of `d` for creature `id`: of its `lines`, and of its lines after each
     /// quest the player has done (`[[dialogue.after]]`).
-    pub(super) fn one_liner(&self, id: ActorId, d: &Dialogue, k: u32) -> String {
+    pub(in crate::world) fn one_liner(&self, id: ActorId, d: &Dialogue, k: u32) -> String {
         let key = self.rotation_key(id, b"lines");
         let done =
             |quest: &str| (self.state.quests.records.get(quest)).is_some_and(|r| r.completed > 0);
@@ -413,7 +418,7 @@ impl World {
     }
 
     /// Creature `id`, having acted, may mutter (see the module docs).
-    pub(super) fn mutter(&mut self, id: ActorId) {
+    pub(in crate::world) fn mutter(&mut self, id: ActorId) {
         let Some(actor) = self.state.actors.get(&id) else {
             return;
         };
@@ -450,7 +455,7 @@ impl World {
     /// Says the lines muttered this turn that the player heard: with the speaker's name if they
     /// see it, else as a voice from where they place it (the words lost if it was faint). Only
     /// logged: a mutter never stops a rest.
-    pub(super) fn say_mutters(&mut self) {
+    pub(in crate::world) fn say_mutters(&mut self) {
         let mutters = std::mem::take(&mut self.mutters);
         let player = self.state.player();
         let viewer = player.pos;
@@ -513,7 +518,7 @@ impl World {
     }
 
     /// What the player is told when creature `id` will not make way: why, if they see it.
-    pub(super) fn refused(&mut self, id: ActorId, why: Refusal, seen: bool) {
+    pub(in crate::world) fn refused(&mut self, id: ActorId, why: Refusal, seen: bool) {
         let text = match (seen, why) {
             (false, _) => "Something is in the way.".to_string(),
             (true, Refusal::Budge) => {
@@ -538,7 +543,7 @@ impl World {
     /// lands: ice there may give way under it (spec §5 "Ice"), and a trap there goes off (spec §8
     /// "Traps"). Its own turn is unaffected but for what that costs it on top (climbing out of a
     /// pit or onto the ice), which comes off its energy.
-    pub(super) fn swap_places(
+    pub(in crate::world) fn swap_places(
         &mut self,
         id: ActorId,
         from: Pos,

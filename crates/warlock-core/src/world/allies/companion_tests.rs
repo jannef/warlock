@@ -207,8 +207,8 @@ map = '''
 "<" = { terrain = "stairs_up", to = "hall" }
 "##;
 
-const ALLIES: &str = include_str!("../../../../assets/data/allies.toml");
-const EXPERIENCE: &str = include_str!("../../../../assets/data/experience.toml");
+const ALLIES: &str = include_str!("../../../../../assets/data/allies.toml");
+const EXPERIENCE: &str = include_str!("../../../../../assets/data/experience.toml");
 
 fn fixture(hall: &str) -> World {
     let mut files = ContentFiles::default();

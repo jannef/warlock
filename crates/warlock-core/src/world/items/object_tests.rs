@@ -1,13 +1,13 @@
 //! Objects (spec §5, §6): piles, picking up and dropping, inventories, weights, and memory.
 
-use super::fixture_factions::make_peace;
-use super::*;
 use crate::action::{Positions, parse_actions};
 use crate::content::ContentFiles;
 use crate::dump::{Layer, layer_rows};
 use crate::perception::CellView;
 use crate::replay::Replay;
 use crate::test_support::last_text as last_message;
+use crate::world::creatures::fixture_factions::make_peace;
+use crate::world::*;
 
 // Room A (x 1..5) with a pile, some arrows, a single dagger, and a heap of daggers; a closed door
 // at (6, 2) to room B, where a ruby lies and a kobold carrying a spear and coins stands. Fully

@@ -13,14 +13,14 @@
 //! fight. No stream is drawn here but the members' gear (`gear/<actor id>`).
 
 use super::encounter::{How, Opening, Party};
-use super::{ActorId, World, travel::make_creature};
 use crate::action::Event;
 use crate::content::{BASE_TURN, Content, CreatureSpawn, local_area_id, price};
 use crate::geom::{Dir, Pos};
+use crate::world::{ActorId, World, levels::travel::make_creature};
 use std::collections::BTreeSet;
 
 /// The cells reachable on foot from `from` on `level` (8 neighbours; walkable and not water).
-fn reachable(level: &super::LevelState, content: &Content, from: Pos) -> BTreeSet<Pos> {
+fn reachable(level: &crate::world::LevelState, content: &Content, from: Pos) -> BTreeSet<Pos> {
     let mut seen = BTreeSet::from([from]);
     let mut queue = std::collections::VecDeque::from([from]);
     while let Some(p) = queue.pop_front() {
@@ -212,7 +212,8 @@ impl World {
                         x.pos = spot;
                         x.energy = 0;
                         x.mind = Default::default();
-                        x.patrol = (!route.is_empty()).then_some(super::Patrol { route, step: 0 });
+                        x.patrol =
+                            (!route.is_empty()).then_some(crate::world::Patrol { route, step: 0 });
                     }
                     actor
                 }

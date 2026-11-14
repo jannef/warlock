@@ -1,12 +1,10 @@
 //! The birth sign's gifts in the world (spec §8 "Birth sign"): the talents a character's sign
 //! grants ([`crate::character::Character::grants`]) are put into the player's
-//! [`Actor::talents`](super::Actor) when a run starts and again whenever one is restored, so they
+//! [`Actor::talents`](crate::world::Actor) when a run starts and again whenever one is restored, so they
 //! are never stored as a choice: a gift added to the data reaches a saved character, one taken
 //! out leaves it, and no save breaks. What each gift does is read through
 //! [`crate::talent::TalentMods`] where its rule lives, as every talent is.
 
-use super::spell::Caster;
-use super::{ActorId, World};
 use crate::action::{Event, SpellShape};
 use crate::character::Character;
 use crate::content::{Content, TerrainDef};
@@ -14,12 +12,14 @@ use crate::damage::Damage;
 use crate::geom::Pos;
 use crate::ice::Shock;
 use crate::talent::{Taken, Talents};
+use crate::world::magic::spell::Caster;
+use crate::world::{ActorId, World};
 
 /// Puts the talents `character`'s race grants (Versatile, `racial.rs`), the gifts of their
 /// sign, and the flaws a forgotten altar marked them with (`boons`, spec §7 "Special rooms":
 /// Forsaken) into `talents` in grant order, in place of whatever granted talents it held (none
 /// for a run without a character); an altar's other boons (Chosen) are held too.
-pub(super) fn grant(
+pub(in crate::world) fn grant(
     content: &Content,
     character: Option<&Character>,
     boons: &[Taken],
@@ -36,7 +36,7 @@ pub(super) fn grant(
 
 /// Whether stepping onto `terrain` is wading (spec §8 "Birth sign": Strong swimmer): water
 /// (terrain that freezes) or ground a disease is caught wading in (a marsh).
-pub(super) fn wading(content: &Content, terrain: &TerrainDef) -> bool {
+pub(in crate::world) fn wading(content: &Content, terrain: &TerrainDef) -> bool {
     if terrain.freeze.is_some() {
         return true;
     }
@@ -46,7 +46,7 @@ pub(super) fn wading(content: &Content, terrain: &TerrainDef) -> bool {
     (content.disease_ids()).any(|(_, d)| d.wading.as_ref().is_some_and(|w| w.terrain.contains(&id)))
 }
 
-/// What [`Progress::once`](super::Progress) records once the Phoenix has risen.
+/// What [`Progress::once`](crate::world::Progress) records once the Phoenix has risen.
 pub(crate) const RISEN: &str = "risen";
 /// What it records once it has risen the second time Second rising allows.
 pub(crate) const RISEN_TWICE: &str = "risen_twice";
@@ -56,7 +56,7 @@ pub(crate) const PROFANE_RISEN: &str = "profane_risen";
 
 /// Who gives `actor` the rising from the ashes: a talent of theirs that is no profane gift (the
 /// Phoenix's sign), and a profane gift (Twice-born).
-fn rising_sources(actor: &super::Actor, content: &Content) -> (bool, bool) {
+fn rising_sources(actor: &crate::world::Actor, content: &Content) -> (bool, bool) {
     let book = content.talents();
     let (mut sign, mut profane) = (false, false);
     for taken in actor.talents.iter() {
@@ -88,7 +88,7 @@ impl World {
     /// once is spent, they are Ashen and back at a share of their (Ashen) hit points, and flames
     /// burst from them, one roll of their damage for every creature they reach, melting the ice
     /// there. Returns whether they rose. A gameplay draw (the flames' damage) only then.
-    pub(super) fn rise_from_ashes(&mut self, events: &mut Vec<Event>) -> bool {
+    pub(in crate::world) fn rise_from_ashes(&mut self, events: &mut Vec<Event>) -> bool {
         let content = self.content.clone();
         let player = self.state.player;
         let mods = self.state.player().talent_mods(&content).into_owned();
@@ -123,7 +123,7 @@ impl World {
         let burst = &rise.burst;
         let level = self.state.current();
         let opaque = |p: Pos| p != center && level.is_opaque(&content, p);
-        let cells = super::spell::burst_cells(center, burst.radius, opaque);
+        let cells = crate::world::magic::spell::burst_cells(center, burst.radius, opaque);
         events.push(Event::Spell {
             effect: burst.spell.clone(),
             origin: center,

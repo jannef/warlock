@@ -1,6 +1,6 @@
 //! Stable state hashing for replays and regression checks (spec §9).
 
-use super::{World, WorldState};
+use crate::world::{World, WorldState};
 
 pub(crate) use crate::unhashed::{HASHING, unhashed_map, unhashed_vec};
 

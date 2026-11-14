@@ -7,7 +7,7 @@
 # The heart (`G`) is a named place, "the crystal hollow": the guardian stands there once
 # Ysella's quest asks for it, and forms there again if it is killed before it is bound (a vault
 # places no unique by its quest, so the quest places it on this place's cell: its `waits`,
-# data/quests/ysella.toml; world/lure.rs). Until then the bed is empty, and its note is said
+# data/quests/ysella.toml; world/people/lure.rs). Until then the bed is empty, and its note is said
 # when the player comes beside it.
 name = "Crystal hollow"
 dungeons = ["meynbew"]

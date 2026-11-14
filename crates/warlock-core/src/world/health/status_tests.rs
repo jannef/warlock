@@ -2,7 +2,6 @@
 //! bites poison, effects tick and ease by game time however it is cut up, slow healing, lower
 //! stats, kill, and are said, saved, and replayed.
 
-use super::*;
 use crate::action::{AttackKind, parse_actions};
 use crate::combat::{Blow, Strike};
 use crate::content::{Affliction, ContentFiles, StatusId};
@@ -10,6 +9,7 @@ use crate::replay::Replay;
 use crate::stats::Stat;
 use crate::status::Effect;
 use crate::test_support::{builtin, run, said as messages};
+use crate::world::*;
 
 const TERRAIN: &str = r##"
 [[terrain]]
@@ -583,7 +583,7 @@ fn creatures_bleed_to_death_where_the_player_sees_it() {
 
 #[test]
 fn a_creature_bled_to_death_by_the_players_wound_is_their_kill() {
-    let experience = include_str!("../../../../assets/data/experience.toml");
+    let experience = include_str!("../../../../../assets/data/experience.toml");
     let bleed_out = |by: Option<ActorId>| {
         let extra = [("data/experience.toml", experience)];
         let mut w = world_with("#####\n#@.r#\n#####\n", "hp = 1000", &extra);

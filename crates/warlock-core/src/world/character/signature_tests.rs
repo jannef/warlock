@@ -2,12 +2,12 @@
 //! own gift held after the meal, its stats moved, its resistance totals; the two wyrms' sums
 //! (#1620: uncapped totals, 75 effective); one Fire breath, the larger; the abilities' source.
 
-use super::super::*;
 use crate::ability::{Ability, Source};
 use crate::action::Meal;
 use crate::content::{ContentFiles, GiftTier, SignActive};
 use crate::dump::{self, Layer};
 use crate::stats::Stat;
+use crate::world::*;
 
 /// Food underfoot, nothing else about.
 const PANTRY: &str = r##"

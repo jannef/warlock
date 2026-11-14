@@ -1,6 +1,6 @@
 # The craftsperson's class ability from level 32 (spec §8 "Class abilities": Field forge; the
 # craftsperson design §7.7): an active aimed in a direction (`use:field_forge:E`), the rule in
-# `world/field_forge.rs`: an ingot carried set on a heap of stones in an hour, a makeshift anvil
+# `world/crafting/field_forge.rs`: an ingot carried set on a heap of stones in an hour, a makeshift anvil
 # (terrain/'s `makeshift_anvil`) for good.
 [[talent]]
 id = "field_forge"

@@ -4,9 +4,9 @@
 //! built-in content's spell-circle hall (peaceful kobolds) with fixture spells and talents, and
 //! the druid's Pack leader (the druid's calls themselves: `caster_tests.rs`).
 
-use super::*;
 use crate::content::ContentFiles;
 use crate::test_support::{last as last_said, run, said};
+use crate::world::*;
 
 /// Two rats for five minutes, three of them at once.
 const RATS: &str = r#"

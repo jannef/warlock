@@ -1,15 +1,15 @@
-//! Cackle (spec §8 "Class abilities"; #904; `world/witch.rs`): the witch's at 6, for the time of
+//! Cackle (spec §8 "Class abilities"; #904; `world/classes/witch.rs`): the witch's at 6, for the time of
 //! a cast; every hex of hers on a creature she sees grows a degree (to its max) and starts
 //! afresh; another's hex and one out of sight untouched; refused with no time when none of hers
 //! is in sight; a voice 60 loud; no draws.
 
 use super::class_active_tests::{reach, world};
 use super::war_cry_tests::foe_at;
-use super::*;
 use crate::ability::{Ability, Unavailable};
 use crate::content::{ClassActive, StatusId};
 use crate::noise::{self, Act, SoundKind};
 use crate::test_support::{last, run};
+use crate::world::*;
 
 const CACKLE: ClassActive = ClassActive::Cackle;
 

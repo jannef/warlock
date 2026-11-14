@@ -5,7 +5,7 @@
 //! `cast.rs::cast_single`, [`World::spell_lands`]). Enemy-only as a choice of its AI; an ally
 //! caster casts the same way at its master's enemies.
 //!
-//! **Paid in mana**: each cast spends the spell's cost ([`super::Actor::spell_cost`], through
+//! **Paid in mana**: each cast spends the spell's cost ([`crate::world::Actor::spell_cost`], through
 //! [`World::spend_mana`]); a creature's pool is its type's `mana` and its mental stats', and
 //! comes back at the usual slow pace. Out of mana it fights as a melee creature (or shoots, with
 //! a missile weapon and ammunition), so it never stands idle.
@@ -40,9 +40,6 @@
 //! ("The spark shocks you."), a hex on a creature the player sees as theirs ("The goblin is
 //! weakened."), a heal as "The kobold looks better.". Unseen, the chanting is heard.
 
-use super::cast::Cast;
-use super::spell::{Caster, burst_cells, cone_cells};
-use super::{ActorId, AttackSkills, World};
 use crate::action::{AttackKind, Event, SpellShape};
 use crate::content::{
     ActionKind, Bolt, Burst, LevelKind, Shape, SpellData, SpellId, SpellPurpose, Stance,
@@ -51,11 +48,14 @@ use crate::fov::radius2;
 use crate::geom::Pos;
 use crate::noise::Act;
 use crate::text::capitalized;
+use crate::world::magic::cast::Cast;
+use crate::world::magic::spell::{Caster, burst_cells, cone_cells};
+use crate::world::{ActorId, AttackSkills, World};
 
 impl World {
     /// What a creature adds to its `attack` spells' roll: its level's quarter, as its natural
     /// attacks' `to_hit` (#1097); 0 for the player.
-    pub(super) fn creature_aim(&self, id: ActorId) -> i32 {
+    pub(in crate::world) fn creature_aim(&self, id: ActorId) -> i32 {
         if id == self.state.player {
             return 0;
         }
@@ -79,7 +79,7 @@ impl World {
     }
 
     /// The spell creature `id` casts now, fighting `target` on `at`, and on whom (module docs).
-    pub(super) fn creature_spell(
+    pub(in crate::world) fn creature_spell(
         &self,
         id: ActorId,
         target: ActorId,
@@ -162,7 +162,8 @@ impl World {
         if self.is_undead(me) {
             return None;
         }
-        let hurt = |a: &super::Actor| a.hp * 2 < a.max_hp(&self.content) && !self.is_undead(a);
+        let hurt =
+            |a: &crate::world::Actor| a.hp * 2 < a.max_hp(&self.content) && !self.is_undead(a);
         if hurt(me) {
             return Some(id);
         }
@@ -223,7 +224,7 @@ impl World {
 
     /// Creature `id` casts `spell` on `on` (its AI saw to it that it can). Returns the price: a
     /// `cast`.
-    pub(super) fn creature_casts(
+    pub(in crate::world) fn creature_casts(
         &mut self,
         id: ActorId,
         (spell, on): (SpellId, ActorId),
@@ -252,7 +253,12 @@ impl World {
         self.say_cast(id, def, on);
         self.creature_spell_does((id, here), &cast, (on, at), events);
         // Gone off in full: now its Spellcraft check, and perhaps a miscast (`miscast.rs`).
-        self.after_cast(id, &cast, super::miscast::Aim::Creature(on), events);
+        self.after_cast(
+            id,
+            &cast,
+            crate::world::magic::miscast::Aim::Creature(on),
+            events,
+        );
         if let Some(outer) = outer {
             let lines = std::mem::replace(&mut self.held, outer).unwrap_or_default();
             match &mut self.held {
@@ -265,7 +271,7 @@ impl World {
 
     /// What creature `id`, standing on `here`, does with `cast` at `on`, standing on `at`, by
     /// its kind (paid and said already).
-    pub(super) fn creature_spell_does(
+    pub(in crate::world) fn creature_spell_does(
         &mut self,
         (id, here): (ActorId, Pos),
         cast: &Cast<'_>,

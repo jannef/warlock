@@ -3,9 +3,9 @@
 //! what the circles are drawn from shows in perception. And the circle's light (spec §8 "Status
 //! effects", the design's §8): a circled status sheds its school's faint light.
 
-use super::*;
 use crate::content::SpellPurpose;
 use crate::test_support::{CONTENT, run};
+use crate::world::*;
 
 fn circles() -> World {
     World::new(CONTENT.clone(), "circles", None).expect("the circles hall")
@@ -117,7 +117,7 @@ fn a_buffed_creature_in_the_dark_is_seen_by_its_circles_light_alone() {
         source_at(&world, ALCOVE).as_deref(),
         Some("circle_transmutation")
     );
-    super::light_tests::check_creature_sight(&world).expect("creature sight agrees");
+    crate::world::turn::light_tests::check_creature_sight(&world).expect("creature sight agrees");
 }
 
 #[test]
@@ -146,7 +146,7 @@ fn low_light_eyes_see_a_cell_away_and_uv_eyes_plainly() {
         .light(ALCOVE.step(Dir::E))
         .expect("its neighbour is seen");
     assert!(beside.brightness() >= 60, "{}", beside.brightness());
-    super::light_tests::check_creature_sight(&uv).expect("creature sight agrees");
+    crate::world::turn::light_tests::check_creature_sight(&uv).expect("creature sight agrees");
 }
 
 #[test]

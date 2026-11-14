@@ -13,10 +13,10 @@
 //! What a rank gives is the spell's own `[spell.ranks]` table ([`crate::content::Ranks`]):
 //! [`Actor::rank_mods`] is its sum up to the caster's rank, one more source of [`SpellMods`]
 //! joined in [`Actor::spell_mods`] for an own cast only. A scroll read or a wand used casts at
-//! rank 1 ([`super::CastBy`]), and casting trains no rank: nothing but the grimoire raises it.
+//! rank 1 ([`crate::world::CastBy`]), and casting trains no rank: nothing but the grimoire raises it.
 
-use super::Actor;
 use crate::content::{Content, MAX_SPELL_RANK, SpellData, SpellId, SpellMods};
+use crate::world::Actor;
 
 impl Actor {
     /// The rank it knows `spell` at, 1 to [`MAX_SPELL_RANK`]; `None` for a spell it does not

@@ -5,9 +5,9 @@
 //! is a rule, like a creature noticing the player); the refusal says neither which kind of creature
 //! blocked it nor where, and takes no time.
 
-use super::{Spent, World};
 use crate::action::Event;
 use crate::content::{LevelKind, Stance};
+use crate::world::{Spent, World};
 
 /// What the player is told when the quick leave is refused.
 pub const QUICK_LEAVE_REFUSED: &str = "You cannot slip away with enemies about.";

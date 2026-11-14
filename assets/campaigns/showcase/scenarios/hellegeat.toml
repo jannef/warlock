@@ -1,6 +1,6 @@
 # A dev scenario of the showcase (spec §7 "The Pits", #1297): straight onto the first floor of a
 # Pit, Pit 1 of Hellegeat, as if a miscast had opened it in the hub. Its record is made as the run
-# starts (`world/pit.rs`): the floor's `<` climbs out to the hub, where no stair leads back, so
+# starts (`world/levels/pit.rs`): the floor's `<` climbs out to the hub, where no stair leads back, so
 # the record is dropped on that arrival.
 name = "Hellegeat"
 description = "Straight into a Pit of Hellegeat, the fiends' own dungeon that a miscast tears open."

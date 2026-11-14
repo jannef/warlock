@@ -3,9 +3,9 @@
 //! is told as it rises; quests from elsewhere do not count; it is derived from the saved records.
 
 use super::goodwill::discounted;
-use super::*;
 use crate::content::ContentFiles;
 use crate::test_support::{run as act, texts};
+use crate::world::*;
 use std::sync::LazyLock;
 
 const HILD: Pos = Pos::new(27, 25);

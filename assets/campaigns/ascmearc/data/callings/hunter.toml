@@ -5,7 +5,7 @@
 # the spirit's topic, `calls = "hunter"`; this file is the door.
 #
 # `level` is the bard's highest level (classes/ `max_level`): the calling comes the moment the
-# class is full, 30. world/strange_spirit_tests.rs checks the two stay together (so does the test
+# class is full, 30. world/campaigns/strange_spirit_tests.rs checks the two stay together (so does the test
 # world's calling).
 [[calling]]
 class = "hunter"

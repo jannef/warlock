@@ -2,12 +2,12 @@
 //! teaches it; cast for mana it asks for a stack the caster carries (`use:identify:c`), and its
 //! cost is its own, a large one, refused without the mana, no time taken.
 
-use super::*;
 use crate::ability::{Ability, Aim};
 use crate::content::{Rarity, SpellId};
 use crate::item_list::ItemList;
 use crate::magic::{Affix, Magic};
 use crate::test_support::{last, run};
+use crate::world::*;
 
 /// The pack: a, two scrolls of identify.
 const PACK: &str = "carry = [\"scroll_of_identify*2\"]";

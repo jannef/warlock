@@ -15,10 +15,10 @@
 //! cast (`World::may_use_class`). No draws, and no marks (no school, no skill: Intimidate is not
 //! trained by it).
 
-use super::{ActorId, Spent, World};
 use crate::action::Event;
 use crate::content::{ActionKind, Stacking, StatusId};
 use crate::noise::Act;
+use crate::world::{ActorId, Spent, World};
 
 impl World {
     /// Cackle (module docs), for the time of a cast.
@@ -51,7 +51,7 @@ impl World {
 
     /// Every hex of the player's on a creature they see now: `(creature, status, severity)`, in
     /// actor-id order, each creature's in status order.
-    pub(super) fn own_hexes_in_sight(&self) -> Vec<(ActorId, StatusId, u16)> {
+    pub(in crate::world) fn own_hexes_in_sight(&self) -> Vec<(ActorId, StatusId, u16)> {
         let player = self.state.player;
         let hexes = self.content.hex_statuses();
         let level = &self.state.current_level;

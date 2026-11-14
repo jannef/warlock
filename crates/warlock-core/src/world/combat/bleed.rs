@@ -1,18 +1,18 @@
 //! Bleeding (spec §8 "Blood"): big hits and kills leave blood where they land.
 //!
 //! [`World::bleed`] turns a blow about to be dealt into stains on the victim's level
-//! ([`crate::blood::Wound::spatter`], [`super::LevelState::stain`]): how much by the blow and the
+//! ([`crate::blood::Wound::spatter`], [`crate::world::LevelState::stain`]): how much by the blow and the
 //! victim's size, where by the blow's direction and a hash of the blow (never the gameplay random
 //! stream), so blood never changes what happens next. No rule reads it. A blow of a kind that
 //! draws no blood (`blood = false` in `data/damage_types.toml`: fire, cold, electricity, poison,
 //! necrotic) spills none; one that chars sears its target's cell instead (`sear.rs`).
 
-use super::{ActorId, World};
 use crate::action::AttackKind;
 use crate::blood::{self, Wound};
 use crate::combat::{Blow, Strike};
 use crate::content::{CreatureId, LevelKind};
 use crate::geom::Pos;
+use crate::world::{ActorId, World};
 
 impl World {
     /// Actor `target` is about to take `blow`, an attack of `kind` that `attacker` made from
@@ -30,7 +30,7 @@ impl World {
 
     /// A corpse of `creature` at `at` bursts, the blast from `from` (`corpse_spell.rs`): its
     /// blood is spattered as a kill's, presentation data as all blood is.
-    pub(super) fn spill_corpse(&mut self, creature: CreatureId, at: Pos, from: Pos) {
+    pub(in crate::world) fn spill_corpse(&mut self, creature: CreatureId, at: Pos, from: Pos) {
         let def = self.content.creature(creature);
         let Some(color) = def.blood else {
             return;
@@ -60,7 +60,7 @@ impl World {
     /// [`World::bleed`] for any blow: `source` only seeds where the blood lands (the attacker's
     /// id; a trap's kind for a trap's blow, spec §8 "Traps"), and the blow came from `from`,
     /// along a missile's flight or not.
-    pub(super) fn spill(
+    pub(in crate::world) fn spill(
         &mut self,
         source: u32,
         target: ActorId,

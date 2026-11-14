@@ -1,7 +1,7 @@
 //! Diseases on actors (spec §8 "Diseases"): the rules of one actor's infections. What the
 //! diseases are is data ([`crate::content::DiseaseDef`], `data/diseases.toml`); applying them to
 //! the world (exposure, their turns as the clock moves, stat damage, deaths, messages) is
-//! `world/disease.rs`.
+//! `world/health/disease.rs`.
 //!
 //! An actor carries its **diseases** ([`Diseases`]): at most one infection of each, in disease
 //! order, each in one of two stages, all of it game time in whole seconds:

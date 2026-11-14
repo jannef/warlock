@@ -90,7 +90,7 @@ fn tier_odds_hold_over_many_seeds() {
 #[test]
 fn no_score_falls_below_one() {
     // Every race, gender, and class, on a thousand stories each: a story's stat points stop at
-    // the floor, however they fall (no caps, one floor; gold's is `world/background_tests.rs`).
+    // the floor, however they fall (no caps, one floor; gold's is `world/character/background_tests.rs`).
     for race in &CONTENT.races().list {
         for class in CONTENT.classes() {
             for gender in crate::character::Gender::ALL {

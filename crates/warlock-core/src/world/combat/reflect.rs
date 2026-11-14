@@ -28,16 +28,16 @@
 //! [`WeaponDoes::ReflectSpell`]: crate::content::WeaponDoes::ReflectSpell
 
 use super::weapon_ability::Fired;
-use super::{ActorId, AttackSkills, World};
 use crate::action::{AttackKind, Event, SpellShape};
 use crate::combat::{Blow, Category};
 use crate::content::{Shape, SpellData, Trigger};
 use crate::dice::Roll;
 use crate::geom::Pos;
+use crate::world::{ActorId, AttackSkills, World};
 
 /// The reflections' transient state (never saved).
 #[derive(Clone, Debug, Default)]
-pub(super) struct Reflections {
+pub(in crate::world) struct Reflections {
     /// Reflections made in the turn of each actor's under way, by actor.
     made: Vec<(ActorId, u8)>,
     /// The actor whose ability has just chosen to turn the blocked spell back.
@@ -46,27 +46,27 @@ pub(super) struct Reflections {
 
 /// A single-target spell as its caster cast it: what a reflection casts again.
 #[derive(Clone, Copy, Debug)]
-pub(super) struct Shot<'s> {
-    pub(super) def: &'s SpellData,
+pub(in crate::world) struct Shot<'s> {
+    pub(in crate::world) def: &'s SpellData,
     /// Its effect's id (drawn along its way), or empty.
-    pub(super) effect: &'s str,
-    pub(super) dice: Roll,
+    pub(in crate::world) effect: &'s str,
+    pub(in crate::world) dice: Roll,
     /// The caster's roll hook: a die showing this or less is drawn once more.
-    pub(super) reroll: u32,
+    pub(in crate::world) reroll: u32,
     /// The caster's to-hit with it.
-    pub(super) to_hit: i32,
+    pub(in crate::world) to_hit: i32,
     /// The natural roll from which it threatens a critical: the caster's
-    /// [`super::Actor::spell_threat`] for its own cast, else [`crate::combat::DEFAULT_THREAT`].
-    pub(super) threat: u8,
+    /// [`crate::world::Actor::spell_threat`] for its own cast, else [`crate::combat::DEFAULT_THREAT`].
+    pub(in crate::world) threat: u8,
     /// The spell attack skill and caster style it is cast with (the caster's own cast of a
     /// spell that rolls to hit; none for a scroll, a wand, or a reflected flight).
-    pub(super) skills: AttackSkills,
+    pub(in crate::world) skills: AttackSkills,
 }
 
 /// A spell turned back: by whom, at whom, the way back, and the spell.
 #[derive(Clone, Debug)]
-pub(super) struct Turned<'s> {
-    pub(super) reflector: ActorId,
+pub(in crate::world) struct Turned<'s> {
+    pub(in crate::world) reflector: ActorId,
     pub(super) caster: ActorId,
     path: Vec<Pos>,
     pub(super) shot: Shot<'s>,
@@ -98,7 +98,7 @@ impl World {
     /// `caster`'s spell `shot`, flown along `path` from `here` (a touch: the cell touched),
     /// missed `reflector` by its Shield: [`Trigger::SpellBlocked`] fires for it, and if its
     /// ability turns the spell back, what to cast back. No draw.
-    pub(super) fn spell_blocked<'s>(
+    pub(in crate::world) fn spell_blocked<'s>(
         &mut self,
         (reflector, caster): (ActorId, ActorId),
         (path, here): (&[Pos], Pos),
@@ -127,7 +127,7 @@ impl World {
     /// turns the bolt back at the shaman."), its effect drawn along the way back; its own attack
     /// roll against the caster's Defence, as the caster cast it. The reflected flight never
     /// raises the trigger: it is never reflected again.
-    pub(super) fn turn_back(&mut self, turned: &Turned<'_>, made: &mut Vec<Event>) {
+    pub(in crate::world) fn turn_back(&mut self, turned: &Turned<'_>, made: &mut Vec<Event>) {
         let Turned {
             reflector,
             caster,

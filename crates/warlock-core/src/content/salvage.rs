@@ -1,5 +1,5 @@
 //! The numbers of salvaging an item for its materials (`assets/data/rules/salvage.toml`; the rules
-//! are `world/salvage.rs`, docs/dev/crafting.md). The file is optional: without it nobody salvages.
+//! are `world/crafting/salvage.rs`, docs/dev/crafting.md). The file is optional: without it nobody salvages.
 
 use super::ContentError;
 use serde::Deserialize;

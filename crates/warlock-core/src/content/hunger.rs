@@ -4,7 +4,7 @@
 //!
 //! The file is optional: without it nobody hungers, nothing can be eaten, food does not rot, and
 //! creatures leave no corpses. The rules are in [`crate::hunger`], [`crate::rot`], and
-//! `world/hunger.rs`.
+//! `world/health/hunger.rs`.
 
 use super::{ActionKind, ContentError, CorpseGifts};
 use crate::dice::Dice;
@@ -120,7 +120,7 @@ pub struct Rotten {
     pub harm: Dice,
 }
 
-/// Telling food's freshness by looking (`world/freshness.rs`): what rotted food adds to the
+/// Telling food's freshness by looking (`world/health/freshness.rs`): what rotted food adds to the
 /// chance, and the most the chance is, in percent.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]

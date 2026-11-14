@@ -2,11 +2,11 @@
 //! staircase, where it stands, what it keeps, when it may act, and what the other ways of
 //! leaving a level do.
 
-use super::fight::Harm;
-use super::*;
 use crate::action::Event;
 use crate::content::ContentFiles;
 use crate::test_support::{run, texts};
+use crate::world::combat::fight::Harm;
+use crate::world::*;
 
 /// The player stands on stairs down and up (below): `k` beside them, `f` two cells off.
 const TOP: &str = "\
@@ -140,7 +140,7 @@ fn the_one_beside_follows_down_and_up_and_the_one_two_cells_off_stays() {
 
 #[test]
 fn a_followed_vault_monster_counts_toward_the_new_levels_cap() {
-    use crate::world::spawn::Spawner;
+    use crate::world::creatures::spawn::Spawner;
     let mut w = world();
     let k = beside(&w);
     let spawner = Spawner::new(1, "test_top", w.state.time, Duration::seconds(60));

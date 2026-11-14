@@ -15,8 +15,8 @@
 //!   sooner, and so do Marvellous, Masterwork, and every cut. Set has no grade; a counted batch
 //!   and a brew have none either.
 
-use super::Actor;
 use crate::content::Content;
+use crate::world::Actor;
 
 /// How long a craft of `base` seconds takes `actor`: Quick hands' share of it, at least a second.
 pub(super) fn craft_seconds(content: &Content, actor: &Actor, base: u32) -> u32 {
@@ -35,7 +35,7 @@ pub(super) fn graded_margin(content: &Content, actor: &Actor, margin: i32) -> i3
     }
 }
 
-impl super::World {
+impl crate::world::World {
     /// How long a craft of `base` seconds takes the player ([`craft_seconds`]): what every craft's
     /// loop asks as it is started.
     pub(super) fn craft_seconds(&self, base: u32) -> u32 {

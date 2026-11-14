@@ -3,10 +3,10 @@
 //! eyes; a disease bonus wins disease checks; a stomach for rotten food eats it unharmed; an
 //! eye for traps notices them in passing.
 
-use super::*;
 use crate::combat::Category;
 use crate::content::ContentFiles;
 use crate::test_support::run;
+use crate::world::*;
 use std::sync::LazyLock;
 
 /// Test races beside the built-in ones, each with one gift.

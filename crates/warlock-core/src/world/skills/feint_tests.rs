@@ -1,15 +1,15 @@
-//! Feint (spec §8 "Skills": Bluff; #1016; `world/feint.rs`): Bluff's use; made and failed; its
+//! Feint (spec §8 "Skills": Bluff; #1016; `world/skills/feint.rs`): Bluff's use; made and failed; its
 //! refusals, with no time and no draw; a blow after it finds the foe flat-footed, though the foe
 //! acted between; Sneak attack's dice for a thief; marks on the training stream.
 
-use super::class_active_tests::world;
 use super::intimidate_tests::foe_at;
-use super::*;
 use crate::ability::Ability;
 use crate::rng::Rng;
 use crate::skills::{Effect, Trained};
 use crate::stats::{PerStat, Stat, Stats};
 use crate::test_support::{builtin, last};
+use crate::world::classes::class_active_tests::world;
+use crate::world::*;
 
 /// The player's skill `id` set to `value` (trained), the rest of their skills as they are.
 fn train(w: &mut World, id: &str, value: Option<u16>) {

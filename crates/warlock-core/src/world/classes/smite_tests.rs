@@ -1,14 +1,14 @@
-//! Smite and zeal (`world/smite.rs`; spec §8 "Class abilities": "Smite", "Resources"; the
+//! Smite and zeal (`world/classes/smite.rs`; spec §8 "Class abilities": "Smite", "Resources"; the
 //! paladin design P1, #910): the pool, the blow's dice and aim, its cost, the sin that empties
 //! it, and a save without it.
 
-use super::alignment::Deed;
 use super::class_active_tests::{at_normal_speed, beside, reach, world};
-use super::*;
 use crate::content::{Build, ResourceId};
 use crate::replay::Replay;
 use crate::stats::Stat;
 use crate::test_support::{builtin, last, run};
+use crate::world::character::alignment::Deed;
+use crate::world::*;
 
 fn zeal(w: &World) -> ResourceId {
     w.content().resource_id("zeal").expect("zeal")

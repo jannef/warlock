@@ -7,13 +7,13 @@
 //! goes home as usual; its waits while the player rests away from it are coarse as anyone's
 //! (`stride.rs`).
 
-use super::ai::Plan;
-use super::{ActorId, World};
+use crate::world::creatures::ai::Plan;
+use crate::world::{ActorId, World};
 
 impl World {
     /// What creature `id` does instead of `plan` (`ai.rs::fight`'s, against a hostile it sees):
     /// a step toward it becomes a wait while it lurks unharmed; anything else stands.
-    pub(super) fn lurker_waits(&self, id: ActorId, plan: Plan) -> Plan {
+    pub(in crate::world) fn lurker_waits(&self, id: ActorId, plan: Plan) -> Plan {
         let me = &self.state.actors[&id];
         let lurks = self.content.creature(me.creature).lurks;
         match plan {

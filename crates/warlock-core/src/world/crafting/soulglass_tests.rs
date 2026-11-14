@@ -1,12 +1,12 @@
-//! Soulglass (docs/design/enchanting.md §6; `world/crystal.rs`): a kill leaves its colour's
+//! Soulglass (docs/design/enchanting.md §6; `world/crafting/crystal.rs`): a kill leaves its colour's
 //! crystals and no corpse or crafting stock, the yield by level, a dragon's heart-crystal, the
 //! rare material's chance from level 15, a creature of no colour dying as ever, another spell's
 //! kill leaving its corpse, and the witch's grant at 16.
 
-use super::super::class_active_tests::beside;
-use super::super::*;
 use crate::action::parse_actions;
 use crate::content::CreatureId;
+use crate::world::classes::class_active_tests::beside;
+use crate::world::*;
 
 /// A lit hall: the player at the west end, a kobold far to the east (the template `beside`
 /// copies).
@@ -25,7 +25,7 @@ map = '''
 "##;
 
 static CONTENT: std::sync::LazyLock<Arc<Content>> = std::sync::LazyLock::new(|| {
-    let mut files = super::super::caster_tests::files();
+    let mut files = crate::world::magic::caster_tests::files();
     files.insert("levels/hall.toml", HALL);
     files.insert(
         "scenarios/hall.toml",

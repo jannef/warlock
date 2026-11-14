@@ -5,11 +5,11 @@
 //! plain whatever the margin.
 
 use super::craft::RecipeLack;
-use super::*;
 use crate::content::{ContentFiles, RecipeId};
 use crate::object::Stack;
 use crate::skills::{SkillId, Trained};
 use crate::test_support::{builtin, last_text as said, run as apply};
+use crate::world::*;
 
 /// The built-in content on a bare floor. The player (a craftsperson) carries nothing and has
 /// Woodcraft at 200.

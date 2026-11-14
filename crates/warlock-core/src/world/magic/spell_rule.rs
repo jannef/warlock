@@ -23,7 +23,6 @@
 
 use super::cast::Cast;
 use super::spell::burst_cells;
-use super::{Actor, ActorId, World};
 use crate::action::{Event, SpellShape};
 use crate::content::{Content, OnlyTerrain, SpellData};
 use crate::fov::radius2;
@@ -31,6 +30,7 @@ use crate::geom::{Dir, Pos};
 use crate::noise::Heard;
 use crate::text::capitalized;
 use crate::weather::{Override, Weather};
+use crate::world::{Actor, ActorId, World};
 use std::collections::BTreeSet;
 
 /// The tags of what has no heartbeat, beside the animated things (Sense the quick).
@@ -59,18 +59,18 @@ impl World {
     }
 
     /// Whether actor `a` carries one of the tags `only` (none: anyone will do).
-    pub(super) fn is_of_tags(&self, a: &Actor, only: &[String]) -> bool {
+    pub(in crate::world) fn is_of_tags(&self, a: &Actor, only: &[String]) -> bool {
         only.is_empty() || (only.iter()).any(|t| self.content.has_tag(a.creature, t))
     }
 
     /// Whether `a` is reached by a hex that reaches `only_sighted` (Flare): any creature with
     /// eyes, never one tagged [`crate::content::EYELESS`].
-    pub(super) fn sees_flash(&self, a: &Actor, only_sighted: bool) -> bool {
+    pub(in crate::world) fn sees_flash(&self, a: &Actor, only_sighted: bool) -> bool {
         !only_sighted || !self.content.has_tag(a.creature, crate::content::EYELESS)
     }
 
     /// Whether cell `p` of the current level is the ground `only` asks for (none: anywhere).
-    pub(super) fn stands_on(&self, p: Pos, only: Option<OnlyTerrain>) -> bool {
+    pub(in crate::world) fn stands_on(&self, p: Pos, only: Option<OnlyTerrain>) -> bool {
         let Some(only) = only else {
             return true;
         };
@@ -314,7 +314,7 @@ impl World {
     /// The end of a turn, for a player whose status `senses`: every living creature within its
     /// reach is on their heard list, faint (perception places it roughly, and only where they do
     /// not see; the deaf hear nothing). A lookup and no more without such a status.
-    pub(super) fn heartbeats(&mut self) {
+    pub(in crate::world) fn heartbeats(&mut self) {
         let content = self.content.clone();
         let me = self.state.player();
         let senses = (me.effects.iter())

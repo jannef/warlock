@@ -38,12 +38,12 @@
 //! Determinism: one draw (more on a collision) from the gameplay stream after the entry's
 //! message; the cells are found in a fixed order.
 
-use super::{World, WorldState};
 use crate::action::Event;
 use crate::content::{
     Content, CreatureId, LevelKind, StairsDir, StairsLink, parse_branch_level, parse_instance,
 };
 use crate::geom::Pos;
+use crate::world::{World, WorldState};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeSet;
 
@@ -59,7 +59,7 @@ pub struct Pit {
 
 impl Pit {
     /// An open Pit whose mouth is on level `from`.
-    pub(super) fn new(from: String) -> Self {
+    pub(in crate::world) fn new(from: String) -> Self {
         Pit {
             from,
             sealed: false,
@@ -77,7 +77,7 @@ impl Pit {
 
 /// Why a portal opens no Pit (module docs).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(super) enum Refused {
+pub(in crate::world) enum Refused {
     /// The overworld, or no plain cell near: the ground will not open.
     Ground,
     /// A Pit's own floor.
@@ -95,7 +95,11 @@ pub fn pit_of(content: &Content, id: &str) -> Option<(u32, u32)> {
 
 /// The level a run of campaign `campaign` starting on `start` records as its Pit's `from`, when
 /// `start` is a Pit's floor: where the campaign's own start scenario begins (module docs).
-pub(super) fn start_from(content: &Content, campaign: &str, start: &str) -> Option<String> {
+pub(in crate::world) fn start_from(
+    content: &Content,
+    campaign: &str,
+    start: &str,
+) -> Option<String> {
     pit_of(content, start)?;
     let scenario = content.scenario(&content.campaign(campaign)?.start)?;
     (!content.is_portal_floor(&scenario.start_level)).then(|| scenario.start_level.clone())
@@ -133,7 +137,7 @@ impl WorldState {
 
 impl World {
     /// Why a portal at `here` on the current level opens no Pit, if it does not.
-    pub(super) fn pit_refused(&self, here: Pos) -> Option<Refused> {
+    pub(in crate::world) fn pit_refused(&self, here: Pos) -> Option<Refused> {
         let level = self.state.current();
         if self.content.is_portal_floor(&level.id) {
             return Some(Refused::InPit);
@@ -172,7 +176,7 @@ impl World {
 
     /// A `portal` miscast by a caster at `here` (module docs): a Pit opened with `gate` at its
     /// mouth, or the gate alone where it is refused.
-    pub(super) fn open_pit(&mut self, here: Pos, gate: CreatureId) {
+    pub(in crate::world) fn open_pit(&mut self, here: Pos, gate: CreatureId) {
         let mouth = match self.pit_refused(here) {
             Some(_) => None,
             None => self.pit_mouth(here),
@@ -203,7 +207,7 @@ impl World {
 
     /// Creature type `creature` died on level `level`: if it is the warden of the Pit that level
     /// is a floor of, that Pit is sealed, and the player is told if they are there (module docs).
-    pub(super) fn seal_pit(&mut self, level: &str, creature: CreatureId) {
+    pub(in crate::world) fn seal_pit(&mut self, level: &str, creature: CreatureId) {
         let Some((s, depth)) = pit_of(&self.content, level) else {
             return;
         };
@@ -256,7 +260,7 @@ impl World {
 
     /// After an action that changed level, on an arrival outside every Pit: a sealed Pit's mouth
     /// closes, and the orphan rule (module docs).
-    pub(super) fn drop_orphan_pits(&mut self, events: &[Event]) {
+    pub(in crate::world) fn drop_orphan_pits(&mut self, events: &[Event]) {
         if self.state.pits.is_empty()
             || !(events.iter()).any(|e| matches!(e, Event::LevelChanged { .. }))
             || self.content.is_portal_floor(&self.state.current_level)

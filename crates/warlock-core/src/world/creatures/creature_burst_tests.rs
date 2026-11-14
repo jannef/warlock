@@ -4,12 +4,12 @@
 //! kind, through the spells' shared burst (resistances, the floor's ruin); a wave douses, a
 //! gust blows the loose things outward; the earth line throws stones and pounds up close.
 
-use super::fight::Harm;
-use super::*;
 use crate::action::{AttackKind, Event, parse_actions};
 use crate::combat::Strike;
 use crate::content::ContentFiles;
 use crate::test_support::said;
+use crate::world::combat::fight::Harm;
+use crate::world::*;
 use std::sync::LazyLock;
 
 const LEGEND: &str = r##"
@@ -327,7 +327,7 @@ fn the_earth_line_hurls_stones_from_afar_and_pounds_up_close() {
 fn a_burst_on_touch_is_a_creatures_whole_offence() {
     let mut files = ContentFiles::builtin();
     let path = "data/creatures/ember_mote.toml";
-    let text = include_str!("../../../../assets/data/creatures/ember_mote.toml").replace(
+    let text = include_str!("../../../../../assets/data/creatures/ember_mote.toml").replace(
         "[creature.burst]",
         "attack = { damage = \"1d4\", name = \"touch\", verb = \"singes\" }\n[creature.burst]",
     );

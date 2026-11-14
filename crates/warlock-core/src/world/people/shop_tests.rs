@@ -1,7 +1,6 @@
 //! Shops in play (spec §7 "Shops"): greeting, prices, buying and paying, putting back, selling,
 //! theft, an attacked or dead keeper, saves, replays, and generated shops.
 
-use super::*;
 use crate::action::{Positions, letter, parse_actions};
 use crate::content::{ContentFiles, Shops};
 use crate::geom::Dir;
@@ -10,6 +9,7 @@ use crate::perception::Sale;
 use crate::replay::Replay;
 use crate::stats::{Stat, Stats};
 use crate::test_support::{builtin as content, last_text as last};
+use crate::world::*;
 
 /// From the courtyard's start: east along the path, the purse in the gazebo (a), the scroll of
 /// light beside it (b), then along the flagstones to the hut, opening its door, and in.

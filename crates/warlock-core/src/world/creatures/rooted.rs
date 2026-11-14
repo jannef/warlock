@@ -13,20 +13,20 @@
 //!   (`stair_followers.rs`) or as an ally (`ally.rs::follow_along`: it stays behind).
 
 use super::ai::Plan;
-use super::{ActorId, World};
 use crate::action::AttackKind;
 use crate::content::ActionKind;
+use crate::world::{ActorId, World};
 
 impl World {
     /// Whether actor `id` is of a rooted type (module docs). The player never is.
-    pub(super) fn is_rooted(&self, id: ActorId) -> bool {
+    pub(in crate::world) fn is_rooted(&self, id: ActorId) -> bool {
         (self.state.actors.get(&id)).is_some_and(|a| self.content.creature(a.creature).rooted)
             && id != self.state.player
     }
 
     /// What rooted creature `id` does of `plan` (module docs): anything that would move it is a
     /// wait; anything else stands.
-    pub(super) fn rooted_plan(&self, id: ActorId, plan: Plan) -> Plan {
+    pub(in crate::world) fn rooted_plan(&self, id: ActorId, plan: Plan) -> Plan {
         match plan {
             Plan::Step(_) | Plan::Patrol | Plan::Blink(_) if self.is_rooted(id) => Plan::Wait,
             Plan::Attack {
@@ -46,8 +46,9 @@ impl World {
     }
 
     /// The price of a stride's waits for rooted creature `id`, which never strides (`stride.rs`).
-    pub(super) fn rooted_stride(&self, id: ActorId) -> Option<i64> {
-        self.is_rooted(id)
-            .then(|| self.price_of(id, ActionKind::Wait) * i64::from(super::stride::STRIDE))
+    pub(in crate::world) fn rooted_stride(&self, id: ActorId) -> Option<i64> {
+        self.is_rooted(id).then(|| {
+            self.price_of(id, ActionKind::Wait) * i64::from(crate::world::turn::stride::STRIDE)
+        })
     }
 }

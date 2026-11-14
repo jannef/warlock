@@ -1,5 +1,5 @@
 //! Combat (spec §8 "Combat"): hitting, Defence, criticals, damage, hit points, and
-//! regeneration. These are the pure rules; `world/fight.rs` applies them to actors.
+//! regeneration. These are the pure rules; `world/combat/fight.rs` applies them to actors.
 //!
 //! - **Hitting**: an attack hits when 2d12 (its *natural* roll, 2 to 24) plus its to-hit is at
 //!   least the target's Defence ([`hits`]). A natural 2 always misses, a natural 22 or better
@@ -28,7 +28,7 @@
 //! - **Hit points**: Toughness plus what race and class (a creature: its type) give
 //!   ([`max_hp`]); one comes back every `max(60 s, 360 s − 12 s × Toughness)` of game time
 //!   ([`regen_seconds`]) at the normal pace (resting and status effects change the pace,
-//!   `world/status.rs`). A **big hit** takes at least a third of them ([`big_hit`]).
+//!   `world/health/status.rs`). A **big hit** takes at least a third of them ([`big_hit`]).
 //!
 //! Every roll comes from the gameplay random stream, so fights replay exactly. Nothing here is
 //! shown to the player as a number but their own hit points, Defence, and Protection: never a

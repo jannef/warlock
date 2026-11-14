@@ -1,6 +1,6 @@
 //! Fletching (spec §8 "Fletching"; #1021, #1336): what the `count = "fletch"` recipes (the arrows
 //! and bolts of `recipes/woodcraft/`) and a recipe's `launcher` read beyond the generic making of
-//! `world/craft_make.rs`, which makes them.
+//! `world/crafting/craft_make.rs`, which makes them.
 //!
 //! - **A launcher ready** ([`shoots`]): a recipe with `launcher` wants a missile weapon ready
 //!   whose `launches` is the result's `ammo` (a bow for arrows, a crossbow for bolts); the row
@@ -14,10 +14,10 @@
 //!   `count = "fletch"` recipe's wood part has no step and takes no billet: the shaft is cut from
 //!   what wood there is.
 
-use super::{Actor, LevelState};
 use crate::content::{Content, ObjectId, RecipeCount, RecipeDef};
 use crate::geom::Pos;
 use crate::rng::Rng;
+use crate::world::{Actor, LevelState};
 
 /// Whether `actor` has a missile weapon ready that shoots `object` (its `ammo`).
 pub(super) fn shoots(actor: &Actor, content: &Content, object: ObjectId) -> bool {
@@ -106,7 +106,8 @@ pub(super) fn wood_free(content: &Content, level: &LevelState, at: Pos) -> bool 
     let Some(settings) = content.recipes().settings.as_ref() else {
         return false;
     };
-    super::forage::landscape_at(content, level, at).is_some_and(|l| settings.free_wood.contains(&l))
+    crate::world::skills::forage::landscape_at(content, level, at)
+        .is_some_and(|l| settings.free_wood.contains(&l))
 }
 
 /// Whether part `part` of `recipe`'s result is free here for `actor` (module docs): a

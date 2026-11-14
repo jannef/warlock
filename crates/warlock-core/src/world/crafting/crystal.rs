@@ -3,7 +3,7 @@
 //!
 //! - **Consuming** ([`World::consume_crystal`]): a crystal is consumed as food is eaten and a
 //!   potion drunk, from the Consume list (`e`) through [`Action::Eat`] (`eat:b`, `eat:floor:a`;
-//!   `world/eat.rs` hands a crystal here): one crystal of the stack, from the pack or the pile
+//!   `world/health/eat.rs` hands a crystal here): one crystal of the stack, from the pack or the pile
 //!   underfoot, a turn of the `drink` action, no check. It gives `[consume] mana` (never past
 //!   the maximum, as a potion's mana does), `[consume] marks` Willpower marks
 //!   (`StatUse::Consumed`, [`World::train_stat_times`]), and a step toward evil
@@ -11,7 +11,7 @@
 //!   diminishing as every deed does). Never refused for a full pool, nor for want of hunger.
 //!   In a shop it is bought as a potion drunk is ([`World::drank_goods`]). The rare materials
 //!   are no crystals: the Consume list leaves them out and `eat` refuses them as any non-food.
-//! - **Salvage's affix checks** ([`World::catch_magic`], called by `world/salvage.rs` before its
+//! - **Salvage's affix checks** ([`World::catch_magic`], called by `world/crafting/salvage.rs` before its
 //!   material checks): a magic or rare item, identified or not (it is destroyed at once, so
 //!   what its crystals tell matters to no one), makes one check per affix, in its order, two
 //!   gameplay draws each: 2d12 + the modifier of `data/rules/enchanting.toml`'s `stat`
@@ -39,14 +39,14 @@
 //! [`EnchantingRules::salvage_against`]: crate::content::EnchantingRules::salvage_against
 //! [`Crystals::colour_of_affix`]: crate::content::Crystals::colour_of_affix
 
-use super::alignment::Deed;
-use super::{Actor, Spent, World};
 use crate::action::{Meal, Positions};
 use crate::combat;
 use crate::content::{ActionKind, AffixKind, StatUse};
 use crate::object::Stack;
 use crate::skills::Effect;
 use crate::text::capitalized;
+use crate::world::character::alignment::Deed;
+use crate::world::{Actor, Spent, World};
 
 /// What salvage's affix checks caught: the lines to say, in order, the stacks caught, and
 /// whether any check was made (Enchanting's mark).
@@ -61,7 +61,7 @@ impl World {
     /// The player consumes one crystal of `stack`, found where `meal` says (module docs);
     /// [`World::eat`] hands it here. Nothing for content without crystals or a stack that is
     /// no crystal (the caller checks).
-    pub(super) fn consume_crystal(&mut self, meal: Meal, stack: &Stack) -> Spent {
+    pub(in crate::world) fn consume_crystal(&mut self, meal: Meal, stack: &Stack) -> Spent {
         let content = self.content.clone();
         let Some(crystals) = content.crystals() else {
             return Spent::Nothing;
@@ -182,7 +182,10 @@ impl World {
     /// saying so where the player sees its cell. `None` when no `crystal` spell struck it, or
     /// its kind leaves no corpse, an everlasting one (it always leaves its corpse), is an
     /// animated thing, or has no colour: it dies as it would.
-    pub(super) fn crystallise(&mut self, actor: &Actor) -> Option<(Vec<Stack>, Option<String>)> {
+    pub(in crate::world) fn crystallise(
+        &mut self,
+        actor: &Actor,
+    ) -> Option<(Vec<Stack>, Option<String>)> {
         if self.glassing != Some(actor.id) {
             return None;
         }

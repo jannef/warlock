@@ -4,7 +4,7 @@ Part of the specification, the source of truth for what to build; the index is
 [`specification.md`](../specification.md). Update it together with the code and the
 developer notes (CLAUDE.md, `docs/dev/`).
 
-- **Hunger** (`warlock-core/src/hunger.rs`, the rules; `world/hunger.rs` and `world/eat.rs`,
+- **Hunger** (`warlock-core/src/hunger.rs`, the rules; `world/health/hunger.rs` and `world/health/eat.rs`,
   applying them; `data/hunger.toml`, §7; M23, #137), ADOM-like:
   - **Nutrition**: the player has a counter of nutrition points (`Actor::satiation`; creatures
     do not hunger). Game time burns it as the scheduler moves the clock, so long actions,
@@ -77,7 +77,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     `vomit` (50 %) to vomit ("You vomit!": it feeds nothing, and the counter falls to at most
     `vomit_leaves`, 1000, Hungry), else "You have a hard time getting it all down." and what
     does not fit is lost.
-  - **Food rots** (`crate::rot`, the stages; `world/rot.rs`, applying them; #195): every food
+  - **Food rots** (`crate::rot`, the stages; `world/health/rot.rs`, applying them; #195): every food
     has a shelf life in data, `keeps` and `lasts` (§7 "Objects": a loaf of bread keeps 5 days
     and lasts 10, an apple 14 and 28, a food ration 30 and 60, dried meat and the angelica root
     longer; corpses by their creature's size, 8 and 36 hours), and every stack of food knows

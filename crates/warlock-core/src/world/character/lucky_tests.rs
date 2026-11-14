@@ -4,9 +4,7 @@
 //! creature fast until they miss it, strike another, or move. A character born on another day
 //! has none of it.
 
-use super::fight::Harm;
 use super::stars::RISEN;
-use super::*;
 use crate::action::AttackKind;
 use crate::character::CharacterSpec;
 use crate::combat::{Blow, Strike};
@@ -14,6 +12,8 @@ use crate::content::{Sign, StatusId};
 use crate::geom::{Dir, Pos};
 use crate::stats::{PerStat, Stat, Stats};
 use crate::test_support::{CONTENT as BUILTIN, last};
+use crate::world::combat::fight::Harm;
+use crate::world::*;
 
 /// A human warrior in the showcase (seed 7) born under the `element` `animal` on day `day`, every
 /// score 14 and at full hit points; the run restored, so the gifts are granted as a load does.
@@ -237,8 +237,8 @@ fn the_deep_ones_hit_holds_until_a_miss_another_target_or_a_step() {
     w.creature_steps(kobold, away, &mut events);
     assert_eq!(w.state.actors[&kobold].pos, at, "it did not step");
     assert_eq!(
-        w.held_back(kobold, ai::Plan::Step(away)),
-        ai::Plan::Attack {
+        w.held_back(kobold, crate::world::creatures::ai::Plan::Step(away)),
+        crate::world::creatures::ai::Plan::Attack {
             target: player,
             kind: AttackKind::Melee
         }
@@ -261,8 +261,8 @@ fn the_deep_ones_hit_holds_until_a_miss_another_target_or_a_step() {
     );
     assert!(!suffers(&w, kobold, "held"));
     assert_eq!(
-        w.held_back(kobold, ai::Plan::Step(away)),
-        ai::Plan::Step(away)
+        w.held_back(kobold, crate::world::creatures::ai::Plan::Step(away)),
+        crate::world::creatures::ai::Plan::Step(away)
     );
     // Striking another lets go of the first.
     w.grip(player, kobold, AttackKind::Melee, Some(&hit()), &mut events);

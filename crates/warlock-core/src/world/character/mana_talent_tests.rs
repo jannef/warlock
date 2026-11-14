@@ -3,12 +3,12 @@
 //! trade of hit points for mana, and spending mana as the `cast` use that trains Willpower.
 
 use super::talent::Due;
-use super::*;
 use crate::ability::{Ability, Source};
 use crate::character::CharacterSpec;
 use crate::stats::{PerStat, Stat, Stats};
 use crate::talent::TalentMods;
 use crate::test_support::{CONTENT as BUILTIN, last, run};
+use crate::world::*;
 
 /// An elf wizard in the showcase, every score 14.
 fn world() -> World {

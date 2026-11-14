@@ -8,8 +8,8 @@
 //! stack gone from the pack (or changed) ends the work on nothing ("You have nothing left to
 //! work on."), never on whatever came to stand where it was.
 
-use super::World;
 use crate::object::Stack;
+use crate::world::World;
 
 /// The stacks a long work began on, in pick order: each pick's position then and the stack it
 /// held (`None` for a pick left out).

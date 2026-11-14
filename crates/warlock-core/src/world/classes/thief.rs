@@ -14,10 +14,10 @@
 //!
 //! Nothing here draws: the blows draw as any blow does.
 
-use super::{Actor, ActorId, Spent, World};
 use crate::action::Event;
 use crate::content::{ActionKind, ClassActive};
 use crate::geom::Dir;
+use crate::world::{Actor, ActorId, Spent, World};
 
 impl World {
     /// The thief's refusals of class active `active` aimed `dir`, before anything is spent (no
@@ -46,7 +46,7 @@ impl World {
     }
 
     /// Whether `actor` lies in wait: it suffers the status of its Lurk.
-    pub(super) fn lurking(&self, actor: &Actor) -> bool {
+    pub(in crate::world) fn lurking(&self, actor: &Actor) -> bool {
         !actor.talents.is_empty()
             && (actor.talent_mods(&self.content).stealth.lurk).is_some_and(|s| actor.effects.has(s))
     }
@@ -54,7 +54,7 @@ impl World {
     /// Actor `keeper`'s free blow at `mover`, which stepped up beside it, is about to be struck:
     /// if the keeper is the player lying in wait, the blow finds `mover` as an unaware target
     /// would be found (taken by its `resolve`, [`World::lurked`]).
-    pub(super) fn lie_in_wait(&mut self, keeper: ActorId, mover: ActorId) {
+    pub(in crate::world) fn lie_in_wait(&mut self, keeper: ActorId, mover: ActorId) {
         let player = self.state.player;
         if keeper == player && self.lurking(self.state.player()) {
             self.technique.lurk = Some(mover);
@@ -63,8 +63,8 @@ impl World {
 
     /// Whether `attacker`'s attack on `target` is the blow of a lurk ([`World::lie_in_wait`])
     /// on a creature not hunting the player: it is caught unawares. The one place
-    /// [`super::weapon_active::Technique::lurk`] is read, which this attack takes.
-    pub(super) fn lurked(&mut self, attacker: ActorId, target: ActorId) -> bool {
+    /// [`crate::world::combat::weapon_active::Technique::lurk`] is read, which this attack takes.
+    pub(in crate::world) fn lurked(&mut self, attacker: ActorId, target: ActorId) -> bool {
         if attacker != self.state.player {
             return false;
         }
@@ -73,9 +73,9 @@ impl World {
     }
 
     /// Whether `attacker`'s attack on `target` is a sneak attack whatever its target knows (an
-    /// exploit's). The one place [`super::weapon_active::Technique::sneak`] is read, which this
+    /// exploit's). The one place [`crate::world::combat::weapon_active::Technique::sneak`] is read, which this
     /// attack takes, unless a thrown exploit is aimed at another creature (`openings.rs`).
-    pub(super) fn sneak_taken(&mut self, attacker: ActorId, target: ActorId) -> bool {
+    pub(in crate::world) fn sneak_taken(&mut self, attacker: ActorId, target: ActorId) -> bool {
         attacker == self.state.player
             && self.technique.at.is_none_or(|at| at == target)
             && std::mem::take(&mut self.technique.sneak)
@@ -83,7 +83,7 @@ impl World {
 
     /// Vanishing act: `attacker`'s sneak attack killed; it takes a degree of the status its
     /// talents name for that (Light-footed), if any.
-    pub(super) fn vanishing_act(&mut self, attacker: ActorId, events: &mut Vec<Event>) {
+    pub(in crate::world) fn vanishing_act(&mut self, attacker: ActorId, events: &mut Vec<Event>) {
         let status = (self.state.actors.get(&attacker))
             .filter(|a| !a.talents.is_empty())
             .and_then(|a| a.talent_mods(&self.content).stealth.sneak_kill_status);

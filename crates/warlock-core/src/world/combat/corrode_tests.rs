@@ -1,15 +1,15 @@
-//! Harm to gear and regeneration (`world/corrode.rs`, `world/regen.rs`; the dread design §5.8
+//! Harm to gear and regeneration (`world/combat/corrode.rs`, `world/health/regen.rs`; the dread design §5.8
 //! and §5.9, #1131, #1168): the roll and what it reaches, the material's chance, damaged then
 //! destroyed, the weapon form, the once-only line of a piece withstanding it, acid resistance,
 //! rust; a troll's pace and what stops it.
 
-use super::class_active_tests::{beside, world};
 use super::corrode::chance;
-use super::*;
 use crate::action::AttackKind;
 use crate::item_parts::ItemPart;
 use crate::object::Stack;
 use crate::test_support::last;
+use crate::world::classes::class_active_tests::{beside, world};
+use crate::world::*;
 
 #[test]
 fn acid_resistance_halves_the_chance() {

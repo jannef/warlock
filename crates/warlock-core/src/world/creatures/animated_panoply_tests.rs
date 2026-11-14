@@ -4,13 +4,13 @@
 //! weapon, ranks in the weapon's skill and in Sword and board); the powers of what they wear and
 //! wield, which work for them as for anyone; and Appraiser's eye, which tells a magic one.
 
-use super::*;
 use crate::action::AttackKind;
 use crate::content::ContentFiles;
 use crate::damage::Damage;
 use crate::magic::{Affix, Magic, Rarity};
 use crate::object::Stack;
 use crate::test_support::builtin;
+use crate::world::*;
 
 // A lit hall: the player between hollow armour of level 12 (west) and a panoply of level 40
 // (east), a panoply of level 70 further on.

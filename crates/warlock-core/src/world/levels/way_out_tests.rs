@@ -3,11 +3,11 @@
 //! comes out there; then it is marked on their map, named, and a way back in. Arriving on the
 //! overworld any other way reveals nothing.
 
-use super::*;
 use crate::action::parse_actions;
 use crate::dump::{self, Layer};
 use crate::replay::Replay;
 use crate::test_support::{builtin, run as act, texts};
+use crate::world::*;
 
 /// Ūtgang's way in on the Ascmearc, on the volcano's south foot.
 const UTGANG: Pos = Pos::new(103, 17);

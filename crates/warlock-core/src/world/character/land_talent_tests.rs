@@ -2,12 +2,12 @@
 //! adaptation, which took in Owl eyes, #817), Blood scent, Lamplighter, Ambusher, and the land's: Swimmer, Marsh
 //! walker, Beast-friend. Each changes the one rule it names.
 
-use super::*;
 use crate::action::AttackKind;
 use crate::combat::{Blow, Strike};
 use crate::content::{ContentFiles, Stance};
 use crate::light::Light;
 use crate::test_support::run;
+use crate::world::*;
 use std::sync::LazyLock;
 
 /// A pitch-dark corridor: the player at its west end, a giant rat seven cells east.

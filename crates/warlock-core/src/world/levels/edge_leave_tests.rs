@@ -4,13 +4,13 @@
 //! nobody. The fixture is the forest scenario's generated local area, the player moved to its
 //! west edge and a kobold placed where each case needs it.
 
-use super::caster_tests::kobold_at;
 use super::edge_leave::EDGE_LEAVE_REFUSED;
 use super::quick_leave::QUICK_LEAVE_REFUSED;
-use super::*;
 use crate::action::parse_actions;
 use crate::content::Stance;
 use crate::test_support::{builtin as content, last_text as last};
+use crate::world::magic::caster_tests::kobold_at;
+use crate::world::*;
 
 /// A run in the forest's local area, the player on a free, walkable cell of its west edge.
 fn at_the_edge() -> World {

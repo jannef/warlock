@@ -3,11 +3,11 @@
 //! 2, shots up to rank 4, and nothing else; missiles at it drop beside it or are destroyed.
 
 use super::fight::Harm;
-use super::*;
 use crate::action::AttackKind;
 use crate::content::WeaponSkillId;
 use crate::object::Stack;
 use crate::test_support::{CONTENT, run as act};
+use crate::world::*;
 
 /// The dummy at the west end of the shooting lane, and one of the three below it.
 const LANE: Pos = Pos::new(73, 17);
@@ -117,7 +117,7 @@ fn blows_train_slowly_up_to_rank_two_and_no_stat() {
     act(&mut w, "move:S*60");
     assert_eq!(rank(&w, "unarmed"), 2, "rank 2 reached");
     assert_eq!(rank(&w, "brawler"), 2);
-    let learned = (w.messages().iter()).filter(|m| m.text.contains(dummy::LEARNED_ALL));
+    let learned = (w.messages().iter()).filter(|m| m.text.contains(super::dummy::LEARNED_ALL));
     assert_eq!(learned.count(), 2, "said once for each");
     // From rank 2 nothing more is learned here.
     let unarmed = skill(&w, "unarmed");

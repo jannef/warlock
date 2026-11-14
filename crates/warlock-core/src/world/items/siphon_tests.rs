@@ -4,9 +4,6 @@
 //! a status tick's death or a trap's kill. No shipped file has these affixes yet, so the tests
 //! bring their own.
 
-use super::class_active_tests::beside;
-use super::spell::Caster;
-use super::*;
 use crate::action::parse_actions;
 use crate::character::CharacterSpec;
 use crate::combat::Strike;
@@ -15,6 +12,9 @@ use crate::damage::Damage;
 use crate::magic::{Affix, Magic, Rarity};
 use crate::stats::{PerStat, Stats};
 use crate::test_support::run;
+use crate::world::classes::class_active_tests::beside;
+use crate::world::magic::spell::Caster;
+use crate::world::*;
 
 const AFFIXES: &str = r#"
 [[suffix]]

@@ -20,11 +20,11 @@
 //!
 //! [`Action::Give`]: crate::action::Action::Give
 
-use super::{ActorId, Spent, World, allies_beside};
 use crate::action::Positions;
 use crate::content::{ActionKind, Content, SlotId};
 use crate::geom::Dir;
 use crate::object::{self, Stack};
+use crate::world::{ActorId, Spent, World, allies_beside};
 
 fn neck(content: &Content) -> Option<SlotId> {
     content.ids().neck
@@ -46,9 +46,9 @@ impl World {
     }
 
     /// The player gives one of the stack at `item` to a kept beast of theirs (the module docs).
-    pub(super) fn give_collar(&mut self, item: usize, way: Option<Dir>) -> Spent {
+    pub(in crate::world) fn give_collar(&mut self, item: usize, way: Option<Dir>) -> Spent {
         let player = self.state.player;
-        let takes = |a: &super::Actor| a.kept().is_some() || a.escorting().is_some();
+        let takes = |a: &crate::world::Actor| a.kept().is_some() || a.escorting().is_some();
         let Some(known) =
             (self.allies_of(player).into_iter()).find(|id| takes(&self.state.actors[id]))
         else {
@@ -90,7 +90,11 @@ impl World {
     /// One of the stack at `item` leaves the player's pack to be handed to an ally, taken off
     /// first if it was on them; with what that costs, priced as `put_on` (and the taking off) at
     /// the load the player has as they begin, as a drop is.
-    pub(super) fn hand_over_one(&mut self, item: usize, put_on: ActionKind) -> (Spent, Stack) {
+    pub(in crate::world) fn hand_over_one(
+        &mut self,
+        item: usize,
+        put_on: ActionKind,
+    ) -> (Spent, Stack) {
         let count = self.state.player().inventory[item].count;
         let mut kinds = Vec::new();
         if count == 1 {
@@ -141,7 +145,7 @@ impl World {
 }
 
 /// `a jade amulet` as `the jade amulet`.
-pub(super) fn definite(what: &str) -> String {
+pub(in crate::world) fn definite(what: &str) -> String {
     match what.strip_prefix("an ").or_else(|| what.strip_prefix("a ")) {
         Some(rest) => format!("the {rest}"),
         None => what.to_string(),

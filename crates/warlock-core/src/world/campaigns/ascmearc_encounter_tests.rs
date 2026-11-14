@@ -5,12 +5,12 @@
 //! brings a branch's folk, and the tables that change as the run goes on (a quest's variant, a
 //! quest under way, the days gone by).
 
-use super::*;
 use crate::action::parse_actions;
 use crate::content::{ContentFiles, EntryStance, Landscape, local_area_id};
 use crate::daylight::{self, DayPhase};
 use crate::replay::Replay;
 use crate::test_support::run as act;
+use crate::world::*;
 use std::sync::LazyLock;
 
 /// The road one cell east of Cēaptūn, in Cēapdenu: seven steps east of the pass.
@@ -237,7 +237,10 @@ fn the_pedlar_hailed_talks_and_tells_the_ways() {
     w.state.actors.get_mut(&pedlar).expect("pedlar").pos = me.step(dir);
     w.perceive(&mut Vec::new());
     act(&mut w, &format!("chat:{dir:?} ask:{dir:?}:rumours"));
-    assert!(said(&w, super::rumour::MARKED), "the way is marked");
+    assert!(
+        said(&w, crate::world::people::rumour::MARKED),
+        "the way is marked"
+    );
     let overworld = &w.state.levels["ascmearc"];
     assert!(
         overworld

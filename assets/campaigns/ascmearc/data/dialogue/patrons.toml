@@ -1,4 +1,4 @@
-# A craftsperson's patron (#1421; world/patron.rs; the craftsperson design §7.4): a well-to-do
+# A craftsperson's patron (#1421; world/crafting/patron.rs; the craftsperson design §7.4): a well-to-do
 # burgher lodging at the Gæsthūs in Cēaptūn in the run of a craftsperson of level 12 or more, of
 # the craftsperson's own race, speaking in that race's register (docs/dev/npcs.md "Speech by race
 # and station"; a patron is a person of means, so a human one speaks posh).

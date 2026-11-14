@@ -5,11 +5,11 @@
 //! from `World::dwell`), a neutral one is ignored. The first entry says which
 //! ([`enter_line`], from `travel.rs::enter_room`).
 
-use super::{Actor, ActorId, LevelState, World};
 use crate::action::Event;
 use crate::alignment::Alignment;
 use crate::content::{Content, Regard, Shrine, SpecialRoom};
 use crate::geom::Pos;
+use crate::world::{Actor, ActorId, LevelState, World};
 
 impl LevelState {
     /// The shrine at `p`, if a shrine of a side is there, with its side.
@@ -39,7 +39,7 @@ impl World {
 
     /// Percent of the usual pace at which `actor` gets hit points back for the shrine it stands
     /// in: the shrine's `regen` for one of its side, else 100.
-    pub(super) fn shrine_pace(&self, actor: &Actor) -> u32 {
+    pub(in crate::world) fn shrine_pace(&self, actor: &Actor) -> u32 {
         match self.shrine_regard(actor) {
             Some((shrine, Regard::Welcome)) => u32::from(shrine.regen),
             _ => 100,
@@ -61,7 +61,11 @@ impl World {
 
 /// The line the player's first entry into `room` says: a shrine's by how it treats them, else
 /// the effect's `enter`.
-pub(super) fn enter_line(room: &SpecialRoom, player: &Actor, content: &Content) -> String {
+pub(in crate::world) fn enter_line(
+    room: &SpecialRoom,
+    player: &Actor,
+    content: &Content,
+) -> String {
     let effect = content.room_effect(room.effect);
     match (&effect.shrine, room.side) {
         (Some(shrine), Some(side)) => {

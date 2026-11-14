@@ -1,11 +1,11 @@
 //! Objects, equipment, and magic items (docs/dev/objects.md, equipment.md, magic-items.md).
 
-mod body_slots;
+pub(in crate::world) mod body_slots;
 mod carry;
 mod equip;
 pub(crate) mod gear_condition;
 mod lamp;
-mod loot;
+pub(in crate::world) mod loot;
 mod material_drops;
 mod siphon;
 mod stock;
@@ -18,9 +18,9 @@ cfg_if! {
         mod body_slots_tests;
         mod equip_tests;
         mod gear_condition_tests;
-        mod gear_tests;
+        pub(in crate::world) mod gear_tests;
         mod gem_tests;
-        mod lamp_tests;
+        pub(in crate::world) mod lamp_tests;
         mod material_draw_tests;
         mod material_drops_tests;
         mod object_tests;

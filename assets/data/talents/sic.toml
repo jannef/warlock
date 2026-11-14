@@ -1,5 +1,5 @@
 # Sic 'em, the ranger's level 40 (#921; docs/design/ranger-companion.md §11.3): the companion set
-# on a creature, on the Focus Rapid shot gives. `world/sic.rs`.
+# on a creature, on the Focus Rapid shot gives. `world/allies/sic.rs`.
 [[talent]]
 id = "sic"
 name = "Sic 'em"

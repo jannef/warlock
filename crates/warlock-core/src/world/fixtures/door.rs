@@ -2,7 +2,7 @@
 //! kicking.
 //!
 //! - **Opening** a closed door swings it open (`open_door`, a noise). A locked one opens only
-//!   to an actor carrying a key that fits ([`super::Actor::key_for`]): it is unlocked (the lock
+//!   to an actor carrying a key that fits ([`crate::world::Actor::key_for`]): it is unlocked (the lock
 //!   is gone) and opened in one action, which costs `unlock` plus `open_door`. Without one the
 //!   player is told "The door is locked." and no time passes; a creature that opens doors treats
 //!   it as a wall.
@@ -19,7 +19,6 @@
 //!   the door breaks; walking through the doorway never sets it off. A door kicked in takes its
 //!   trap with it ([`World::set_terrain`]).
 
-use super::{ActorId, AttackSkills, Spent, World};
 use crate::action::Event;
 use crate::content::Effect as ItemEffect;
 use crate::content::{ActionKind, Role};
@@ -28,11 +27,12 @@ use crate::geom::{Dir, Pos};
 use crate::noise::Act;
 use crate::skills::{Effect, Use};
 use crate::stats::Stat;
+use crate::world::{ActorId, AttackSkills, Spent, World};
 
 impl World {
     /// The player opens the door at `p`; a locked one only with a key that fits, which unlocks
     /// it first. Returns what it cost.
-    pub(super) fn open_door(&mut self, p: Pos, events: &mut Vec<Event>) -> Spent {
+    pub(in crate::world) fn open_door(&mut self, p: Pos, events: &mut Vec<Event>) -> Spent {
         // What they take for a chest is a mimic (`mimic.rs`).
         if let Some(spent) = self.touch(p, events) {
             return spent;
@@ -79,7 +79,7 @@ impl World {
     /// Actor `id` swings the closed door at `p` open (unlocked by now): its noise, the terrain
     /// it opens to, and the event; then a trap on the door goes off at them. No pit lies on a
     /// door (content refuses one), so opening it costs no more than it did.
-    pub(super) fn swing_open(&mut self, id: ActorId, p: Pos, events: &mut Vec<Event>) {
+    pub(in crate::world) fn swing_open(&mut self, id: ActorId, p: Pos, events: &mut Vec<Event>) {
         let terrain = self.state.current().terrain[p];
         let opened = (self.content.terrain(terrain).opens_to).expect("closed doors have opens_to");
         self.make_noise(id, Act::OpenDoor(p));
@@ -90,7 +90,7 @@ impl World {
 
     /// The player closes the open door at `p`, unless someone or something is in the doorway.
     /// Returns whether they did.
-    pub(super) fn close_door(&mut self, p: Pos, events: &mut Vec<Event>) -> bool {
+    pub(in crate::world) fn close_door(&mut self, p: Pos, events: &mut Vec<Event>) -> bool {
         let terrain = self.state.current().terrain.get(p).copied();
         let def = terrain.map(|t| self.content.terrain(t));
         match def {
@@ -121,7 +121,7 @@ impl World {
 
     /// The player kicks in `dir`: whoever stands there (an unarmed blow), else a closed door
     /// there (it may break). Kicking at anything else is refused and takes no time.
-    pub(super) fn kick(&mut self, dir: Dir, events: &mut Vec<Event>) -> Spent {
+    pub(in crate::world) fn kick(&mut self, dir: Dir, events: &mut Vec<Event>) -> Spent {
         let at = self.player_pos().step(dir);
         // What they take for a chest is a mimic (`mimic.rs`).
         if let Some(spent) = self.touch(at, events) {
@@ -165,7 +165,7 @@ impl World {
     /// effective Strength, their athletics (spec §8 "Skills"), their talents' (Mighty kick,
     /// Lockbreaker; spec §8 "Talents"), and what they wear (Hobnailed; spec §8 "Magic
     /// items"): as if stronger.
-    pub(super) fn kick_force(&self) -> u8 {
+    pub(in crate::world) fn kick_force(&self) -> u8 {
         let me = self.state.player();
         let strength = me.effective_stats(&self.content).score(Stat::Strength);
         let athletics = me.skill_effect(&self.content, Effect::Kick);

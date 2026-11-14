@@ -1,7 +1,6 @@
 //! The birth sign's gifts from the Roc to the Barghest (spec §8 "Birth sign"): each changes the
 //! one rule it names, and the Phoenix rises from its ashes once in a life.
 
-use super::*;
 use crate::character::CharacterSpec;
 use crate::content::{ContentFiles, Sign, TalentEffect};
 use crate::dump::{self, Layer};
@@ -13,6 +12,7 @@ use crate::stats::{PerStat, Stats};
 use crate::talent::{OffenceEffect, VigourEffect};
 use crate::test_support::{CONTENT as BUILTIN, said};
 use crate::time::Duration;
+use crate::world::*;
 
 /// A human warrior in `scenario` born under the `element` `animal` (`None`: under no sign), the
 /// run restored with that birth, so the gifts are granted as a load grants them.
@@ -259,7 +259,12 @@ fn the_phoenix_rises_from_its_ashes_once_in_a_life() {
     let kobold = beside(&mut w, "kobold", 50);
     let mut events = Vec::new();
     // A blow that would kill: the Phoenix rises instead, Ashen, with a third of its hit points.
-    assert!(!w.hurt(player, 999, fight::Harm::Actor(kobold), &mut events));
+    assert!(!w.hurt(
+        player,
+        999,
+        crate::world::combat::fight::Harm::Actor(kobold),
+        &mut events
+    ));
     assert!(w.state.death.is_none());
     assert!(ashen(&w));
     let max = w.state.player().max_hp(w.content());
@@ -282,7 +287,12 @@ fn the_phoenix_rises_from_its_ashes_once_in_a_life() {
     // Saved and restored, it stays spent: the next deadly blow kills.
     let restored = World::from_state(w.content().clone(), w.state().clone()).expect("restores");
     assert!(restored.state.progress.happened(RISEN));
-    assert!(w.hurt(player, 999, fight::Harm::Actor(kobold), &mut events));
+    assert!(w.hurt(
+        player,
+        999,
+        crate::world::combat::fight::Harm::Actor(kobold),
+        &mut events
+    ));
     assert!(w.state.death.is_some());
 }
 
@@ -291,13 +301,23 @@ fn the_phoenix_still_starves_and_others_never_rise() {
     let mut w = born_under("phoenix", "fire");
     let player = w.state.player;
     let when = w.state.time;
-    assert!(w.hurt(player, 999, fight::Harm::Starving(when), &mut Vec::new()));
+    assert!(w.hurt(
+        player,
+        999,
+        crate::world::combat::fight::Harm::Starving(when),
+        &mut Vec::new()
+    ));
     assert!(w.state.death.is_some(), "starving kills");
     assert!(!w.state.progress.happened(RISEN));
     let mut other = unborn();
     let player = other.state.player;
     let kobold = beside(&mut other, "kobold", 5);
-    assert!(other.hurt(player, 999, fight::Harm::Actor(kobold), &mut Vec::new()));
+    assert!(other.hurt(
+        player,
+        999,
+        crate::world::combat::fight::Harm::Actor(kobold),
+        &mut Vec::new()
+    ));
     // And a run without the gift writes nothing of it.
     assert!(other.state.progress.once.is_empty());
 }

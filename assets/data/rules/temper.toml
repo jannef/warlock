@@ -1,4 +1,4 @@
-# Working an item at an anvil (the Temper ability; spec §7 "Special rooms", world/temper.rs, the
+# Working an item at an anvil (the Temper ability; spec §7 "Special rooms", world/crafting/temper.rs, the
 # item's state magic/worked.rs). An attempt takes `seconds` of the `temper` action (actions.toml).
 # Done, a 2d12 check, plus the Strength modifier, Metalcraft's `temper` points, and the talents'
 # Strength checks, against

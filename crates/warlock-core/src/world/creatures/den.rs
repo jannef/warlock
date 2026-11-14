@@ -14,9 +14,9 @@
 //! Light and sight never wake a sleeper. Waking ends the status ("The goblin wakes up." when the
 //! player sees it); the creature is an ordinary one from its next turn on.
 
-use super::{ActorId, World};
 use crate::content::ActionKind;
 use crate::noise::{self, Act, Heard, Noise, VOICE_NOISE};
+use crate::world::{ActorId, World};
 
 impl World {
     /// Creature `id`'s sleep, if it sleeps: its status that `sleeps` (Asleep).
@@ -31,7 +31,7 @@ impl World {
     }
 
     /// Whether actor `id` sleeps.
-    pub(super) fn asleep(&self, id: ActorId) -> bool {
+    pub(in crate::world) fn asleep(&self, id: ActorId) -> bool {
         self.sleep_of(id).is_some()
     }
 
@@ -39,7 +39,7 @@ impl World {
     /// at once while the player rests, as an idle creature away from them would: a sleeper costs
     /// next to nothing in a rest). `None`: it is awake and acts as usual.
     /// A disguised mimic (`mimic.rs`) waits the same way: it never acts until found out.
-    pub(super) fn slumbers(&mut self, id: ActorId) -> Option<i64> {
+    pub(in crate::world) fn slumbers(&mut self, id: ActorId) -> Option<i64> {
         if !self.asleep(id) && !self.disguised(id) {
             return None;
         }
@@ -48,7 +48,7 @@ impl World {
         }
         let wait = self.price_of(id, ActionKind::Wait);
         let times = if self.resting {
-            i64::from(super::stride::STRIDE)
+            i64::from(crate::world::turn::stride::STRIDE)
         } else {
             1
         };
@@ -56,8 +56,8 @@ impl World {
     }
 
     /// `noise` is heard on the current level: everyone it reaches loudly enough keeps it in
-    /// their [`super::Actor::heard`] list, and the sleepers it is loud enough for wake.
-    pub(super) fn spread_noise(&mut self, noise: Noise) {
+    /// their [`crate::world::Actor::heard`] list, and the sleepers it is loud enough for wake.
+    pub(in crate::world) fn spread_noise(&mut self, noise: Noise) {
         let hearers = noise::hearers(&self.state, &self.content, noise);
         let mut woken = Vec::new();
         for (id, loudness) in hearers {
@@ -97,7 +97,7 @@ impl World {
 
     /// Actor `id` wakes, if it sleeps: its sleep ends, the player is told if they see it, and it
     /// cries out (its den's `cry`), which may wake others.
-    pub(super) fn wake(&mut self, id: ActorId) {
+    pub(in crate::world) fn wake(&mut self, id: ActorId) {
         let Some(sleep) = self.sleep_of(id) else {
             return;
         };

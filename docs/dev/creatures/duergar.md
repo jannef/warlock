@@ -52,7 +52,7 @@ Follow-ups: enlarging as an ability used in a fight, a mount as a creature of it
 Invisibility (#1132, docs/dev/creatures.md "The unseen"): every duergar but the skeleton has
 `[creature.invisible] cooldown = 300`: it fades from sight (two minutes of Invisible) at the start
 of its turn whenever the five minutes are up, and goes on with its turn; the priest and the
-mindbreaker as well as their spells. Their hobnails are heard as ever. `world/unseen_tests.rs`
+mindbreaker as well as their spells. Their hobnails are heard as ever. `world/creatures/unseen_tests.rs`
 checks the rows.
 
 Spells (#1102, docs/dev/creatures.md "Casters"; in the order each prefers them): the duergar priest `cure_wounds`, `blessing`, `flay`, `cause_wounds` (mana 40); the duergar mindbreaker `fear`, `bind`, `flay` (mana 60).

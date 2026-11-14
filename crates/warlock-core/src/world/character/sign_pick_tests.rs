@@ -3,7 +3,6 @@
 //! prerequisites), and each changes the one rule it names, the two new actives (Fire breath and
 //! Hound's bay) with their cooldowns in the abilities menu.
 
-use super::*;
 use crate::ability::{Ability, Unavailable};
 use crate::action::AttackKind;
 use crate::character::CharacterSpec;
@@ -14,6 +13,7 @@ use crate::geom::Pos;
 use crate::stats::{PerStat, Stats};
 use crate::talent::{Candidate, Refusal, may_take};
 use crate::test_support::{CONTENT as BUILTIN, last, run};
+use crate::world::*;
 
 /// The fourteen picks with the sign each asks for (`(animal, element)`, one of them set).
 const PICKS: [(&str, Option<&str>, Option<&str>); 14] = [
@@ -354,7 +354,7 @@ fn second_rising_lets_the_phoenix_rise_twice_and_no_more() {
     let at = w.player_pos().step(Dir::E);
     let kobold = foe_at(&mut w, at, 500);
     let mut events = Vec::new();
-    let blow = fight::Harm::Actor(kobold);
+    let blow = crate::world::combat::fight::Harm::Actor(kobold);
     assert!(!w.hurt(player, 999, blow, &mut events), "rises once");
     assert!(w.state.progress.happened(RISEN));
     assert!(!w.state.progress.happened(RISEN_TWICE));

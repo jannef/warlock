@@ -10,8 +10,8 @@
 //! every spell paid in mana trains it (`World::practise_cast`). The player's casts and the
 //! creatures' are decided alike. Nothing is saved.
 
-use super::{Actor, AttackSkills, CastBy};
 use crate::content::{Content, Grip, Shape, SpellData, SpellMods};
+use crate::world::{Actor, AttackSkills, CastBy};
 
 impl Actor {
     /// The grip of the caster style its cast of `spell` is made in (module docs); `None` for

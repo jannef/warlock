@@ -3,7 +3,6 @@
 //! the floor, never killing; the player is told in words; talents raise the check; a temple's
 //! mending gives the points back; all of it is saved, hashed, and replayed.
 
-use super::*;
 use crate::action::{AttackKind, parse_actions};
 use crate::check::check;
 use crate::combat::{Blow, Strike};
@@ -11,6 +10,7 @@ use crate::content::{Affliction, ContentFiles, Drain};
 use crate::replay::Replay;
 use crate::stats::{DRAIN_FLOOR, PerStat, Stat, Stats};
 use crate::test_support::{CONTENT as BUILTIN, run, said};
+use crate::world::*;
 
 const TERRAIN: &str = r##"
 [[terrain]]
@@ -369,7 +369,7 @@ fn a_temples_mending_gives_drained_points_back() {
     let me = w.state.player();
     assert_eq!(me.stats.score(Stat::Strength), 12);
     assert_eq!(me.stats.potential(Stat::Strength), 15);
-    assert!(super::actor::undrained(&me.drained));
+    assert!(crate::world::turn::actor::undrained(&me.drained));
 }
 
 #[test]

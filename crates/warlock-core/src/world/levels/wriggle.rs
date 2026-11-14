@@ -15,11 +15,11 @@
 //! shop's keeper (the owner, #1032): it keeps its door, the refusal stands, and no draw, mark, or
 //! time is spent.
 
-use super::talk::Refusal;
-use super::*;
 use crate::check::check;
 use crate::skills::Effect as SkillEffect;
 use crate::stats::Stat;
+use crate::world::people::talk::Refusal;
+use crate::world::*;
 
 /// How a step into a creature that will not make way came out.
 pub(super) enum Wriggled {

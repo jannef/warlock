@@ -90,7 +90,7 @@ Wing-shouldered bars the cloak slot (its wings, "Your wings are in the way."). S
 Basilisk's `stare` with the sign's numbers (one stare with the sign's, the larger).
 
 **Twice-born** (design §6.3, §11, D7): the Phoenix's `rise_from_ashes` with its numbers, under a
-once of its own. `world/stars.rs::rise_from_ashes` asks `rising_sources` who gives the rising: a
+once of its own. `world/character/stars.rs::rise_from_ashes` asks `rising_sources` who gives the rising: a
 talent that is no gift (the sign's) and a gift. The sign's rising takes `risen`, then
 `risen_twice` with Second rising; then a gift's takes `profane_risen` (`PROFANE_RISEN`). So a
 Phoenix who is Twice-born rises once by each (twice with Second rising, then once more), and
@@ -100,10 +100,10 @@ two).
 
 **The body** (P5, #1628; design §6.4). Six talent effects, any talent's to use, each read at one
 hook (`docs/dev/progression.md`'s table has them all): `bars_slot` and `opens_slot` (the new
-`slots` area, `talent/slots.rs`; read in `world/body_slots.rs`, `docs/dev/equipment.md`
+`slots` area, `talent/slots.rs`; read in `world/items/body_slots.rs`, `docs/dev/equipment.md`
 "Barred and opened slots"), `unarmed_on_hit` (`offence`: bare hands' `on_hit`, `Actor::melee`),
 `vision` (`senses`: `WorldState::base_vision`), `kin_to` (`beast`: Beast-friend's rule by tag,
-`world/beast_friend.rs::calms`), and `max_mana_percent` (`magic`: `Actor::mana_scaled`). The
+`world/allies/beast_friend.rs::calms`), and `max_mana_percent` (`magic`: `Actor::mana_scaled`). The
 gifts: lesser `soft_footed`, `barrow_eyed`, `horned`, `hoofed`, `mere_eyed`; greater `clawed`,
 `many_fingered`, `dim_eyed`; dire `deep_eyed`, `fell_minded`; and Rat-king's court's
 `kin_to { tag = "vermin" }`. Their relations are written on the later of each pair (`hoofed`
@@ -115,7 +115,7 @@ longer fits, and falls to the floor." for a slot barred, "Your silver ring slips
 that is no longer there." for a slot no longer the player's (only rings are gated to a class
 today; an aristocrat's own extra ring stays when Many-fingered goes).
 
-## In the world: `world/profane.rs`
+## In the world: `world/character/profane.rs`
 
 - `World::may_take_gift(gift)`: §7.2's pool, what a draw may give: not held, not `excludes`-related
   to a gift held, not `not_for` the player's race. `World::gift_pool(tier)` counts it (open, all).
@@ -166,18 +166,18 @@ load, as any unknown talent does.
 ## Tests
 
 `content/profane.rs` (the tree, the symmetric excludes, the loader's refusals) and
-`world/eat_tests.rs` (Gnægan's meal in §4's order, an interrupted meal, the fallbacks, the empty
+`world/health/eat_tests.rs` (Gnægan's meal in §4's order, an interrupted meal, the fallbacks, the empty
 table, the deed in full and diminished, a paladin's zeal, the loader's profane-corpse and
-signature refusals), `world/signature_tests.rs` (each of the nine corpses: its gift, its stats, its resistance totals;
+signature refusals), `world/character/signature_tests.rs` (each of the nine corpses: its gift, its stats, its resistance totals;
 Līgetdrȳ's Decipher script; the two wyrms summed and capped; one breath, the larger; the
-`Fire breath (profane)` row), `world/layer_boss_tests.rs` (every keeper's profane corpse, the
-campaign check), `world/body_slots_tests.rs` (P5: Horned's helm falls and the equip is refused
+`Fire breath (profane)` row), `world/levels/layer_boss_tests.rs` (every keeper's profane corpse, the
+campaign check), `world/items/body_slots_tests.rs` (P5: Horned's helm falls and the equip is refused
 with no time; Many-fingered's ring, and its fall when the gift goes, an aristocrat's kept;
 Clawed's bleeding; Rat-king's court's vermin neutral until struck; Deep-eyed's darkvision eyes
 on a human, replacing Barrow-eyed; Fell-minded's quarter more mana), `content/profane.rs`'s
-`the_loader_refuses_a_bad_body_effect`, the screen snapshot `equipment-horned`, `world/profane_tests.rs` (bestow; rescind reversing `stat` exactly; Withered at the floor;
+`the_loader_refuses_a_bad_body_effect`, the screen snapshot `equipment-horned`, `world/character/profane_tests.rs` (bestow; rescind reversing `stat` exactly; Withered at the floor;
 `replaces`; `undoes` with and without the boon; `excludes` both ways; `not_for`; a save; the
-`progress` row), `world/gift_table_tests.rs` (P6: the fixture run that eats all ten keepers, its
+`progress` row), `world/character/gift_table_tests.rs` (P6: the fixture run that eats all ten keepers, its
 `progress` pools after each meal as the insta snapshot `profane_ten_meals`; a Phoenix who is
 Twice-born rises twice, Twice-born alone once; Wyrm-blooded over Ember-veined and its glow;
 Palsied undoing Adder-quick and nothing more; Scaled's excludes; Wing-shouldered's cloak), and

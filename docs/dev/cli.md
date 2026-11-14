@@ -580,7 +580,7 @@ thaw:X,Y,R`
   rank 10 or a character not trained in Decipher script; docs/dev/spells.md "Learning").
 - `decipher:b` makes out the scroll in inventory stack `b`, of a type not yet identified,
   without reading it (the Decipher ability, Decipher script's use: ten minutes, then the reading
-  check of `world/decipher.rs`; made, the type is learned and the scroll kept, failed, the time
+  check of `world/magic/decipher.rs`; made, the type is learned and the scroll kept, failed, the time
   is gone and it may be tried again; refused, with no time, for a known scroll or a stack that is
   no scroll; docs/dev/scrolls.md).
 - `scribe:fireball` writes a scroll of a spell the player knows on the first blank scroll they
@@ -791,7 +791,7 @@ All in docs/dev/crafting.md unless named.
   with its choice) when a level's pick is due (every third level; until it is made every other
   action is refused).
 - `advance:stealth` spends one of a level's skill rolls (on a trained skill;
-  `world/skill_roll.rs`).
+  `world/character/skill_roll.rs`).
 
 ### Dev actions
 

@@ -1,6 +1,6 @@
 //! Levels' choices and talents in the world (spec §8 "Talents"). A level that comes
 //! ([`World::level_up`], from `grant_xp`) hands out what it brings: its skill rolls
-//! (`world/skill_roll.rs`) and every `talent_every`th level a talent pick, kept as a [`Due`] in
+//! (`world/character/skill_roll.rs`) and every `talent_every`th level a talent pick, kept as a [`Due`] in
 //! `Progress` until they are made. **Nothing is banked**: while a choice is due the rules refuse
 //! every other action ([`World::refuse_due`], "You have skill rolls to spend." / "You must
 //! choose a talent first."), so the level-up screen, the headless CLI, and replays all spend a
@@ -13,17 +13,17 @@
 //! A level of the player's class's `bonus_talents` brings a **bonus pick** besides
 //! ([`Due::bonus`]), of a talent from the class's trees (any for the commoner); a talent from
 //! those trees spends a bonus pick before an ordinary one. The class abilities of a level are
-//! given as it comes (`world/class.rs`).
+//! given as it comes (`world/classes/class.rs`).
 //!
 //! What a talent does is read through `Actor::talent_mods` where each rule lives; the hand-outs
 //! are hit points by level (Hardy): a share at the pick, and each later level's growth as
 //! the level comes, into the actor's base hit points, as levels' own hit points are; and stat
-//! gifts, once, at the pick (`world/class.rs`'s `hand_out`).
+//! gifts, once, at the pick (`world/classes/class.rs`'s `hand_out`).
 
-use super::{Spent, World, class};
 use crate::action::Action;
 use crate::content::{TalentId, TreeId};
 use crate::talent::{self, Candidate};
+use crate::world::{Spent, World, classes::class};
 use serde::{Deserialize, Serialize};
 
 /// What a level still asks the player to choose (spec §8 "Talents").
@@ -34,7 +34,7 @@ pub struct Due {
     /// Talent picks left.
     #[serde(default, skip_serializing_if = "is_zero")]
     pub talents: u8,
-    /// Skill rolls left (`world/skill_roll.rs`).
+    /// Skill rolls left (`world/character/skill_roll.rs`).
     #[serde(default, skip_serializing_if = "is_zero")]
     pub rolls: u8,
     /// Bonus talent picks left, from the class's trees (spec §8 "Class abilities").
@@ -217,7 +217,7 @@ impl World {
     }
 
     /// Refuses `action` while a level's choices are due, unless it is one of them.
-    pub(super) fn refuse_due(&mut self, action: &Action) -> Option<Spent> {
+    pub(in crate::world) fn refuse_due(&mut self, action: &Action) -> Option<Spent> {
         let due = self.due()?;
         if matches!(
             action,
@@ -236,7 +236,7 @@ impl World {
     /// `talent:ID[:CHOICE]` ([`Action::Talent`]): the player takes talent `id` for `choice`,
     /// one of the picks due (a bonus pick first, if it is of the class's bonus trees), if its
     /// prerequisites hold; else why not, and nothing changes. Takes no time.
-    pub(super) fn take_talent(&mut self, id: &str, choice: Option<&str>) -> Spent {
+    pub(in crate::world) fn take_talent(&mut self, id: &str, choice: Option<&str>) -> Spent {
         match self.learn(id, choice) {
             Ok(news) => {
                 self.say(news);
@@ -311,7 +311,7 @@ impl World {
     /// the first the player may take (skill rolls on the first trained skill, then talents tree
     /// by tree, in file order, the first choice of one with a choice), for tests and
     /// benchmarks. Takes no time.
-    pub(super) fn level_up_auto(&mut self) -> Spent {
+    pub(in crate::world) fn level_up_auto(&mut self) -> Spent {
         if self.due().is_none() {
             self.say("Nothing is due.");
             return Spent::Nothing;

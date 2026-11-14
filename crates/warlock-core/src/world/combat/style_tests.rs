@@ -4,7 +4,6 @@
 //! weapon and draws on its own skill), the shield bash that may follow a blow, starting ranks
 //! from classes, and all of it saved and replayed.
 
-use super::*;
 use crate::action::{AttackKind, parse_actions};
 use crate::character::CharacterSpec;
 use crate::combat::Category;
@@ -13,6 +12,7 @@ use crate::equipment;
 use crate::replay::Replay;
 use crate::test_support::CONTENT as BUILTIN;
 use crate::weapon_skills::{Training, WeaponSkills};
+use crate::world::*;
 
 const TERRAIN: &str = r##"
 [[terrain]]
@@ -237,7 +237,7 @@ const LEGEND: &str = r##"
 "k" = { terrain = "floor", creature = "kobold", carry = ["sword", "dagger"], wield = ["sword", "dagger"] }
 "##;
 
-const WEAPON_SKILLS: &str = include_str!("../../../../assets/data/weapon_skills.toml");
+const WEAPON_SKILLS: &str = include_str!("../../../../../assets/data/weapon_skills.toml");
 
 /// The test content with a fully lit level on `map` and `tables` after it (`[[pile]]`s); the
 /// scenario gives the player a thousand hit points.

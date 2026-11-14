@@ -6,7 +6,6 @@
 //! door, the hermit's topic, too. The bard's cap and the callings' level are the shipped ones, 30
 //! (#874).
 
-use super::*;
 use crate::action::parse_actions;
 use crate::alignment::Score;
 use crate::character::CharacterSpec;
@@ -14,6 +13,7 @@ use crate::content::{ContentFiles, Factor};
 use crate::daylight::{self, DayPhase};
 use crate::replay::Replay;
 use crate::test_support::last_text as last_message;
+use crate::world::*;
 use std::sync::LazyLock;
 
 /// The bard's cap, and the level its calling asks.

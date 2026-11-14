@@ -17,12 +17,12 @@
 //! `world/mod.rs` has only the dispatch lines.
 
 use super::rest::Ended;
-use super::{Spent, World};
 use crate::action::Event;
 use crate::burden::Burden;
 use crate::geom::{Dir, Pos};
 use crate::perception::{CellView, PerceptionView};
 use crate::skills::Use;
+use crate::world::{Spent, World};
 use std::cell::Cell;
 
 /// How the run goes on: holding its direction, or following a corridor.
@@ -130,7 +130,7 @@ impl World {
     /// dispatch; a first step that cannot be a run's ([`steppable`]: a wall, a door, a creature,
     /// a known trap, deep water, the unknown) is a plain step that way instead (it opens the
     /// door, strikes the creature, or says what is in the way).
-    pub(super) fn start_running(&mut self, dir: Dir, events: &mut Vec<Event>) -> Spent {
+    pub(in crate::world) fn start_running(&mut self, dir: Dir, events: &mut Vec<Event>) -> Spent {
         let to = self.player_pos().step(dir);
         if !steppable(&self.perception(), to) {
             return self.player_moves(dir, events);
@@ -141,7 +141,7 @@ impl World {
     /// Runs in `dir` (see the module): step after step through [`World::keep_at`]. Ended by a
     /// creature coming close, it says so ("A kobold comes into view; you stop running."); ended
     /// by a message, that message says why; ended where the way gives out, nothing more is said.
-    pub(super) fn run(&mut self, dir: Dir, events: &mut Vec<Event>) {
+    pub(in crate::world) fn run(&mut self, dir: Dir, events: &mut Vec<Event>) {
         let player = self.state.player;
         let (steps, stuck) = (Cell::new(0u32), Cell::new(false));
         let (mode, next) = (Cell::new(None::<Mode>), Cell::new(None::<Dir>));

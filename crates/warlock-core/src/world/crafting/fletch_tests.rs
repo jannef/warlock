@@ -4,7 +4,6 @@
 //! and the flaming arrows; wood free in the woods; the knife and the launcher; the ranger's
 //! Fletcher; the marks; and a replay.
 
-use super::*;
 use crate::ability::Ability;
 use crate::action::parse_actions;
 use crate::character::CharacterSpec;
@@ -15,6 +14,7 @@ use crate::replay::Replay;
 use crate::skills::{SkillId, Trained};
 use crate::stats::{PerStat, Stats};
 use crate::test_support::{CONTENT as BUILTIN, last_text as last_message};
+use crate::world::*;
 use crate::world::{CraftStepKind, RecipeLack};
 use std::sync::LazyLock;
 

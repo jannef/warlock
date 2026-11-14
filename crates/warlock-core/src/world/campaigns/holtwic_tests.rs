@@ -4,12 +4,12 @@
 //! way down, the branch's three fey floors with the moss bed on the last, the dev scenarios, the
 //! village at the start (a snapshot), and a replay.
 
-use super::*;
 use crate::action::parse_actions;
 use crate::content::{ContentFiles, Stance};
 use crate::dump::{self, Layer};
 use crate::replay::Replay;
 use crate::test_support::{run as act, texts};
+use crate::world::*;
 use std::sync::LazyLock;
 
 /// Cēaptūn's cell, where the north road starts.
@@ -237,7 +237,7 @@ fn the_fey_hall_scenario_starts_on_its_first_floor() {
 fn the_village_at_the_start() {
     let w = village();
     let rows = dump::layer_rows(&w, Layer::View).join("\n");
-    insta::with_settings!({ snapshot_path => "../snapshots" }, {
+    insta::with_settings!({ snapshot_path => "../../snapshots" }, {
         insta::assert_snapshot!("holtwic_start", rows);
     });
 }

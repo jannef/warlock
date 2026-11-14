@@ -1,11 +1,11 @@
 //! Light and vision through the whole turn pipeline (spec §5).
 
-use super::*;
 use crate::content::ContentFiles;
 use crate::light::{BOUNCE, Light, falloff};
 use crate::object::LightMode;
 use crate::perception::{CellView, Emitter, PerceptionView};
 use crate::test_support::builtin;
+use crate::world::*;
 use proptest::prelude::*;
 use std::collections::BTreeSet;
 
@@ -214,7 +214,7 @@ fn load_rooms(
     files.insert("data/lights.toml", LIGHTS);
     files.insert("data/vision.toml", VISION);
     files.insert("data/legend.toml", LEGEND);
-    super::lamp_tests::with_lantern(&mut files);
+    crate::world::items::lamp_tests::with_lantern(&mut files);
     files.replace_table("room_effects", ROOM_EFFECTS);
     let [r, g, b, uv] = ambient;
     files.insert(
@@ -272,7 +272,7 @@ fn indirect(view: &PerceptionView<'_>, p: Pos) -> [u16; 3] {
 }
 
 /// Light API invariants that must hold in any state.
-pub(super) fn check_invariants(world: &World) -> Result<(), TestCaseError> {
+pub(in crate::world) fn check_invariants(world: &World) -> Result<(), TestCaseError> {
     let view = world.perception();
     for (p, sum) in summed_light(&view) {
         let light = view.light(p).expect("visible cells have light");
@@ -316,7 +316,7 @@ pub(super) fn check_invariants(world: &World) -> Result<(), TestCaseError> {
 /// Creature sight uses the player's rules (spec §5 "Creature sight"): on every transparent cell
 /// the player sees, the light a creature with the player's eyes finds there ([`crate::sight::light`],
 /// one cell at a time, from a cold light cache) is the light the player perceives.
-pub(super) fn check_creature_sight(world: &World) -> Result<(), TestCaseError> {
+pub(in crate::world) fn check_creature_sight(world: &World) -> Result<(), TestCaseError> {
     let view = world.perception();
     let content = world.content();
     let mut cold = LightCache::default();
@@ -702,11 +702,17 @@ fn terrain_changed_on_another_level_drops_its_cached_masks() {
 fn the_lantern_takes_a_turn_and_lights_the_way() {
     let map = "##########\n#@.......#\n##########\n";
     let mut w = dark_world(map, "normal");
-    assert_eq!(super::lamp_tests::light_mode(&w), Some(LightMode::Unlit));
+    assert_eq!(
+        crate::world::items::lamp_tests::light_mode(&w),
+        Some(LightMode::Unlit)
+    );
     assert!(!visible(&w.perception(), Pos::new(2, 1)));
     let outcome = w.apply(&Action::UseTool);
     assert!(outcome.took_turn);
-    assert_eq!(super::lamp_tests::light_mode(&w), Some(LightMode::Lit));
+    assert_eq!(
+        crate::world::items::lamp_tests::light_mode(&w),
+        Some(LightMode::Lit)
+    );
     assert!(visible(&w.perception(), Pos::new(3, 1)));
     let source = &w.perception().light_sources()[0];
     let key = source.key;
@@ -735,7 +741,10 @@ fn a_hooded_lantern_lights_around_the_player_but_not_them() {
     );
     let outcome = w.apply(&Action::UseTool);
     assert!(outcome.took_turn);
-    assert_eq!(super::lamp_tests::light_mode(&w), Some(LightMode::Hooded));
+    assert_eq!(
+        crate::world::items::lamp_tests::light_mode(&w),
+        Some(LightMode::Hooded)
+    );
     let view = w.perception();
     let hood = &view.light_sources()[0];
     assert_eq!(hood.pos(), Some(me));
@@ -757,7 +766,10 @@ fn a_hooded_lantern_lights_around_the_player_but_not_them() {
     // Doused and lit again, it burns open.
     w.apply(&Action::UseTool);
     w.apply(&Action::UseTool);
-    assert_eq!(super::lamp_tests::light_mode(&w), Some(LightMode::Lit));
+    assert_eq!(
+        crate::world::items::lamp_tests::light_mode(&w),
+        Some(LightMode::Lit)
+    );
     assert!(visible(&w.perception(), Pos::new(7, 2)));
     check_invariants(&w).expect("open light keeps the invariants");
 }
@@ -806,7 +818,7 @@ fn without_a_light_ready_using_the_tool_is_refused() {
     );
     let outcome = w.apply(&Action::UseTool);
     assert!(!outcome.took_turn, "a lantern in the pack is not ready");
-    assert_eq!(super::lamp_tests::light_mode(&w), None);
+    assert_eq!(crate::world::items::lamp_tests::light_mode(&w), None);
     assert_eq!(
         w.messages().iter().last().map(|m| m.text.as_str()),
         Some("You have no light ready to use.")
@@ -906,7 +918,10 @@ fn showcase_start_room_is_lit_and_readable() {
     let w = World::new(content, "showcase", None).expect("showcase");
     let view = w.perception();
     assert_eq!(view.vision().id, "normal");
-    assert_eq!(super::lamp_tests::light_mode(&w), Some(LightMode::Unlit));
+    assert_eq!(
+        crate::world::items::lamp_tests::light_mode(&w),
+        Some(LightMode::Unlit)
+    );
     // The start room spans x 1..14, y 12..19; every cell and its walls are visible.
     for y in 11..=20 {
         for x in 0..=15 {
@@ -1008,7 +1023,7 @@ fn vast_world() -> World {
     files.insert("data/lights.toml", LIGHTS);
     files.insert("data/vision.toml", VISION);
     files.insert("data/legend.toml", LEGEND);
-    super::lamp_tests::with_lantern(&mut files);
+    crate::world::items::lamp_tests::with_lantern(&mut files);
     files.insert(
         "levels/vast.toml",
         &format!(

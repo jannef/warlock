@@ -9,16 +9,16 @@
 //!   (Frugal caster). Spent only once the cast is sure to go off.
 //! - **Reach**: the spell's base range, radius, or length, climbed on its reach ladders by the
 //!   caster's scores, then the reach hook's cells (School focus, of Farcasting), held only by the
-//!   engine's limits ([`Actor::spell_reach`], `world/spell_rung.rs`); a buff's or a hex's degrees
+//!   engine's limits ([`Actor::spell_reach`], `world/magic/spell_rung.rs`); a buff's or a hex's degrees
 //!   the same way on its degrees ladder ([`Actor::spell_degrees`]).
 //! - **Dice**: the roll at the rung the caster reaches on the spell's damage or heal ladder (a
 //!   scroll's or a wand's own rungs plus the reader's scroll or wand rungs), then the dice hook
 //!   ([`Actor::spell_roll`]); drawn with the roll hook's rerolls, and the rider hook's statuses
-//!   laid on every target harmed (`world/spell_mods.rs`). Nothing holds the roll (the spell
+//!   laid on every target harmed (`world/magic/spell_mods.rs`). Nothing holds the roll (the spell
 //!   scaling design, decision 16).
 //! - **Type**: what every spell of its damage type does beyond its damage, on those it harmed
-//!   and the cells it reached (`world/spell_type.rs`), and how it spreads from them through
-//!   water and by arcs, at the same roll (`world/spell_arc.rs`).
+//!   and the cells it reached (`world/magic/spell_type.rs`), and how it spreads from them through
+//!   water and by arcs, at the same roll (`world/magic/spell_arc.rs`).
 //! - **Resolution**: `area` (a burst, a cone, a line) strikes everyone in it with one roll, no
 //!   roll to hit, Evasion halving it ([`World::spell_hurts`]) and resistances taking their
 //!   share; `auto` (a ray or a bolt) strikes the first creature on its way, never missing;
@@ -61,10 +61,8 @@
 //! [`Action::Cast`]: crate::action::Action::Cast
 //! [`Action::CastOn`]: crate::action::Action::CastOn
 
-use super::reflect::{Shot, Turned};
 use super::spell::{Caster, burst_cells};
 use super::spell_rung::CastBy;
-use super::{Actor, ActorId, AttackSkills, Cause, Spent, World};
 use crate::ability::{Ability, Unavailable};
 use crate::action::position_text;
 use crate::action::{AttackKind, Event, ReadTarget, SpellShape};
@@ -79,6 +77,8 @@ use crate::dice::Roll;
 use crate::geom::Pos;
 use crate::magic::Mods;
 use crate::text::capitalized;
+use crate::world::combat::reflect::{Shot, Turned};
+use crate::world::{Actor, ActorId, AttackSkills, Cause, Spent, World};
 use std::cell::Cell;
 
 /// How far a spell reaches as one actor casts it, its reach ladders climbed (each `None` where
@@ -157,7 +157,7 @@ impl World {
     /// `use:ID[:X,Y]` ([`crate::action::Action::Cast`]) and `use:ID:c`
     /// ([`crate::action::Action::CastOn`]): the player casts the spell of id `name`, at the cell
     /// or on the stack `target` if it asks for one (module docs).
-    pub(super) fn cast_spell(
+    pub(in crate::world) fn cast_spell(
         &mut self,
         name: &str,
         target: Option<ReadTarget>,
@@ -351,7 +351,7 @@ impl World {
     /// scroll the reader fails to make out does not (`decipher.rs`), and the caller ends the
     /// cast there, its time spent and nothing else.
     #[must_use]
-    pub(super) fn pay_cast(&mut self, cast: &Cast<'_>) -> bool {
+    pub(in crate::world) fn pay_cast(&mut self, cast: &Cast<'_>) -> bool {
         match cast.pay {
             Pay::Mana(mana) => {
                 self.spend_mana(self.state.player, mana);
@@ -396,7 +396,7 @@ impl World {
     /// the strongest creature struck at, and `landed` (a harm done, a hex taken, a heal given,
     /// a buff or a cure or a utility's work done) makes it a success. The one place every kind
     /// reports a landing.
-    pub(super) fn spell_landed(&mut self, cast: &Cast<'_>, other: ActorId, landed: bool) {
+    pub(in crate::world) fn spell_landed(&mut self, cast: &Cast<'_>, other: ActorId, landed: bool) {
         let mut outcome = cast.outcome.get();
         let level = self.level_of(other);
         outcome.level = Some(outcome.level.map_or(level, |l| l.max(level)));
@@ -452,7 +452,7 @@ impl World {
             }
             _ => on,
         };
-        if matches!(self.identify(on), super::Identified::Now(_)) {
+        if matches!(self.identify(on), crate::world::Identified::Now(_)) {
             self.train_stat(crate::content::StatUse::Identified);
             events.push(Event::Identified { item: on });
         }
@@ -512,7 +512,7 @@ impl World {
     }
 
     /// `target` gets `back` hit points of a heal, never past its maximum; said.
-    pub(super) fn spell_heals(&mut self, target: ActorId, back: i32) {
+    pub(in crate::world) fn spell_heals(&mut self, target: ActorId, back: i32) {
         if target == self.state.player {
             self.heal_player(back);
             self.say("Your wounds close.");
@@ -695,7 +695,7 @@ impl World {
 
     /// The creature a hex at `at` within `range` falls on: one the player sees there, that is
     /// not friendly to them. `None` (said) otherwise.
-    pub(super) fn hex_target(&mut self, at: Pos, range: i32) -> Option<ActorId> {
+    pub(in crate::world) fn hex_target(&mut self, at: Pos, range: i32) -> Option<ActorId> {
         if !self.within_reach(at, range, "hex") {
             return None;
         }
@@ -852,7 +852,7 @@ impl World {
     /// lives its status and the cast's `riders` (the rider hook; a status of both merged). The
     /// player's own `cast` then hears of each creature it struck at, harmed or missed, in the
     /// order struck (an area's in ascending actor id; [`World::spell_landed`]).
-    pub(super) fn spell_lands(
+    pub(in crate::world) fn spell_lands(
         &mut self,
         by: ActorId,
         (def, riders): (&SpellData, &[(StatusId, u16)]),
@@ -922,7 +922,7 @@ impl World {
     /// nothing. An attack roll missed by the target's Shield may be turned back (Spell
     /// reflection, `reflect.rs`): what to cast back, if so, and the harm it rolled (0: it rolled
     /// none).
-    pub(super) fn cast_single<'s>(
+    pub(in crate::world) fn cast_single<'s>(
         &mut self,
         caster: ActorId,
         (here, at, reach): (Pos, Pos, i32),
@@ -1006,7 +1006,7 @@ impl World {
     /// `by`'s single-target spell `shot` strikes `target` from `source` as its resolution says:
     /// `auto` always, `attack` and `touch` by the attack roll (`shot`'s to-hit) against its
     /// Defence. How it struck, and the harm it rolled, before what the target resists.
-    pub(super) fn spell_attack(
+    pub(in crate::world) fn spell_attack(
         &mut self,
         by: ActorId,
         target: ActorId,
@@ -1078,7 +1078,7 @@ impl World {
         self.glassing = def.effect.crystal.then_some(target);
         let harm = self.spell_strikes(by, target, source, (damage, strike), made);
         self.glassing = None;
-        super::surprise::mark_caught(&mut made[start..], (by, target), caught);
+        crate::world::combat::surprise::mark_caught(&mut made[start..], (by, target), caught);
         self.leech(by, def, harm);
         (strike, amount + sneak)
     }
@@ -1121,25 +1121,25 @@ enum Pay {
 }
 
 /// One cast's settled facts, handed to each kind's code.
-pub(super) struct Cast<'c> {
-    pub(super) spell: SpellId,
-    pub(super) def: &'c SpellData,
+pub(in crate::world) struct Cast<'c> {
+    pub(in crate::world) spell: SpellId,
+    pub(in crate::world) def: &'c SpellData,
     /// Who casts it: whose its blows, kills, and zone are (a flask's thrower).
-    pub(super) by: ActorId,
+    pub(in crate::world) by: ActorId,
     pay: Pay,
-    pub(super) reach: Reach,
+    pub(in crate::world) reach: Reach,
     /// The school and the caster style it is cast in (`cast_style.rs`), decided once before its
     /// kind runs: its marks, a rolling spell's attack and triggers.
     skills: AttackSkills,
     /// Its roll, harm, healing, or a summon's count, at the rung reached with the dice hook
     /// applied ([`Actor::spell_roll`]); `None` for a spell that rolls nothing.
-    pub(super) roll: Option<Roll>,
+    pub(in crate::world) roll: Option<Roll>,
     /// The roll hook: a die showing this or less is drawn once more.
-    pub(super) reroll: u32,
+    pub(in crate::world) reroll: u32,
     /// The rider hook: statuses laid on everyone its harm reaches.
-    pub(super) riders: Vec<(StatusId, u16)>,
+    pub(in crate::world) riders: Vec<(StatusId, u16)>,
     /// A buff's or a hex's degrees, a summon's minutes ([`Actor::spell_degrees`]).
-    pub(super) degrees: Option<u16>,
+    pub(in crate::world) degrees: Option<u16>,
     /// A scroll read, once paid: its object, and whether Scroll savant kept it.
     read: Cell<Option<(ObjectId, bool)>>,
     /// What it came to, as its kind fills it ([`World::spell_landed`]), for its marks.
@@ -1158,14 +1158,14 @@ struct Outcome {
 impl<'c> Cast<'c> {
     /// The school and caster style it is cast in when paid in mana (the caster's own spell: its
     /// aim and triggers), else none (a scroll, a wand, a creature's, a flask's).
-    pub(super) fn own_skills(&self) -> Option<AttackSkills> {
+    pub(in crate::world) fn own_skills(&self) -> Option<AttackSkills> {
         matches!(self.pay, Pay::Mana(_)).then_some(self.skills)
     }
 
     /// Creature `caster`'s own cast of `spell` (`creature_cast.rs`): its
     /// reach, roll, and degrees at its own stats, as the player's own cast is at theirs; paid
     /// by the creature before it goes off.
-    pub(super) fn by_creature(
+    pub(in crate::world) fn by_creature(
         caster: &Actor,
         content: &Content,
         spell: (SpellId, &'c SpellData),
@@ -1176,7 +1176,7 @@ impl<'c> Cast<'c> {
     /// The splash of `flask` thrown by `by` (`flask.rs`): the spell it names at its rung of
     /// each of the spell's ladders ([`Flask::splash`]), with no caster's stats, hooks, school,
     /// or style (glass, not skill).
-    pub(super) fn by_flask(by: ActorId, content: &'c Content, flask: &Flask) -> Self {
+    pub(in crate::world) fn by_flask(by: ActorId, content: &'c Content, flask: &Flask) -> Self {
         let def = content.spell(flask.spell);
         let splash = flask.splash(content);
         Cast {

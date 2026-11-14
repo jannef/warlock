@@ -1,11 +1,11 @@
 //! The game clock in the turn pipeline (spec §8 "Time"): how long actions take, resting,
 //! skipping. What actions cost and how speed scales it: `cost_tests.rs`.
 
-use super::*;
 use crate::action::parse_actions;
 use crate::content::ContentFiles;
 use crate::replay::Replay;
 use crate::test_support::{last_text as last_message, run};
+use crate::world::*;
 
 const TERRAIN: &str = r##"
 [[terrain]]

@@ -23,7 +23,6 @@
 //! The player turned to stone dies (the death screen's line, Stiffening's `death`); no statue is
 //! laid for them, as the run ends there.
 
-use super::{Actor, Spent, World};
 use crate::action::{Breach, Event};
 use crate::content::ActionKind;
 use crate::door::kick_breaks;
@@ -31,6 +30,7 @@ use crate::geom::Pos;
 use crate::noise::Act;
 use crate::object::{self, Stack};
 use crate::skills::Use;
+use crate::world::{Actor, Spent, World};
 
 pub use crate::statue::Statue;
 
@@ -38,7 +38,7 @@ impl World {
     /// `actor`, a creature just stoned to death, becomes a statue where it fell, holding
     /// `dropped` (taken out of it) and the pile beneath (module docs). Returns whether it was
     /// laid; `false` leaves `dropped` to fall as usual.
-    pub(super) fn lay_statue(&mut self, actor: &Actor, dropped: &mut Vec<Stack>) -> bool {
+    pub(in crate::world) fn lay_statue(&mut self, actor: &Actor, dropped: &mut Vec<Stack>) -> bool {
         let content = self.content.clone();
         let Some(terrain) = content.statue_terrain() else {
             return false;
@@ -84,7 +84,7 @@ impl World {
 
     /// The terrain at `p` on the current level changed (`set_terrain`): a statue there that it
     /// no longer is is gone, and what it held spills onto the cell, under what lies there.
-    pub(super) fn statue_gone(&mut self, p: Pos) {
+    pub(in crate::world) fn statue_gone(&mut self, p: Pos) {
         let content = self.content.clone();
         let level = self.state.current_mut();
         let still = (level.terrain.get(p)).is_some_and(|t| content.terrain(*t).statue.is_some());
@@ -101,7 +101,7 @@ impl World {
 
     /// The player kicks the statue at `p` (module docs): a banging noise and the marks a door's
     /// kick earns, and with a chance of their force in its sturdiness it falls to rubble.
-    pub(super) fn kick_statue(&mut self, p: Pos, events: &mut Vec<Event>) -> Spent {
+    pub(in crate::world) fn kick_statue(&mut self, p: Pos, events: &mut Vec<Event>) -> Spent {
         let player = self.state.player;
         let price = self.price_of(player, ActionKind::Kick);
         let def = self.content.terrain(self.state.current().terrain[p]);

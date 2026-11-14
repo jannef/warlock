@@ -5,15 +5,15 @@
 //! rest); and the statuses a room gives everyone inside ([`World::dwell`]: a draining room's
 //! Ebbing). The rules' one question is [`World::effects_at`].
 
-use super::{Actor, ActorId, World, WorldState};
 use crate::action::Event;
 use crate::content::{Content, StatusId};
+use crate::world::{Actor, ActorId, World, WorldState};
 
 impl World {
     /// Phase 4, after perception: each special room of the current level of which the player
     /// sees a cell for the first time is glimpsed, and its `near` line said, unless they are
     /// inside it (its `enter` line says it).
-    pub(super) fn glimpse_rooms(&mut self) {
+    pub(in crate::world) fn glimpse_rooms(&mut self) {
         let here = self.state.player().pos;
         let perception = &self.perception;
         let content = &self.content;
@@ -36,7 +36,7 @@ impl World {
 
     /// The percent `room` (the pace a special room gives healing or mana, 100 none) is for
     /// `actor`: where it quickens, Old delver quickens it more (spec §8 "Talents").
-    pub(super) fn room_pace(&self, actor: &Actor, room: u32) -> u32 {
+    pub(in crate::world) fn room_pace(&self, actor: &Actor, room: u32) -> u32 {
         if room <= 100 || actor.talents.is_empty() {
             return room;
         }
@@ -47,7 +47,7 @@ impl World {
 
     /// Whether anything on the current level gives a status to those inside (a room's or the
     /// whole level's `status`): [`World::dwell`] has nothing to do otherwise.
-    pub(super) fn dwelling_here(&self) -> bool {
+    pub(in crate::world) fn dwelling_here(&self) -> bool {
         let level = self.state.current();
         let gives = |e| self.content.room_effect(e).status.is_some();
         level.pervading.is_some_and(gives)
@@ -59,7 +59,7 @@ impl World {
     /// it takes what the special room it stands in gives ([`World::dwell`]) at once, so one
     /// standing in a silent vault is silenced before its first action, not after it. Returns
     /// whether the level gives any status at all (then perception may have changed).
-    pub(super) fn settle_in(&mut self) -> bool {
+    pub(in crate::world) fn settle_in(&mut self) -> bool {
         if !self.dwelling_here() {
             return false;
         }
@@ -83,7 +83,7 @@ impl World {
     /// talents spare them (Old delver: Ebbing; Communion with the dark: an unholy place's
     /// status), and one with no mana for a status that only
     /// touches mana; one immune to its kind of damage never takes it (`World::afflict`).
-    pub(super) fn dwell(&mut self, id: ActorId, events: &mut Vec<Event>) {
+    pub(in crate::world) fn dwell(&mut self, id: ActorId, events: &mut Vec<Event>) {
         let Some(actor) = self.state.actors.get(&id) else {
             return;
         };
@@ -113,7 +113,7 @@ impl World {
 
 /// The line said as the player arrives on the current level when an effect covers it whole: its
 /// `pervade` line.
-pub(super) fn pervade_line(state: &WorldState, content: &Content) -> Option<String> {
+pub(in crate::world) fn pervade_line(state: &WorldState, content: &Content) -> Option<String> {
     content
         .room_effect(state.current().pervading?)
         .pervade

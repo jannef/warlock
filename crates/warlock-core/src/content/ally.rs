@@ -1,6 +1,6 @@
 //! Allies (`assets/data/allies.toml`, spec §8 "Allies"; docs/design/druid-and-summons.md §4,
 //! §7.1, §14): the constants of the ally core. An ally is a creature on the player's side; the
-//! rules live in `world/ally.rs`. The file is optional: without it no ally can be made, and
+//! rules live in `world/allies/ally.rs`. The file is optional: without it no ally can be made, and
 //! nothing here is read.
 
 use super::ContentError;

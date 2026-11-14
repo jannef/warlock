@@ -26,7 +26,6 @@
 //!
 //! Speed is hidden from the player: it is in neither the perception snapshot nor any message.
 
-use super::{Actor, ActorId, AttackSkills, World};
 use crate::action::Event;
 use crate::content::Effect as ItemEffect;
 use crate::content::{ActionKind, BASE_TURN, Benefit, LevelKind, TerrainDef, percent_of, price};
@@ -35,6 +34,7 @@ use crate::magic::Mods;
 use crate::magic::mods::faster;
 use crate::skills::Effect;
 use crate::time::{Duration, GameTime};
+use crate::world::{Actor, ActorId, AttackSkills, World};
 use std::collections::BTreeMap;
 
 /// Whole seconds until an actor with `energy` and `speed` may act: 0 if it may act now.
@@ -70,7 +70,7 @@ impl World {
     /// The energy price of action `kind` for actor `id`: what it costs it ([`World::cost_of`])
     /// over the 6-second base, slowed by its burden ([`World::burdened`]). Steps are priced by
     /// the terrain instead ([`World::step_price`]), attacks by [`World::attack_price`].
-    pub(super) fn price_of(&self, id: ActorId, kind: ActionKind) -> i64 {
+    pub(in crate::world) fn price_of(&self, id: ActorId, kind: ActionKind) -> i64 {
         let base = price(self.cost_of(id, kind), BASE_TURN);
         self.burdened(id, base)
     }
@@ -78,7 +78,11 @@ impl World {
     /// The energy price of actor `id`'s cast of `spell`: the `cast` action for each of the
     /// spell's `casts`, slowed by its burden, then its rank's `time` percent off (or on;
     /// `spell_rank.rs`), never more than nine tenths off.
-    pub(super) fn cast_price(&self, id: ActorId, spell: &crate::content::SpellData) -> i64 {
+    pub(in crate::world) fn cast_price(
+        &self,
+        id: ActorId,
+        spell: &crate::content::SpellData,
+    ) -> i64 {
         let cost = self.cost_of(id, ActionKind::Cast);
         let full = self.burdened(id, price(cost, BASE_TURN)) * i64::from(spell.casts);
         let percent = self.state.actors[&id]
@@ -136,7 +140,7 @@ impl World {
     /// Whether actor `id` stepping to `to` flees: some hostile creature stands next to it now and
     /// the step takes it out of that creature's reach ([`World::leaves`]; spec §8 "Stances": a
     /// coward's flight is cheaper and quieter).
-    pub(super) fn flees(&self, id: ActorId, to: Pos) -> bool {
+    pub(in crate::world) fn flees(&self, id: ActorId, to: Pos) -> bool {
         let Some(me) = self.state.actors.get(&id) else {
             return false;
         };
@@ -155,7 +159,7 @@ impl World {
     /// ([`World::burdened`]). Every attack is priced as it begins, before it is made: a rank its
     /// marks raise, a load it lightens (a throw), or a kill changes the price of the next one,
     /// never its own.
-    pub(super) fn attack_price(
+    pub(in crate::world) fn attack_price(
         &self,
         id: ActorId,
         kind: ActionKind,
@@ -198,7 +202,7 @@ impl World {
     /// The energy price of reloading a missile weapon after a shot for actor `id` drawing on
     /// `skills`: the `reload` action less what their ranks take off (`reload`), slowed by its
     /// burden. Reloading is not an attack: neither attack speed nor the stance changes it.
-    pub(super) fn reload_price(&self, id: ActorId, skills: AttackSkills) -> i64 {
+    pub(in crate::world) fn reload_price(&self, id: ActorId, skills: AttackSkills) -> i64 {
         let actor = &self.state.actors[&id];
         let saving = actor.benefit_of(&self.content, skills).reload;
         let cost = self.cost_of(id, ActionKind::Reload);
@@ -212,7 +216,7 @@ impl World {
     /// percent ([`Effect::Wade`]), all of it by the talents that spare it. On the overworld its
     /// skills (survival; spec §8 "Skills") take their percent off the journey, rounded up (at
     /// least 1).
-    pub(super) fn step_price(&self, id: ActorId, to: &TerrainDef, fleeing: bool) -> i64 {
+    pub(in crate::world) fn step_price(&self, id: ActorId, to: &TerrainDef, fleeing: bool) -> i64 {
         let actor = &self.state.actors[&id];
         let talents = actor.talent_mods(&self.content);
         let step = self.cost_of(id, ActionKind::Step);
@@ -271,10 +275,10 @@ impl World {
 
     /// Whether a step onto `to` on the current level is wading: off the overworld, onto wading
     /// terrain, or deep water, that makes the step dearer.
-    pub(super) fn wading_step(&self, to: &TerrainDef) -> bool {
+    pub(in crate::world) fn wading_step(&self, to: &TerrainDef) -> bool {
         self.state.current().kind != LevelKind::Overworld
             && to.move_cost > 100
-            && (to.swim || super::stars::wading(&self.content, to))
+            && (to.swim || crate::world::character::stars::wading(&self.content, to))
     }
 
     /// `price` as actor `id` pays it now: ×1.25 Burdened, ×1.5 Strained or Overloaded (spec §8
@@ -298,7 +302,7 @@ impl World {
 
     /// The price that leaves the player ready to act exactly at `until` (the last turn of a
     /// rest): all the energy they have and will gain until then.
-    pub(super) fn price_until(&self, until: GameTime) -> i64 {
+    pub(in crate::world) fn price_until(&self, until: GameTime) -> i64 {
         let player = self.state.player();
         let speed = i64::from(player.speed(&self.content));
         let seconds = i64::try_from(until.since(self.state.time).as_seconds()).unwrap_or(i64::MAX);
@@ -316,7 +320,7 @@ impl World {
     /// back, the player's nutrition burns). A player who faints from hunger as the turn begins
     /// pays for the turns lost too ([`World::faint`]). A creature that dies leaves the schedule;
     /// the player's death ends the turn there and then.
-    pub(super) fn run_turn(&mut self, price: i64, events: &mut Vec<Event>) {
+    pub(in crate::world) fn run_turn(&mut self, price: i64, events: &mut Vec<Event>) {
         let began = self.state.time;
         self.state.turn += 1;
         // The player has acted: what they heard before is spent, and they hear afresh (lines

@@ -2,11 +2,11 @@
 //! room, stopping at an intersection and at a side door, and for whatever stops a rest (a hostile
 //! coming within [`World::stop_within`] in view; never one farther off).
 
-use super::*;
 use crate::action::parse_actions;
 use crate::content::ContentFiles;
 use crate::replay::Replay;
 use crate::test_support::last_text as last;
+use crate::world::*;
 
 /// The built-in content with `map`, lit: the player at `@`, a kobold at `k`, fences
 /// (transparent, not walkable, never named as a statue is) at `F`.

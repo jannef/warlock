@@ -24,7 +24,7 @@ room_effects = {{ chance = 100, per_level = 1, favoured = {{ beast_den = 100 }} 
     let mut files = ContentFiles::builtin();
     let dungeons = format!(
         "{}{lair}",
-        include_str!("../../../../assets/data/dungeons.toml")
+        include_str!("../../../../../assets/data/dungeons.toml")
     );
     files.insert("data/dungeons.toml", &dungeons);
     Content::load(&files).expect("content")

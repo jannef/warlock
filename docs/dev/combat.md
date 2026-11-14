@@ -15,14 +15,14 @@ modifiers: `melee`, `ranged`, `thrown`); both hold their damage as a `dice::Roll
 (`dice/roll.rs`: `Dice` groups of more than one size plus one bonus, `3d6+1d10`; a weapon's,
 natural attack's, or trap's `Dice` converts with `From<Dice>` where its `Attack` is built and
 rolls the very draws it would, `roll(rng, 0)`); `strike` resolves one with a fixed order of draws from
-the gameplay stream; `max_hp`, `regen_seconds`, `Health` words). `world/fight.rs` applies them:
+the gameplay stream; `max_hp`, `regen_seconds`, `Health` words). `world/combat/fight.rs` applies them:
 `World::attack` (picks the profile: melee weapon / natural attack / bare hands, the readied
 launcher for a shot, none for a spell) → `attack_with(attacker, target, kind, Option<Profile>)`
 (**the entry point for ranged combat, #117**) → `Event::Attacked { .., strike }`, noise, damage
 (`hurt`), `Event::Died`, then for a target left alive `World::after_blow` (status effects:
-wounds and `on_hit`, `world/status.rs`) and the gimmicks' riders, each its own line (`barbed`,
+wounds and `on_hit`, `world/health/status.rs`) and the gimmicks' riders, each its own line (`barbed`,
 `split`, `snatch`, `knock_away`: a duellist's hit may knock the player's weapon onto a cell
-beside them, `world/knock_away.rs`, docs/dev/creatures.md). **`hurt(id, damage, Harm)` is the one way hit points go
+beside them, `world/combat/knock_away.rs`, docs/dev/creatures.md). **`hurt(id, damage, Harm)` is the one way hit points go
 down**: blows (`Harm::Actor`), traps (`Harm::Trap`), status ticks and diseases (`Harm::Status {
 of, by, when }`), starving (`Harm::Starving(when)`, `die_of`), and what never kills
 (`Harm::Spared`: the plunge through the ice, a disease that does not kill; it leaves the last hit
@@ -50,7 +50,7 @@ grade (`grade.rs`, spec §8 "Grades") is read in the rules' own places only: `Ac
 `PerceptionView::own_hp`, `own_defence` (the total: its Dexterity part would give a modifier
 away), `SeenActor::health`, and `death`: **never a creature's hit points, a to-hit, a roll, or a
 modifier**, with one exception the owner asked for (spec §6 "Character"): the player's own
-ready attacks, `PerceptionView::own_attacks` → `Actor::known_attacks` (`world/attacks.rs`,
+ready attacks, `PerceptionView::own_attacks` → `Actor::known_attacks` (`world/combat/attacks.rs`,
 `OwnAttack`: source, kind, name, to-hit, damage with the bonus folded in, extra dice, kinds,
 riders, range; `summary`/`damage_text` are the one text form, for the character screen and the
 `attacks` dump layer). It reads the profiles the strikes use (`Actor::melee`, `off_hand_blow`,
@@ -58,11 +58,11 @@ riders, range; `summary`/`damage_text` are the one text form, for the character 
 whose unidentified stacks have no magic (`Stack::as_known`), so they cannot drift from the
 rules and unknown affixes stay hidden; situational changes made after the profile (ambush,
 glare, averted eyes, class abilities' blows, free blows' flurry) are not part of it. Averted
-eyes (`world/avert.rs`, a gaze marked `averted`, `docs/dev/creatures.md` "Gazes"): −4 on the
+eyes (`world/creatures/avert.rs`, a gaze marked `averted`, `docs/dev/creatures.md` "Gazes"): −4 on the
 player's every attack in `resolve` beside the glare, their positive Dodge halved in
 `defence_of`, and no free blows (`free_blows_of`); derived from the perception, never saved. Tests:
-`world/attacks_tests.rs`. A creature's spells are real casts (`world/creature_cast.rs`); an intent (`strike: None`) is left only for an attack with no profile. Tests: `combat.rs` (exhaustive 2d12
-enumeration for hit chances, criticals, miss attribution), `world/fight_tests.rs`.
+`world/combat/attacks_tests.rs`. A creature's spells are real casts (`world/creatures/creature_cast.rs`); an intent (`strike: None`) is left only for an attack with no profile. Tests: `combat.rs` (exhaustive 2d12
+enumeration for hit chances, criticals, miss attribution), `world/combat/fight_tests.rs`.
 Surprise (`docs/dev/surprise.md`): `resolve` asks `World::unaware` of every attack, `startle`s an
 unaware target before the strike's draws, and rolls against `World::flat_footed` (Dexterity and
 Dodge stripped by `Target::without`, Feint's strip) for an unaware or Surprised target.
@@ -100,10 +100,10 @@ Protection, else the hide) into `attack_message`: "Your sword glances off the ca
 shell.", "Something hits you but does no harm." when an end is unseen. Penetration is
 `ObjectDef::penetration` (weapons and ammunition), set on the profile by `Actor::melee`,
 `off_hand_blow`, `ranged` (launcher plus ammunition), and `thrown`; natural attacks, bashes,
-kicks, and traps have none. A spirit weapon (the Hunter's, `world/spirit_weapon.rs::gifts`, read
+kicks, and traps have none. A spirit weapon (the Hunter's, `world/classes/spirit_weapon.rs::gifts`, read
 in `Actor::melee` and `off_hand_blow` when the stack is `spirit` and the actor has
 `MartialMods::spirit_weapon`) adds its `to_hit`, lowers the threat (never below 3), and sets the
-penetration to `ALL_PROTECTION` (`world/weapon_active.rs`: no soak drawn); the character screen's
+penetration to `ALL_PROTECTION` (`world/combat/weapon_active.rs`: no soak drawn); the character screen's
 attack then says `pierces armour` (`OwnAttack::pierces`). Data: objects `protection` (armour worn, never a hand slot or a
 shield; `check_protection`) and `penetration`; creatures `natural = { defence, protection,
 name }`. Presentation: `PerceptionView::own_protection` (the character screen's `Pv` beside `Dv`, the
@@ -111,7 +111,7 @@ equipment screen's totals line, the JSON dump's `protection`), the item descript
 ("Protection 3", "Pierces armour": never a penetration number) and every item's numbers (`Dv +2,
 Pv 3`, `magic::numbers`, #552); the dev `actors` layer shows every actor's `pv`.
 Tests: `combat.rs` (soak distribution, draw order, criticals before the soak, penetration),
-`world/protection_tests.rs` (sums, soaked hits, messages, penetration, replay).
+`world/combat/protection_tests.rs` (sums, soaked hits, messages, penetration, replay).
 
 Damage types (spec §8 "Damage types", #151): the data is `data/damage_types.toml`
 (`content/damage_type.rs`: `DamageTypeDef { id, name, physical, verb, you, unarmed }`,
@@ -158,23 +158,23 @@ against slashing, −1 against piercing)", "Resists cold 20%", affix phrases); n
 resistances (the dev `actors` layer's `resists` only). Wiki: `xtask/src/wiki/damage.rs`
 (`damage-types.md`, `damage-weapons.md`, `damage-armour.md`; the traps' and scrolls' damage
 cells carry the kind). Tests: `damage.rs`, `content/damage_type.rs`, `combat.rs` (the better
-kind, elements unsoaked, riders' draw order, resisted hits), `world/damage_tests.rs` (the
+kind, elements unsoaked, riders' draw order, resisted hits), `world/combat/damage_tests.rs` (the
 built-in data names a kind everywhere, verbs, per-kind Protection, resistance sums and words,
 riders, wounds by kind, poison doses, spells, the plunge, descriptions, data checks, replay).
 
 Free blows (spec §8 "Free blows", #228; design `docs/design/progression.md` §4.1 B3) live in
-`world/free_blow.rs`. **`World::second_blow(striker, target, Cue)` (`fight.rs`) is the one place
+`world/combat/free_blow.rs`. **`World::second_blow(striker, target, Cue)` (`fight.rs`) is the one place
 every blow beyond an attack's first is decided**; a new kind of extra blow is a `Cue` (or a case
 of one) there and a `Free` kind, never a second mechanism. Cues: `First(blow)` (the off hand's or
 Sword and Board's bash, `off_hand_or_bash`, unchanged), `Attacked { parried, dodged, hit }` (the end of a
 melee attack: `World::cleave` if the target is gone, else, when a blow of it `hit` the player,
-their Retribution (`World::retribution`, `world/smite.rs`, the paladin's at 25, #912: their smite
+their Retribution (`World::retribution`, `world/classes/smite.rs`, the paladin's at 25, #912: their smite
 back for its zeal, `Free::Retribution`, held as a riposte is and said "You answer the blow with
 holy wrath!"; an attack it answers is not also riposted: one free blow an attack), else
 `World::riposte`; `hit` is raised only by `World::attack`, a creature's or the player's melee
 attack, never by `after_attack`; `dodged`, a blow
 missed by the target's Dexterity or Dodge, is answered only while the target is Poised, the
-ascetic's Patient defence, `world/ascetic.rs`, #849, and is raised only by `World::attack`, through
+ascetic's Patient defence, `world/classes/ascetic.rs`, #849, and is raised only by `World::attack`, through
 `World::after_melee`: the player's attacks call `after_attack`, never dodged), `Cleaved` (great
 cleave's next), `Leaves` (`World::opportunist`), `Approaches` (`World::gatekeeper`, #267: a
 hostile that steps up beside a gatekeeper, from `World::step_up(id, from)` at the end of
@@ -204,8 +204,8 @@ abilities by setting the field; weapon abilities, Brace, Riposte, Cleaving sweep
 (`travel.rs`, #561), and then fires the `approaches` weapon abilities (Point-blank). A free blow is an ordinary blow: its kinds, riders, resistances, and
 verbs come with its `Profile` and `Words::of` like any other's. Rules: deciding never draws (cleave's target is the next hostile clockwise from where
 the target fell); a free blow draws only as the blow it is; free blows give none of their own
-but cleave after cleave; noise only for the opportunist's and the gatekeeper's. Tests: `world/free_blow_tests.rs`
+but cleave after cleave; noise only for the opportunist's and the gatekeeper's. Tests: `world/combat/free_blow_tests.rs`
 (cleave order and count, great cleave, kicks, ripostes and their message order, no answer to a
 riposte, opportunists both ways, in the dark, no draws while triggers do not fire, saves).
 
-**Balance probe** (#569): `world/balance_probe.rs` (and `balance_probe/tables.rs`), an `#[ignore]` test that measures the player against the monsters of their level through the code above (`Actor::melee`, `World::target_of`, `combat::strike`, `World::attack_price`) and prints the tables of `docs/balance.md`, which holds the method, the command, and the tuning notes. It asserts nothing; rerun it and replace the tables after tuning combat data.
+**Balance probe** (#569): `world/combat/balance_probe.rs` (and `balance_probe/tables.rs`), an `#[ignore]` test that measures the player against the monsters of their level through the code above (`Actor::melee`, `World::target_of`, `combat::strike`, `World::attack_price`) and prints the tables of `docs/balance.md`, which holds the method, the command, and the tuning notes. It asserts nothing; rerun it and replace the tables after tuning combat data.

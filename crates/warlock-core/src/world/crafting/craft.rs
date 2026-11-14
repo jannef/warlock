@@ -15,14 +15,13 @@
 //!   untrained in the recipe's skill ("You are not trained in Woodcraft."; `World::untrained`,
 //!   which `temper:` and `whittle:` ask too); a built-in recipe's row runs its own action
 //!   (`temper:`, `whittle:`), so `craft:` refuses it, taking no time, but for Cut and Set, which are
-//!   `craft:cut:LETTER` and `craft:set:ITEM,GEM` themselves (`world/cut.rs`, `world/set.rs`); a
-//!   generic recipe is made by `world/craft_make.rs` (the forge's weapons, the hand-made ones,
+//!   `craft:cut:LETTER` and `craft:set:ITEM,GEM` themselves (`world/crafting/cut.rs`, `world/crafting/set.rs`); a
+//!   generic recipe is made by `world/crafting/craft_make.rs` (the forge's weapons, the hand-made ones,
 //!   the arrows, the brews).
 //!
 //! [`Action::Craft`]: crate::action::Action::Craft
 //! [`PerceptionView::recipes`]: crate::perception::PerceptionView::recipes
 
-use super::{Actor, LevelState, Spent, World};
 use crate::content::{
     Content, InputKind, MaterialId, ObjectId, PartSource, RecipeDef, RecipeId, RecipeInput,
     RecipeUse, TerrainId, counted,
@@ -32,6 +31,7 @@ use crate::scroll_label::Lore;
 use crate::skills::SkillId;
 use crate::text::article;
 use crate::time::Duration;
+use crate::world::{Actor, LevelState, Spent, World};
 
 /// One recipe as the profession's screen lists it.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -64,7 +64,7 @@ pub enum RecipeLack {
     Gem,
     /// Nothing carried with an unset ornament part (Set's).
     Setting,
-    /// Nothing carried an enchanting recipe may work (`world/enchant.rs`).
+    /// Nothing carried an enchanting recipe may work (`world/crafting/enchant.rs`).
     Nothing,
     /// Only items with no room for another affix (Quicken's).
     Room,
@@ -156,7 +156,7 @@ pub(crate) fn station_beside(
 
 /// The first reason `player` cannot make `recipe` now, in the screen's order: skill, station,
 /// knife, Set's item and gem, launcher, stock, inputs, a gem part. `"stock"` parts (but a
-/// `count = "fletch"` recipe's wood on wooded ground, `world/fletch.rs`), a required part's
+/// `count = "fletch"` recipe's wood on wooded ground, `world/crafting/fletch.rs`), a required part's
 /// sources, object inputs (those a part's sources name only there), stock inputs, and gem parts
 /// are looked at, an object input only of a type the player knows. A stock input (a bow's sinew) wants one stack holding all it takes, as the
 /// wizard picks one.
@@ -517,7 +517,7 @@ impl World {
 
     /// The player makes a recipe (the module docs): a generic one is begun by
     /// [`World::start_making`]; a built-in or unknown one is refused, taking no time.
-    pub(super) fn start_craft(&mut self, recipe: &str, picks: &[Option<usize>]) -> Spent {
+    pub(in crate::world) fn start_craft(&mut self, recipe: &str, picks: &[Option<usize>]) -> Spent {
         let content = self.content.clone();
         let Some(id) = content.recipes().id(recipe) else {
             self.say("You know no such recipe.");

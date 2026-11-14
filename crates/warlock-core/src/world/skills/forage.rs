@@ -32,9 +32,6 @@
 //!
 //! [`Action::Forage`]: crate::action::Action::Forage
 
-use super::encounter::Watch;
-use super::rest::Ended;
-use super::{LevelState, Spent, World};
 use crate::action::Event;
 use crate::content::{ActionKind, Content, ForageGround, Landscape, LevelKind, parse_local_area};
 use crate::geom::Pos;
@@ -42,6 +39,9 @@ use crate::magic::loot::pick_weighted;
 use crate::object::{self, Stack};
 use crate::skills::{Effect, Use};
 use crate::time::Duration;
+use crate::world::levels::encounter::Watch;
+use crate::world::turn::rest::Ended;
+use crate::world::{LevelState, Spent, World};
 
 /// The ground a forage at `at` on `level` would search (module docs): `None` where nothing can
 /// be foraged, or without `data/forage.toml`.
@@ -59,7 +59,7 @@ pub(crate) fn forage_ground<'a>(
 
 /// The landscape of the wild at `at` on `level`: the overworld's cell, or a local area's own
 /// overworld cell; `None` anywhere else (a dungeon, a town). What a forage searches, and where
-/// wood is free for arrows (`world/fletch.rs`).
+/// wood is free for arrows (`world/crafting/fletch.rs`).
 pub(crate) fn landscape_at(content: &Content, level: &LevelState, at: Pos) -> Option<Landscape> {
     let terrain = match level.kind {
         LevelKind::Overworld => level.terrain_at(at)?,
@@ -74,7 +74,7 @@ pub(crate) fn landscape_at(content: &Content, level: &LevelState, at: Pos) -> Op
 
 impl World {
     /// The player begins to forage; refused, taking no time, untrained or out of the wild.
-    pub(super) fn start_forage(&mut self) -> Spent {
+    pub(in crate::world) fn start_forage(&mut self) -> Spent {
         let content = self.content.clone();
         let me = self.state.player();
         if content.forage().is_none() || !crate::ability::Ability::Forage.had_by(me, &content) {
@@ -95,7 +95,7 @@ impl World {
     /// Forages turn after turn until its time is up or something stops it (module docs): its
     /// last turn cut short to end exactly when its time is up, whatever the player's speed, as
     /// a rest's is.
-    pub(super) fn forage(&mut self, seconds: u32, events: &mut Vec<Event>) {
+    pub(in crate::world) fn forage(&mut self, seconds: u32, events: &mut Vec<Event>) {
         let until = self.state.time + Duration::seconds(u64::from(seconds));
         let turn = self.price_of(self.state.player, ActionKind::Forage);
         let ended = self.keep_at(

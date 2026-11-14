@@ -24,7 +24,7 @@ which the ash wraith is) and `fire` (the burning things; hostile to the player o
 has the hand axe, the duergar's racial weapon, as a second, rarer line. The basilisk's slowing
 bite is the existing `sluggish` status; its gaze (#1126, dread D2) is the one `averted` gaze:
 range 6, `glance` 25, a degree of Stiffening unless a Toughness check against 15 (12 + 16 ÷ 5) is
-made; four degrees are stone, and a creature it stones becomes a statue (`world/statue.rs`). Its
+made; four degrees are stone, and a creature it stones becomes a statue (`world/creatures/statue.rs`). Its
 speed stays 900 (the dread design §7.2's 600 or 700 for slow dread is D10's).
 Fyrdelf (#339) is where the wave lives: its branch's `population` (with the bats, kobolds, and
 giant centipedes the shallow floors draw on), leaving out the drake, which only the drake's
@@ -36,13 +36,13 @@ hag too (unique, so the population and spawns bring her once a run); the sunken 
 bottom adds two drowned standing guard in its water.
 
 The barrow spider sneak-attacks and lurks (#686, spec §8 "Surprise and sneak attacks"):
-`sneak_attack = 10` (1d6), `initiative = 20`, and `lurks = true` (`world/lurk.rs`): one that
+`sneak_attack = 10` (1d6), `initiative = 20`, and `lurks = true` (`world/combat/lurk.rs`): one that
 sees the player waits in its passage until they come beside it or it is hurt, so Cealdhlāw's
 dark holds a thing that waits rather than one that comes.
 `bestiary_tests::the_sneak_attackers_carry_their_craft_and_two_lurk` checks the numbers.
 
 The dread design's D7 (#1131): the ember beetle's acid blood pits a weapon that strikes it
-(`corrodes = { chance = 25, what = "weapon", kind = "acid" }`, `world/corrode.rs`) and spatters whoever strikes it in melee (`innate = ["acid_blood"]`, a
+(`corrodes = { chance = 25, what = "weapon", kind = "acid" }`, `world/combat/corrode.rs`) and spatters whoever strikes it in melee (`innate = ["acid_blood"]`, a
 status that `retaliates` acid `1d3`, #1128's innate statuses), and the marsh troll is a brute that regenerates (`regen = 400`,
 `2d8`, `base_hp` 36; `docs/dev/creatures/trolls.md`).
 
@@ -66,7 +66,7 @@ and a racial weapon for up close. Numbers on the living base: XP `5L + 10`, `bas
 
 The chymist is a shared type (not the
 Ascmearc's `cultist`, which is campaign-owned) so the showcase's hall may place it; it resists
-poison 25 %. Tests: `world/creature_flask_tests.rs`; `content::tag`'s test lists the kobold and
+poison 25 %. Tests: `world/creatures/creature_flask_tests.rs`; `content::tag`'s test lists the kobold and
 goblin members.
 
 Gear condition (#1193, `data/gear_condition.toml`): the scavengers' gear is often damaged, the kobolds' 55 % and the goblins' 50 % (Fine 1 % and 1.5 %); the undead's 95 % (docs/dev/creatures.md, "Gear condition").

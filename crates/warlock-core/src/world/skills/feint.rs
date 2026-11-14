@@ -29,7 +29,6 @@
 //! bones, the spirits, the animated). Nothing limits trying again (the owner's rule): the time
 //! is the price.
 
-use super::{Spent, World};
 use crate::action::Event;
 use crate::check;
 use crate::content::{ActionKind, Build, Stance};
@@ -37,10 +36,11 @@ use crate::geom::Dir;
 use crate::skills::{Effect, Use};
 use crate::stats::Stat;
 use crate::text::capitalized;
+use crate::world::{Spent, World};
 
 impl World {
     /// [`crate::Action::Feint`]: the player feints at the creature in `dir` (see the module docs).
-    pub(super) fn feint(&mut self, dir: Dir, events: &mut Vec<Event>) -> Spent {
+    pub(in crate::world) fn feint(&mut self, dir: Dir, events: &mut Vec<Event>) -> Spent {
         let content = self.content.clone();
         let player = self.state.player;
         let trained = crate::ability::Ability::Feint.had_by(self.state.player(), &content);

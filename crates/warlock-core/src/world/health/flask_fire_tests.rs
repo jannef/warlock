@@ -4,11 +4,11 @@
 //! (`flask_tests.rs`) and `zone.rs`'s (`zone_tests.rs`); these check that each file does what the
 //! design's §4.4 and §6 tables say.
 
-use super::caster_tests::sp;
-use super::fixture_factions::make_peace;
-use super::*;
 use crate::content::{ContentFiles, ZoneKind};
 use crate::test_support::{builtin, run, said as texts};
+use crate::world::creatures::fixture_factions::make_peace;
+use crate::world::magic::caster_tests::sp;
+use crate::world::*;
 
 // A training dummy takes a lot and never fights back.
 const DUMMY: &str = "[[creature]]\nid = \"dummy\"\nname = \"training dummy\"\nglyph = \"D\"\n\

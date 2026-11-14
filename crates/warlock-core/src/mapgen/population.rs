@@ -60,7 +60,7 @@ pub(super) fn populate(
         .count
         .for_cells(u32::try_from(walkable).unwrap_or(u32::MAX));
     // Kept clear: a sanctuary (shunned), a teeming den (its sleepers come on top, `den.rs`), a
-    // tempting hoard (unguarded until it seals, `world/hoard.rs`), a treasure room (sealed).
+    // tempting hoard (unguarded until it seals, `world/fixtures/hoard.rs`), a treasure room (sealed).
     let shunned = |p: Pos| {
         (template.rooms.iter()).any(|r| {
             let effect = content.room_effect(r.effect);

@@ -3,7 +3,6 @@
 //! Scribe, and the study odds.
 
 use super::caster_tests::sp;
-use super::*;
 use crate::action::{ReadTarget, parse_actions};
 use crate::check;
 use crate::content::ContentFiles;
@@ -12,6 +11,7 @@ use crate::rng::Rng;
 use crate::skills::{Effect, SkillId, Trained};
 use crate::stats::Stat;
 use crate::test_support::{run, said_text as said};
+use crate::world::*;
 use std::collections::BTreeMap;
 use std::sync::Mutex;
 

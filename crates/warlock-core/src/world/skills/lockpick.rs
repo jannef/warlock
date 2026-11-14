@@ -20,17 +20,17 @@
 //! - A closed door without a lock, or anything else, is refused and takes no time: "That door is
 //!   not locked." (as `o` would find out at once), "There is no lock there."
 
-use super::{Spent, World};
 use crate::action::Event;
 use crate::check::check;
 use crate::content::ActionKind;
 use crate::geom::{Dir, Pos};
 use crate::skills::{Effect, Use};
 use crate::stats::Stat;
+use crate::world::{Spent, World};
 
 impl World {
     /// The player tries to pick the lock of the closed door in `dir`. Returns what it cost.
-    pub(super) fn pick_lock(&mut self, dir: Dir, events: &mut Vec<Event>) -> Spent {
+    pub(in crate::world) fn pick_lock(&mut self, dir: Dir, events: &mut Vec<Event>) -> Spent {
         let content = self.content.clone();
         let me = self.state.player();
         if !crate::ability::Ability::PickLock.had_by(me, &content) {

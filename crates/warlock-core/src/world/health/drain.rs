@@ -12,7 +12,7 @@
 //! - **The loss**: failed, the drain's `points` come off the stat's **score**
 //!   ([`crate::stats::Stats::drain`]), one of the six drawn for a `random` drain. The potential
 //!   stays, so lost points may be won back the slow way (training, corpses), and
-//!   [`Actor::drained`](super::Actor::drained) counts them for a temple's mending
+//!   [`Actor::drained`](crate::world::Actor::drained) counts them for a temple's mending
 //!   (`World::mend`), which gives them all back.
 //! - **Never a kill-lock**: no score falls below [`DRAIN_FLOOR`], nor so low that it could not
 //!   carry the actor's stat damage. Hit points and mana are cut down to the new maxima (a
@@ -21,11 +21,11 @@
 //! The player hears of their own drains in words ([`drained_message`]), never the points.
 //! Draws of the gameplay stream: the check's two, and one before it for a `random` stat.
 
-use super::{ActorId, World};
 use crate::action::Event;
 use crate::check::check;
 use crate::content::Drain;
 use crate::stats::{DRAIN_FLOOR, Stat};
+use crate::world::{ActorId, World};
 
 impl World {
     /// Whether actor `target` resists what `by` (if anyone) put on it with a check of `stat`
@@ -61,7 +61,7 @@ impl World {
 
     /// Actor `target` was hit by a drain of `by`'s (a creature's touch; `None`: no creature's,
     /// a scroll's backlash) (module docs).
-    pub(super) fn drain(
+    pub(in crate::world) fn drain(
         &mut self,
         target: ActorId,
         drain: Drain,
@@ -96,9 +96,9 @@ impl World {
 
     /// Up to `points` come off actor `target`'s score in `stat` for good, with no check (the
     /// loss of a drain failed, or a brewer's blunder's outcome, `outcome.rs`), counted in
-    /// [`Actor::drained`](super::Actor::drained) and never below the floor (module docs).
+    /// [`Actor::drained`](crate::world::Actor::drained) and never below the floor (module docs).
     /// Returns the points taken.
-    pub(super) fn drain_points(&mut self, target: ActorId, stat: Stat, points: u8) -> u8 {
+    pub(in crate::world) fn drain_points(&mut self, target: ActorId, stat: Stat, points: u8) -> u8 {
         let content = self.content.clone();
         let Some(actor) = self.state.actors.get_mut(&target) else {
             return 0;
@@ -116,7 +116,7 @@ impl World {
 
     /// Every drained point of actor `id`'s comes back (a temple's mending, with its stat
     /// damage): the scores rise by what drains took, and nothing is counted any more.
-    pub(super) fn restore_drained(&mut self, id: ActorId) {
+    pub(in crate::world) fn restore_drained(&mut self, id: ActorId) {
         if let Some(actor) = self.state.actors.get_mut(&id) {
             for stat in Stat::ALL {
                 let points = std::mem::take(&mut actor.drained[stat]);
@@ -127,7 +127,7 @@ impl World {
 }
 
 /// What the player is told of a drain of theirs: the stat it took from, or a chill that passes.
-pub(super) fn drained_message(stat: Option<Stat>) -> String {
+pub(in crate::world) fn drained_message(stat: Option<Stat>) -> String {
     match stat {
         Some(stat) => format!("You feel your {} drain away!", stat.name().to_lowercase()),
         None => "A deathly chill passes through you.".to_string(),

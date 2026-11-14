@@ -5,9 +5,9 @@
 //! one gives nothing, even with an item or a talent raising it. Marks:
 //! [`crate::skills::Use::Cast`], reported where mana is spent (`World::spend_mana`).
 
-use super::Actor;
 use crate::content::Content;
 use crate::skills::Effect;
+use crate::world::Actor;
 
 impl Actor {
     /// What its trained skills give of the mana effect `effect` (Concentration), with what

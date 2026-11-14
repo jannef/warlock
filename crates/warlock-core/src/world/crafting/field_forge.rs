@@ -17,17 +17,17 @@
 //!   the level, saved with it): "You set the block on a heap of stones: a makeshift anvil." It
 //!   works as the anvil ([`crate::content::Content::works_as`]), so every recipe at the anvil,
 //!   Temper, and the walk-in are made there. A pick clears it to floor, and nothing is mined
-//!   out of it (`world/mine.rs`).
+//!   out of it (`world/crafting/mine.rs`).
 //!
 //! No draws at all.
 
-use super::shop::unpaid_parts;
 use super::work::{Job, Task};
-use super::{LevelState, Spent, World};
 use crate::action::Event;
 use crate::content::{Content, LevelKind, TerrainId};
 use crate::geom::{Dir, Pos};
 use crate::object::Stack;
+use crate::world::people::shop::unpaid_parts;
+use crate::world::{LevelState, Spent, World};
 
 /// A field forge under way: the cell it is set on.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -111,7 +111,7 @@ impl World {
     /// The player begins to set an ingot on a heap of stones the way `dir`; refused, taking no
     /// time, without the talent, on the overworld, without an ingot, or where the ground will not
     /// take it (module docs).
-    pub(super) fn start_field_forge(&mut self, dir: Dir) -> Spent {
+    pub(in crate::world) fn start_field_forge(&mut self, dir: Dir) -> Spent {
         let content = self.content.clone();
         let Some(seconds) = self.state.player().talent_mods(&content).craft.field_forge else {
             return Spent::Nothing;

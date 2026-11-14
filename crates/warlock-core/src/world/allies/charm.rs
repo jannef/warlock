@@ -24,16 +24,21 @@
 //! Nothing here draws from any stream.
 
 use super::ally::{Ally, AllySource, Order};
-use super::cast::Cast;
-use super::{ActorId, World};
 use crate::content::SpellCharm;
 use crate::geom::Pos;
 use crate::text::capitalized;
 use crate::time::Duration;
+use crate::world::magic::cast::Cast;
+use crate::world::{ActorId, World};
 
 impl World {
     /// A charm hex at `at` (the module docs). Returns whether the action took its time.
-    pub(super) fn cast_charm(&mut self, cast: &Cast<'_>, charm: &SpellCharm, at: Pos) -> bool {
+    pub(in crate::world) fn cast_charm(
+        &mut self,
+        cast: &Cast<'_>,
+        charm: &SpellCharm,
+        at: Pos,
+    ) -> bool {
         let Some(rules) = self.content.allies().cloned() else {
             self.say("Nothing answers your call.");
             return false;

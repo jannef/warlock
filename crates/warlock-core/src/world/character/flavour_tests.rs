@@ -4,12 +4,12 @@
 //! of it.
 
 use super::flavour::BIRTHDAY;
-use super::*;
 use crate::ability::Ability;
 use crate::character::CharacterSpec;
 use crate::content::{ContentFiles, Sign, SignActive};
 use crate::test_support::{CONTENT as BUILTIN, run};
 use crate::time::{Duration, GameTime};
+use crate::world::*;
 use std::sync::LazyLock;
 
 /// The built-in content files with the horoscope's `[flavour]` table replaced by `table`.

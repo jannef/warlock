@@ -6,10 +6,10 @@
 
 use super::shoot::Flight;
 use super::weapon_ability_tests::{at, give, ranks, world};
-use super::*;
 use crate::action::AttackKind;
 use crate::combat::{Category, Profile, Strike};
 use crate::rng::Rng;
+use crate::world::*;
 
 /// How many shots a comparison makes, each from a seed of its own.
 const SHOTS: u64 = 300;

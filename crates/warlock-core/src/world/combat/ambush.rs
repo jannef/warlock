@@ -11,21 +11,26 @@
 //! (training stream).
 //!
 //! The ranger's Favoured prey is here too: against the creature type the player has killed most
-//! ([`super::Quests::prey`]), its attacks hit likelier and do more damage.
+//! ([`crate::world::Quests::prey`]), its attacks hit likelier and do more damage.
 
 use super::weapon_ability::Fired;
-use super::{ActorId, AttackSkills, World};
 use crate::action::{AttackKind, Event};
 use crate::combat::{Blow, Profile, Target};
 use crate::content::{Build, Trigger};
 use crate::dice::Dice;
 use crate::skills::{Effect, Use};
+use crate::world::{ActorId, AttackSkills, World};
 
 impl World {
     /// Whether `attacker` falls on `target` unseen with its sneak dice, a blow or (`missile`)
     /// not (tests ask it; `resolve` asks [`World::sneaks`], having asked `unaware` itself).
     #[cfg(test)]
-    pub(super) fn sneaking(&mut self, attacker: ActorId, target: ActorId, missile: bool) -> bool {
+    pub(in crate::world) fn sneaking(
+        &mut self,
+        attacker: ActorId,
+        target: ActorId,
+        missile: bool,
+    ) -> bool {
         let unaware = self.unaware(target, attacker);
         self.sneaks(attacker, target, unaware, missile)
     }
@@ -36,7 +41,7 @@ impl World {
     /// [`World::off_guard`]), has vitals for the
     /// attacker, and a missile flies no farther than the rules' `missile_reach` plus the
     /// attacker's Long reach (no limit, and vitals everywhere, without the surprise rules).
-    pub(super) fn sneaks(
+    pub(in crate::world) fn sneaks(
         &self,
         attacker: ActorId,
         target: ActorId,
@@ -62,7 +67,7 @@ impl World {
 
     /// The dice actor `id`'s sneak attacks add: its Sneak attack skill's d6s and its talents'
     /// ambush dice, together; `None` with neither.
-    pub(super) fn sneak_dice(&self, id: ActorId) -> Option<Dice> {
+    pub(in crate::world) fn sneak_dice(&self, id: ActorId) -> Option<Dice> {
         let a = self.state.actors.get(&id)?;
         let count = a.skill_effect(&self.content, Effect::SneakDice);
         let skill = u32::try_from(count)
@@ -77,7 +82,7 @@ impl World {
     }
 
     /// Whether actor `target` has vitals to find (`Content::has_vitals`).
-    pub(super) fn has_vitals(&self, target: ActorId) -> bool {
+    pub(in crate::world) fn has_vitals(&self, target: ActorId) -> bool {
         let Some(t) = self.state.actors.get(&target) else {
             return true;
         };
@@ -87,7 +92,7 @@ impl World {
     /// A blow of the player's that would be a critical whenever it hits (Vital strike, an
     /// exploit) hit a target that had no vitals (`vitalless`, asked before the blow):
     /// it was a plain blow, and the player is told so after its line.
-    pub(super) fn no_vital_spot(&mut self, vitalless: bool, blow: Option<Blow>) {
+    pub(in crate::world) fn no_vital_spot(&mut self, vitalless: bool, blow: Option<Blow>) {
         if vitalless && blow.is_some_and(|b| b.strike.is_hit()) {
             self.news.push("It has no vital spot.".into());
         }
@@ -95,7 +100,7 @@ impl World {
 
     /// `struck`, the side of `target` an attack strikes, immune to criticals when it has no
     /// vitals.
-    pub(super) fn vitals(&self, target: ActorId, struck: Target) -> Target {
+    pub(in crate::world) fn vitals(&self, target: ActorId, struck: Target) -> Target {
         Target {
             no_criticals: !self.has_vitals(target),
             ..struck
@@ -104,7 +109,7 @@ impl World {
 
     /// `profile` of an attack by `attacker`, `unseen` (it is [`World::sneaking`]), with Master
     /// thief's lower threat (never below 3).
-    pub(super) fn sneak_threat(
+    pub(in crate::world) fn sneak_threat(
         &self,
         attacker: ActorId,
         unseen: bool,
@@ -125,7 +130,7 @@ impl World {
 
     /// `blow` by `attacker` at `target`, `unseen` (it is [`World::sneaking`]), with the sneak
     /// dice added when it hit.
-    pub(super) fn ambushed(
+    pub(in crate::world) fn ambushed(
         &mut self,
         (attacker, target): (ActorId, ActorId),
         unseen: bool,
@@ -160,7 +165,7 @@ impl World {
     /// [`World::sneaks`]: the attacker has sneak dice) and hit, so its dice landed in
     /// [`World::ambushed`]. Raised after the attack's own line and its `hit` triggers, before
     /// the damage is dealt, as they are.
-    pub(super) fn sneak_trigger(
+    pub(in crate::world) fn sneak_trigger(
         &mut self,
         (attacker, target): (ActorId, ActorId),
         (kind, skills): (AttackKind, AttackSkills),
@@ -182,7 +187,7 @@ impl World {
     /// `profile` of an attack by `attacker` at `target`, with Favoured prey's to-hit and damage
     /// when the player makes it at a creature of the type they have killed most, and Sworn
     /// foe's at one whose type carries the tag it was taken for (each tag sworn adds).
-    pub(super) fn favoured(
+    pub(in crate::world) fn favoured(
         &self,
         attacker: ActorId,
         target: ActorId,

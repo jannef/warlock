@@ -11,17 +11,17 @@
 //! The one ability here that runs with time is Connoisseur's: a magic item carried long enough
 //! is identified ([`World::appraise_carried`]).
 
-use super::{Actor, World, focus};
 use crate::character::Character;
 use crate::content::{Content, TalentDef, TalentEffect, TalentId};
 use crate::talent::GrowthEffect;
 use crate::talent::TalentMods;
+use crate::world::{Actor, World, classes::focus};
 
 /// Hands out what holding `def` gives once, as it is taken or given at character
 /// `level`: its hit points by level, into `actor`'s base hit points and hit points, its mana by
 /// level likewise (Deep well), and its stat gifts, into its scores and potentials (a gift of
 /// Toughness raises its hit points with its maximum).
-pub(super) fn hand_out(content: &Content, actor: &mut Actor, def: &TalentDef, level: u8) {
+pub(in crate::world) fn hand_out(content: &Content, actor: &mut Actor, def: &TalentDef, level: u8) {
     let mods = TalentMods::of(content, def.effects.iter().cloned());
     let before = actor.max_hp(content);
     for (stat, by) in mods.vigour.stats.iter().filter(|&(_, by)| by != 0) {
@@ -72,7 +72,7 @@ fn handed_news(def: &TalentDef) -> Vec<String> {
 /// level `level` that it does not hold yet, table by table (the class's to its cap, a prestige
 /// class's to its own level; spec §8 "Prestige classes"), each with what it hands out; returns
 /// each talent given, in table order.
-pub(super) fn grant(
+pub(in crate::world) fn grant(
     content: &Content,
     character: Option<&Character>,
     actor: &mut Actor,
@@ -100,7 +100,7 @@ pub(super) fn grant(
 /// already holds: a pickable the table names (Fast healer, Beast-friend, Evasion, Riposte) that
 /// the player took as a pick before the class gave it. Each brings a talent pick in its place
 /// (#790), so a pick made early is never lost to the table.
-pub(super) fn held_already(
+pub(in crate::world) fn held_already(
     content: &Content,
     character: Option<&Character>,
     actor: &Actor,
@@ -123,7 +123,7 @@ pub(super) fn held_already(
 impl World {
     /// Gives the player what their classes give up to `level` that they lack ([`grant`]); with
     /// `news`, each is news of the level ("You gain Fencing.").
-    pub(super) fn grant_class(&mut self, level: u8, news: bool) {
+    pub(in crate::world) fn grant_class(&mut self, level: u8, news: bool) {
         let content = self.content.clone();
         let character = self.state.character.clone();
         let given = grant(&content, character.as_ref(), self.player_mut(), level);
@@ -170,7 +170,7 @@ impl World {
     /// `seconds` of carrying pass for the player (spec §8 "Class abilities": Connoisseur): with
     /// the ability, each unidentified magic item they carry counts them, and one carried long
     /// enough is identified ("This is ...!"). Nothing without it.
-    pub(super) fn appraise_carried(&mut self, seconds: u64) {
+    pub(in crate::world) fn appraise_carried(&mut self, seconds: u64) {
         let Some(hours) = self
             .state
             .player()

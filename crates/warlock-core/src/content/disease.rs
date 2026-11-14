@@ -7,7 +7,7 @@
 //! hit points), how it is shaken off (`recovery`: checks won in a row; 0 never by itself),
 //! whether it can kill, how it slows healing (`regen`), how it is caught besides creatures'
 //! `on_hit` (named sources, [`SOURCES`]; terrain waded through, [`Wading`]), what cures it, and
-//! its words. The rules that apply them live in `crate::disease` and `world/disease.rs`.
+//! its words. The rules that apply them live in `crate::disease` and `world/health/disease.rs`.
 //!
 //! Without the file there are no diseases.
 

@@ -3,11 +3,11 @@
 //! repeats, no cap on active quests, the quest log, saves, and replays; then the showcase's own
 //! quests.
 
-use super::*;
 use crate::action::parse_actions;
 use crate::content::ContentFiles;
 use crate::replay::Replay;
 use crate::test_support::{builtin, run, texts};
+use crate::world::*;
 
 const TERRAIN: &str = r##"
 [[terrain]]
@@ -294,7 +294,7 @@ fn files_with(map: &str, quests: &str) -> ContentFiles {
         ("data/legend.toml", LEGEND),
         (
             "data/experience.toml",
-            include_str!("../../../../assets/data/experience.toml"),
+            include_str!("../../../../../assets/data/experience.toml"),
         ),
         (
             "data/vision.toml",

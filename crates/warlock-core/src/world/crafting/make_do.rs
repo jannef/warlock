@@ -15,7 +15,7 @@
 //! - **The check**: done, the stack found again, one check (two gameplay draws): the natural
 //!   roll plus the modifier of the stat of the profession that works its main material, the
 //!   talents' checks of that stat, and that profession's [`Effect::Craft`]
-//!   ([`super::Actor::skill_effect_of`]; untrained, the stat alone, as Salvage's), against
+//!   ([`crate::world::Actor::skill_effect_of`]; untrained, the stat alone, as Salvage's), against
 //!   `difficulty` + the material's `work`. A natural 2 always fails, a natural 24 always
 //!   succeeds.
 //! - **Made**: the damage is gone ([`Worked::repair`](crate::magic::Worked)); the improvements it
@@ -26,11 +26,11 @@
 //! - **Marks**: [`Use::Craft`] on that profession alone, if trained, whatever came of it.
 
 use super::work::{Job, Task};
-use super::{Actor, Spent, World};
 use crate::action::Event;
 use crate::combat;
 use crate::object::Stack;
 use crate::skills::{Effect, Use};
+use crate::world::{Actor, Spent, World};
 
 /// Whether `stack` is damaged, so that a mend has something to do. Worn, protected, unpaid, and
 /// unworkable stacks are the rules' to refuse.
@@ -46,7 +46,7 @@ pub(crate) fn mends_any(actor: &Actor) -> bool {
 
 /// A mend under way: the stack mended.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(super) struct Mending {
+pub(in crate::world) struct Mending {
     item: usize,
 }
 
@@ -66,7 +66,7 @@ impl Job for Mending {
 
 impl World {
     /// The player begins to mend the stack at `item`; refused, taking no time (module docs).
-    pub(super) fn start_make_do(&mut self, item: usize) -> Spent {
+    pub(in crate::world) fn start_make_do(&mut self, item: usize) -> Spent {
         let Some(rules) = self.state.player().talent_mods(&self.content).craft.make_do else {
             return Spent::Nothing;
         };

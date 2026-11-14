@@ -7,19 +7,24 @@
 //!   shot is an ordinary one.
 //! - **Volley** (level 50): its talent's `resource = { id = "focus", cost = 6 }` makes it
 //!   unavailable while short (`ability.rs::short_of`) and is spent as the volley is loosed
-//!   (`world/volley.rs`); its shots are priced as one ordinary shot, never by Rapid shot.
+//!   (`world/classes/volley.rs`); its shots are priced as one ordinary shot, never by Rapid shot.
 //!
 //! What a talent grants is held from the moment the talent is ([`hold`]): as it is taken or
 //! given (`class::hand_out`), and again when a run is restored (`World::grant_class`).
 
-use super::{Actor, ActorId, World};
 use crate::action::Event;
 use crate::content::{Content, ResourceId, percent_of};
+use crate::world::{Actor, ActorId, World};
 
 /// `actor` holds each of `resources` it does not hold yet, at its `start` (capped at its
 /// maximum at character `level`); one it holds keeps its value. Says nothing: the talent's
 /// news does.
-pub(super) fn hold(content: &Content, actor: &mut Actor, resources: &[ResourceId], level: u8) {
+pub(in crate::world) fn hold(
+    content: &Content,
+    actor: &mut Actor,
+    resources: &[ResourceId],
+    level: u8,
+) {
     for &resource in resources {
         if actor.resources.get(resource).is_none() {
             let start = actor.resource_start(content, resource, level);
@@ -32,7 +37,12 @@ impl World {
     /// What a shot priced `price` costs actor `id` with Rapid shot: if they have it and hold its
     /// cost in its resource, that is spent and the shot takes its saving less (at least 1);
     /// otherwise `price` as it is. The one place Rapid shot reads.
-    pub(super) fn rapid_shot(&mut self, id: ActorId, price: i64, events: &mut Vec<Event>) -> i64 {
+    pub(in crate::world) fn rapid_shot(
+        &mut self,
+        id: ActorId,
+        price: i64,
+        events: &mut Vec<Event>,
+    ) -> i64 {
         let Some(rapid) = (self.state.actors.get(&id))
             .and_then(|a| a.talent_mods(&self.content).martial.rapid_shot)
         else {

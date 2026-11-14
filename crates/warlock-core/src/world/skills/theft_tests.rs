@@ -1,13 +1,13 @@
 //! Theft on a cooldown and the blink to reach you (docs/design/monster-dread.md §5.6; #1130):
 //! `snatch.rs` and `blink.rs`, with the bearers' rows.
 
-use super::*;
 use crate::action::{AttackKind, Positions};
 use crate::character::CharacterSpec;
 use crate::content::{CreatureSpawn, Takes};
 use crate::geom::Pos;
 use crate::object::Stack;
 use crate::test_support::{CONTENT as BUILTIN, last};
+use crate::world::*;
 
 /// A kitted human warrior in the showcase (seed 7), alone on the level, carrying only what they
 /// wear and wield, in an open room of floor 21 by 11 cells walled round, its west end at the
@@ -66,7 +66,7 @@ fn put(w: &mut World, kind: &str, p: Pos) -> ActorId {
         status: Vec::new(),
     };
     let (content, level) = (w.content.clone(), w.state.current_level.clone());
-    travel::make_creature(&mut w.state, &content, &level, &spawn)
+    crate::world::levels::travel::make_creature(&mut w.state, &content, &level, &spawn)
 }
 
 /// Gives the player `count` of object `id`, at the end of their pack; its position.
@@ -302,7 +302,10 @@ fn a_blink_dog_hemmed_in_blinks_beside_its_target_then_walks_on_its_cooldown() {
     let player = w.state.player;
     let dog = hemmed(&mut w, Pos::new(me.x + 4, me.y), true);
     w.perceive(&mut Vec::new());
-    assert_eq!(w.fight(dog, player, me), ai::Plan::Blink(me));
+    assert_eq!(
+        w.fight(dog, player, me),
+        crate::world::creatures::ai::Plan::Blink(me)
+    );
     let mut events = Vec::new();
     w.creature_blinks(dog, me, &mut events);
     let at = w.state.actors[&dog].pos;
@@ -312,10 +315,16 @@ fn a_blink_dog_hemmed_in_blinks_beside_its_target_then_walks_on_its_cooldown() {
     assert_eq!(last(&w), "The blink dog is suddenly beside you.");
     // Back in its ring, on its cooldown, it waits as any other would.
     w.state.actors.get_mut(&dog).expect("dog").pos = Pos::new(me.x + 4, me.y);
-    assert_eq!(w.fight(dog, player, me), ai::Plan::Wait);
+    assert_eq!(
+        w.fight(dog, player, me),
+        crate::world::creatures::ai::Plan::Wait
+    );
     // Its cooldown eased, it blinks again.
     clear_status(&mut w, dog, "blink");
-    assert_eq!(w.fight(dog, player, me), ai::Plan::Blink(me));
+    assert_eq!(
+        w.fight(dog, player, me),
+        crate::world::creatures::ai::Plan::Blink(me)
+    );
 }
 
 #[test]
@@ -325,12 +334,18 @@ fn an_open_way_is_walked_and_a_blink_needs_range_and_sight() {
     let player = w.state.player;
     // Unhemmed, it runs.
     let dog = hemmed(&mut w, Pos::new(me.x + 4, me.y), false);
-    assert!(matches!(w.fight(dog, player, me), ai::Plan::Step(_)));
+    assert!(matches!(
+        w.fight(dog, player, me),
+        crate::world::creatures::ai::Plan::Step(_)
+    ));
     w.state.actors.retain(|&id, _| id == player);
     // Too far: no cell beside the player lies within six of it.
     let far = hemmed(&mut w, Pos::new(me.x + 8, me.y), true);
     assert!(w.blink_landings(far, me).is_empty());
-    assert_eq!(w.fight(far, player, me), ai::Plan::Wait);
+    assert_eq!(
+        w.fight(far, player, me),
+        crate::world::creatures::ai::Plan::Wait
+    );
     w.state.actors.retain(|&id, _| id == player);
     // Out of its sight: a wall across the room (a door it cannot open, for all it knows)
     // hides every cell beside the player.
@@ -343,7 +358,10 @@ fn an_open_way_is_walked_and_a_blink_needs_range_and_sight() {
     }
     let shut = put(&mut w, "blink_dog", Pos::new(me.x + 4, me.y));
     assert!(w.blink_landings(shut, me).is_empty());
-    assert_eq!(w.fight(shut, player, me), ai::Plan::Wait);
+    assert_eq!(
+        w.fight(shut, player, me),
+        crate::world::creatures::ai::Plan::Wait
+    );
 }
 
 #[test]

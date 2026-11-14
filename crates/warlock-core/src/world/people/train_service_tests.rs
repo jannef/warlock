@@ -3,11 +3,11 @@
 //! untrained, the price paid, the skill at the data's value, gone once trained, refusals for
 //! nothing, digging refused before and allowed after, saves and replays, and the load checks.
 
-use super::*;
 use crate::action::parse_actions;
 use crate::content::ContentFiles;
 use crate::replay::Replay;
 use crate::test_support::{last_text as last_message, run};
+use crate::world::*;
 
 /// The teacher's words and service, added to the built-in dialogue.
 const TEACHER: &str = r##"
@@ -96,12 +96,12 @@ fn untrained_the_player_cannot_dig_and_is_told_why_for_no_time() {
     assert_eq!(mining(&w), None);
     assert_eq!(
         w.perception().dig_refusal(),
-        Some(super::dig::UNTRAINED),
+        Some(crate::world::crafting::dig::UNTRAINED),
         "perception reads the rules' refusal"
     );
     let time = w.time();
     run(&mut w, "dig:N");
-    assert_eq!(last_message(&w), super::dig::UNTRAINED);
+    assert_eq!(last_message(&w), crate::world::crafting::dig::UNTRAINED);
     assert_eq!(w.time(), time);
     assert!(!earth_dug(&w));
 }

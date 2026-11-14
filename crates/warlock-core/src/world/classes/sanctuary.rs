@@ -18,11 +18,11 @@
 //! the words and the look ("hallowed" or "dreaded" ground); the rule is the same. Missiles and
 //! spells cross it. Nothing here draws at random, and it sheds no light.
 
-use super::{LevelState, Spent, World, rest::Ended};
 use crate::action::Event;
 use crate::content::{ActionKind, Face, LevelKind};
 use crate::geom::Pos;
 use crate::time::GameTime;
+use crate::world::{LevelState, Spent, World, turn::rest::Ended};
 use serde::{Deserialize, Serialize};
 
 /// Ground hallowed by Sanctuary (kept in its level's state, saved and hashed).
@@ -122,7 +122,7 @@ impl World {
 
     /// Kneels turn after turn until `until`, unless something interrupts (module docs); then the
     /// ground is hallowed.
-    pub(super) fn sanctuary(&mut self, until: GameTime, events: &mut Vec<Event>) {
+    pub(in crate::world) fn sanctuary(&mut self, until: GameTime, events: &mut Vec<Event>) {
         let wait = self.price_of(self.state.player, ActionKind::Wait);
         let ended = self.keep_at(
             events,
@@ -164,7 +164,7 @@ impl World {
 
     /// The player strikes: a hallow they stand in is broken (a blow, shot, or throw of theirs,
     /// or a spell of theirs that strikes another).
-    pub(super) fn break_hallow(&mut self) {
+    pub(in crate::world) fn break_hallow(&mut self) {
         let (here, now) = (self.player_pos(), self.state.time);
         let level = self.state.current_mut();
         let before = level.hallows.len();
@@ -177,7 +177,7 @@ impl World {
     /// The end of a turn that began at `began`: the current level's hallows past their end are
     /// dropped, and one that faded during the turn says so (one that faded while the player was
     /// away goes quietly). The message does not stop a rest.
-    pub(super) fn hallows_fade(&mut self, began: GameTime) {
+    pub(in crate::world) fn hallows_fade(&mut self, began: GameTime) {
         let now = self.state.time;
         let level = self.state.current_mut();
         if level.hallows.iter().all(|h| h.until > now) {
@@ -192,7 +192,7 @@ impl World {
 
     /// The healing and mana pace of the hallow `actor` stands in at `now`, in percent (the
     /// largest if several; 100 on no hallowed ground).
-    pub(super) fn hallow_pace(&self, actor: &super::Actor, now: GameTime) -> u32 {
+    pub(in crate::world) fn hallow_pace(&self, actor: &crate::world::Actor, now: GameTime) -> u32 {
         (self.state.levels.get(&actor.level).into_iter())
             .flat_map(|level| level.hallows_at(actor.pos, now))
             .map(|h| u32::from(h.regen))
@@ -200,7 +200,11 @@ impl World {
     }
 
     /// Seconds from `now` until a hallow actor `id` stands in fades (its paces change then).
-    pub(super) fn until_unhallowed(&self, id: super::ActorId, now: GameTime) -> Option<u64> {
+    pub(in crate::world) fn until_unhallowed(
+        &self,
+        id: crate::world::ActorId,
+        now: GameTime,
+    ) -> Option<u64> {
         let actor = self.state.actors.get(&id)?;
         let level = self.state.levels.get(&actor.level)?;
         (level.hallows_at(actor.pos, now))

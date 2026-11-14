@@ -2,7 +2,6 @@
 //! a creature that opens doors must kick the door in instead; the player opens it as usual; the
 //! wedge is saved, hashed, and replays.
 
-use super::*;
 use crate::ability::Ability;
 use crate::action::parse_actions;
 use crate::content::ContentFiles;
@@ -10,6 +9,7 @@ use crate::replay::Replay;
 use crate::skills::{SkillId, Trained};
 use crate::stats::{PerStat, Stats};
 use crate::test_support::last_text as last_message;
+use crate::world::*;
 use std::sync::LazyLock;
 
 /// A hall split by iron bars and a door; the hobgoblin sees the player through the bars, and its way round is the door beside the player.

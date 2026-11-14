@@ -26,7 +26,7 @@ pub(super) fn peaceful_factions() -> String {
 /// `files` at peace: the [`peaceful_factions`], and no campaign's encounter tables (a hostile
 /// entry names types hostile to the player, which no type is now; `docs/dev/encounters.md`), and
 /// no shared vaults (a tag pool, the Catacomb's `undead`, draws only types hostile to the player).
-pub(super) fn make_peace(files: &mut crate::content::ContentFiles) {
+pub(in crate::world) fn make_peace(files: &mut crate::content::ContentFiles) {
     files.replace_table("factions", &peaceful_factions());
     files.remove_encounter_tables();
     files.remove_shared_vaults();

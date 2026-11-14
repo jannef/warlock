@@ -13,20 +13,20 @@
 //! the roll, or than `most` leaves room for: fewer come. The summoned take the summoning's
 //! `faction`, else the summoner's (a gate's fiends come `loosed`, #1316); a summoner set on
 //! another side than its type's (a gate the Pit's warden opened, #1298) brings them to that side
-//! instead. They remember who called them ([`super::Actor::summoner`]); a kill of one pays its
+//! instead. They remember who called them ([`crate::world::Actor::summoner`]); a kill of one pays its
 //! experience like any other. The action costs a `cast`.
 //!
 //! **Words**: the player who sees the summoner is told what it calls forth that they see
 //! ("The goblin wizard calls forth 2 goblins and a warg!", "something" for none); unseen, only
 //! what appears where they see it ("A skeleton appears!").
 
-use super::{ActorId, World};
 use crate::action::{AttackKind, Event};
 use crate::content::{ActionKind, CreatureId, CreatureSpawn, counted, the_start};
 use crate::geom::Pos;
 use crate::noise::Act;
 use crate::sight::LineOfSight;
 use crate::text::{and_list, capitalized};
+use crate::world::{ActorId, World};
 
 impl World {
     /// Whether creature `id` summons now, at a hostile it sees at `at` (module docs).
@@ -48,7 +48,7 @@ impl World {
 
     /// How many creatures summoned by `id` live beside it: not those it left on another level
     /// when it followed the player (`stair_followers.rs`).
-    pub(super) fn live_summons(&self, id: ActorId) -> usize {
+    pub(in crate::world) fn live_summons(&self, id: ActorId) -> usize {
         let level = self.state.actors.get(&id).map(|a| a.level.as_str());
         (self.state.actors.values())
             .filter(|a| a.summoner == Some(id) && Some(a.level.as_str()) == level)
@@ -59,7 +59,7 @@ impl World {
     /// line of sight to, walkable, with no one there, and not a sanctuary it would shun; nearest
     /// first (Chebyshev distance, then squared distance, then row order). The dev `ally:` places
     /// the player's allies with it too (`ally.rs`).
-    pub(super) fn summon_cells(&self, id: ActorId, spread: i32) -> Vec<Pos> {
+    pub(in crate::world) fn summon_cells(&self, id: ActorId, spread: i32) -> Vec<Pos> {
         let me = &self.state.actors[&id];
         let level = self.state.current();
         let radius = LineOfSight::radius_for(2 * spread * spread);
@@ -82,7 +82,7 @@ impl World {
     /// With one (the owner's Q9 of #828: `AllyMods::summon_bias`), an entry whose type
     /// carries a bias's tag weighs that bias's weight (several multiply), the rest 1, and the
     /// draw is one `below(total)`; a total of 0 falls back to the plain draw.
-    pub(super) fn summon_draw(
+    pub(in crate::world) fn summon_draw(
         &mut self,
         pool: &[CreatureId],
         bias: &[(String, u32)],
@@ -113,7 +113,11 @@ impl World {
     }
 
     /// Creature `id` summons (its AI saw to it that it can). Returns the price: a `cast`.
-    pub(super) fn creature_summons(&mut self, id: ActorId, events: &mut Vec<Event>) -> i64 {
+    pub(in crate::world) fn creature_summons(
+        &mut self,
+        id: ActorId,
+        events: &mut Vec<Event>,
+    ) -> i64 {
         let content = self.content.clone();
         let me = &self.state.actors[&id];
         let price = self.price_of(id, ActionKind::Cast);
@@ -157,7 +161,12 @@ impl World {
                 asleep: false,
                 status: Vec::new(),
             };
-            let made = super::travel::make_creature(&mut self.state, &content, &level, &spawn);
+            let made = crate::world::levels::travel::make_creature(
+                &mut self.state,
+                &content,
+                &level,
+                &spawn,
+            );
             if let Some(actor) = self.state.actors.get_mut(&made) {
                 actor.summoner = Some(id);
             }

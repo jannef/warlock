@@ -2,8 +2,8 @@
 //! a hand-made level (`bottom`), whose `<` leads back up onto that floor's `>`; the town's people
 //! are peaceful, and its keepers and unique characters are deep gnomes.
 
-use super::*;
 use crate::test_support::{builtin, run as step};
+use crate::world::*;
 
 #[test]
 fn the_deepest_floor_leads_down_to_the_town_and_back() {

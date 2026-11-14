@@ -1,14 +1,14 @@
-//! The warrior's Charge in the world (#1466, `world/charge.rs`): the rush ends beside the
+//! The warrior's Charge in the world (#1466, `world/classes/charge.rs`): the rush ends beside the
 //! target with a blow, it moves at least a cell, it costs a point and a point a cell, it
 //! provokes no free blows, its refusals take no time and spend nothing, and a warrior holds
 //! stamina from level 1; Whirling charge strikes the hostiles beside the way, and Battle rhythm
 //! gives stamina back for melee hits and kills (#1467); each cell is entered as a step enters
 //! it (#1615).
 
-use super::*;
 use crate::action::AttackKind;
 use crate::content::{ContentFiles, STAMINA};
 use crate::test_support::said;
+use crate::world::*;
 
 const CREATURES: &str = r##"
 [[creature]]

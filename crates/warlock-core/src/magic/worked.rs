@@ -1,19 +1,19 @@
 //! What an anvil's work has done to one item (spec §7 "Special rooms": Temper; the rules are
-//! `world/temper.rs`): the state a [`Stack`](crate::object::Stack) keeps, and its pure rules.
+//! `world/crafting/temper.rs`): the state a [`Stack`](crate::object::Stack) keeps, and its pure rules.
 //!
 //! An item is improved up to three times, each time in an [`Aspect`] its base item has, and the
 //! same one may come twice: **Fine**, **Marvellous**, **Masterwork**. A failure leaves it
 //! **damaged**, which takes all its improvements and makes it a point worse until it is mended:
 //! its Protection if it gives some, else its Defence, else its damage ([`super::Mods::local`]).
-//! Acid, rust, and heat damage an item the same way (`world/item_damage.rs`), and the state
+//! Acid, rust, and heat damage an item the same way (`world/combat/item_damage.rs`), and the state
 //! keeps the kind for its word ("rusted", "corroded", "scorched"; a failed attempt's is
 //! "damaged"). A damaged item is repaired or destroyed. Every attempt counts for the item's
 //! whole life and is never shown in the game. Affixes are another matter ([`super::Magic`]): the
 //! work never touches them.
 //!
-//! A craftsperson's work may also bear their **mark** (Maker's mark, `world/craft_make.rs`):
+//! A craftsperson's work may also bear their **mark** (Maker's mark, `world/crafting/craft_make.rs`):
 //! saved with the rest, never lost to damage or repair, worth more ([`Worked::value`]), and
-//! read by the patron (`world/patron.rs`) and the capacity (`super::capacity`). A plain marked
+//! read by the patron (`world/crafting/patron.rs`) and the capacity (`super::capacity`). A plain marked
 //! item carries a `Worked` with nothing else on it.
 //!
 //! The numbers are read in two places: to hit, plus damage, Defence, and Protection through

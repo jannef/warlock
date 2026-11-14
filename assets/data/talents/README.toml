@@ -640,7 +640,7 @@
 #                                 the place's status never touches it, while the dark answers
 #                                 its prayers (docs/dev/prayer.md)
 #   sanctuary { mana, time, radius, lasts, regen }   the active Sanctuary (`use:sanctuary`;
-#                                 world/sanctuary.rs): kneels `time` (10s to 1h) for that mana
+#                                 world/classes/sanctuary.rs): kneels `time` (10s to 1h) for that mana
 #                                 (1 to 500), then the ground within `radius` (1 to 5) is
 #                                 hallowed for `lasts` (10m to 12h): no hostile steps onto it
 #                                 from outside, and those on it heal and regain mana at `regen`

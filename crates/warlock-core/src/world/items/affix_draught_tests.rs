@@ -2,13 +2,13 @@
 //! read where the matching talent's is: of the Alchemist's `potion_kept` in
 //! [`Actor::potion_kept`] (beside Thrifty drinker's, which `take_draught` reads), of Wands'
 //! `wand_rungs` in [`Actor::spell_mods`] (beside Wand mastery's). The tests bring fixture
-//! affixes with ranges of their own, as `world/affix_spell_tests.rs` does.
+//! affixes with ranges of their own, as `world/items/affix_spell_tests.rs` does.
 
-use super::potion::KEPT;
-use super::*;
 use crate::content::ContentFiles;
 use crate::magic::{Affix, Magic, Rarity};
 use crate::test_support::run;
+use crate::world::health::potion::KEPT;
+use crate::world::*;
 
 /// Fixture affixes, one per effect, with ranges wide enough for every test.
 const AFFIXES: &str = r#"
@@ -178,7 +178,7 @@ fn of_wands_raises_a_wands_rung_beside_wand_mastery() {
     let def = content.spell(wand.spell);
     let rung = |w: &World| {
         let me = w.state.player();
-        let by = super::CastBy::Wand(wand.min_rung);
+        let by = crate::world::CastBy::Wand(wand.min_rung);
         me.spell_rung(&content, def, by, &me.spell_mods(&content, def))
     };
     assert_eq!(rung(&w), 0, "the wand's own");

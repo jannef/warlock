@@ -3,7 +3,6 @@
 //! lock's door opens (and its trap goes off at the picker); every try takes its time and may be
 //! tried again; refusals take none; a status may block it; replays verify.
 
-use super::*;
 use crate::ability::{Ability, Unavailable};
 use crate::action::parse_actions;
 use crate::check;
@@ -14,6 +13,7 @@ use crate::skills::{Effect, SkillId, Trained};
 use crate::stats::Stat;
 use crate::test_support::last_text as last_message;
 use crate::time::Duration;
+use crate::world::*;
 
 /// A lit hall: the player west of a locked door (`L`, the usual difficulty), a hard one (`H`), an
 /// easy one (`E`), a trapped locked door (`T`), an unlocked closed door (`+`), and an open one.

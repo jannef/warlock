@@ -2,20 +2,20 @@
 //! temperature.md).
 
 mod edge_leave;
-mod encounter;
+pub(in crate::world) mod encounter;
 mod encounter_area;
-mod endless;
-mod enter;
+pub(in crate::world) mod endless;
+pub(in crate::world) mod enter;
 mod footing;
-mod ice;
+pub(in crate::world) mod ice;
 mod layer_boss;
-mod pit;
+pub(in crate::world) mod pit;
 mod quick_leave;
 mod reveal;
 mod stair_followers;
-mod swim;
-mod talk_past;
-mod travel;
+pub(in crate::world) mod swim;
+pub(in crate::world) mod talk_past;
+pub(in crate::world) mod travel;
 mod wriggle;
 cfg_if! {
     if #[cfg(test)] {

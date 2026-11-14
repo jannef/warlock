@@ -3,18 +3,18 @@
 
 mod buff;
 mod disease;
-mod drain;
-mod eat;
+pub(in crate::world) mod drain;
+pub(in crate::world) mod eat;
 mod elixir;
 mod flask;
 pub(crate) mod freshness;
-mod heal;
+pub(in crate::world) mod heal;
 mod heal_harm;
 mod hold;
 mod hunger;
-mod potion;
+pub(in crate::world) mod potion;
 mod regen;
-mod rot;
+pub(in crate::world) mod rot;
 mod status;
 cfg_if! {
     if #[cfg(test)] {

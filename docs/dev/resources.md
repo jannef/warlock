@@ -10,7 +10,7 @@ Openings (R3), Ki and Inspiration (R4), and the four resource talents (R5). Rage
 (R2), Openings (R3), Ki, and Inspiration (R4), and the resource talents (R5) have moved (below).
 
 - **Granted by talents**: the talent effect `grants_resource { resource }` collects into
-  `ResourceMods::grants`; `world/focus.rs::hold` gives the actor each it lacks at its start (one
+  `ResourceMods::grants`; `world/classes/focus.rs::hold` gives the actor each it lacks at its start (one
   held keeps its value). Called from `class::hand_out` (a talent taken or given) and
   `World::grant_class` (so a restored run gets one its talents grant), the only two places so
   far. `hold` takes the character level (the maximum a pool starts at may depend on it). The
@@ -18,14 +18,14 @@ Openings (R3), Ki and Inspiration (R4), and the four resource talents (R5). Rage
   player gains is said) holds stamina for a player without it when a rank first teaches an
   active weapon ability, said "You learn to pace your breath." after the ability's line
   (`weapon_active_tests::the_first_active_rank_grants_the_pool`).
-- **Focus** (R2, #250; `world/focus.rs`): Rapid shot grants it. `MartialEffect::RapidShot {
+- **Focus** (R2, #250; `world/classes/focus.rs`): Rapid shot grants it. `MartialEffect::RapidShot {
   resource, cost, saving }` (`MartialMods::rapid_shot`) is read in one place,
   `World::rapid_shot`, which `shoot.rs::fire` calls on the shot's price: with `cost` held it
   spends it and takes `saving` percent off the whole price (`percent_of`, at least 1), else the
-  price stands. Volley (`world/volley.rs`) costs `resource = { id = "focus", cost = 6 }` on its
+  price stands. Volley (`world/classes/volley.rs`) costs `resource = { id = "focus", cost = 6 }` on its
   talent, spent after its own checks (so a refused volley spends nothing), and has no cooldown
   (`MartialEffect::Volley { shots }` only); its price is `shot_price`, never Rapid shot's.
-  Creatures never shoot through `fire`, so never use either. Tests: `world/focus_tests.rs`.
+  Creatures never shoot through `fire`, so never use either. Tests: `world/classes/focus_tests.rs`.
 
 - **Data**: `content/resource.rs` parses `data/resources.toml` into `ResourceDef`s (`id`,
   `name`, `short`, `max`, `start`, `starts_full` (no `start` in data: granted at its maximum by
@@ -47,7 +47,7 @@ statuses).
 - **State**: `Actor::resources: Pools` (`resource.rs`): `Pool { resource, value, progress }` in
   resource order (`Pools::set` keeps it sorted), saved and hashed, skipped in the JSON while
   empty. Creatures never get any; nothing stops one but nothing grants one.
-- **Changes** (`world/resource.rs`, each the one place):
+- **Changes** (`world/character/resource.rs`, each the one place):
   - `World::grant_resource(id, resource)`: held at `start` (or more, if it already holds more),
     capped at the maximum. `World::grant_resource_with_status(id, resource, by, events)` also
     begins its `status` (the Rage ability and the dev action call this one).
@@ -65,7 +65,7 @@ statuses).
     `Kill`: the holder killed its mark; docs/dev/openings.md), and `feint.rs::feint` (`Feint`, a feint the foe falls for). A new event is a `Build` variant and
     one call where it happens.
   - `World::spend_resource(id, resource, amount, events) -> bool`: refused when not held or
-    short; spending to 0 ends one that `ends_at_zero`. `world/class_ability.rs::use_class` spends
+    short; spending to 0 ends one that `ends_at_zero`. `world/classes/class_ability.rs::use_class` spends
     a class active's cost after its checks.
   - `World::end_resource` / `resource::ended` (the free function `World::live` uses while it
     holds the actor): removes the pool, pushes `Event::ResourceEnded`, and takes its `status` off,
@@ -75,7 +75,7 @@ statuses).
     Perception says `ResourceEnded` in the resource's `ended` words, if any (Rage has none: its
     Raging's end says it) (logged, not stopping a rest: `perceive.rs`, `rest.rs` keeps
     the event across unperceived turns) and the effects layer ignores.
-  - Time: `World::live` (`world/status.rs`) takes `World::resource_paces(id)` (each pool's
+  - Time: `World::live` (`world/health/status.rs`) takes `World::resource_paces(id)` (each pool's
     `Pace { max, rate }`) every step, `resource::until_next` as a moment, and
     `resource::pass` for the step (in the fast path too, when no point is due within it); the
     resources `pass` returns as ended are ended at that moment. Progress is dropped when there
@@ -103,15 +103,15 @@ statuses).
   after the player's action, so taking the piece off is exact at once (`resource::pass` also
   clamps as time moves); it leaves progress alone. Stamina's third, `active_stamina`, is read
   in `Actor::weapon_stamina` (docs/dev/weapon-abilities.md). Tests:
-  `world/affix_stamina_tests.rs`, with fixture affix files; the shipped ones are Tireless, of
+  `world/items/affix_stamina_tests.rs`, with fixture affix files; the shipped ones are Tireless, of
   Breath, of Ease, of the Hunt, and the pools' of Fury, of Steadiness, of Stillness, of Guile,
   and of the Muse (P1, #635). The
   fourth, `resource_on_kill` (of the Hunt; E1, #632), is read in `World::siphon`
-  (`world/siphon.rs`) at the kill point of an attack, beside of Siphoning's mana: each pool held
+  (`world/items/siphon.rs`) at the kill point of an attack, beside of Siphoning's mana: each pool held
   that an affix names gains its sum, up to its maximum, when the holder's own blow, shot, or
   spell kills within the `[siphon]` range of `data/rules/tuning.toml` (3) cells. `gain_resource(by, Build::Kill)` stays in
-  `dies` for the data's `builds` and the talents' (any kill). Tests: `world/siphon_tests.rs`.
-- **Rage** (R1, #249; `world/rage.rs`): the talent effect `rage { resource = "rage" }`
+  `dies` for the data's `builds` and the talents' (any kill). Tests: `world/items/siphon_tests.rs`.
+- **Rage** (R1, #249; `world/classes/rage.rs`): the talent effect `rage { resource = "rage" }`
   (`MartialMods::rage: Option<ResourceId>`, `rage_status` its resource's status) makes the Rage
   ability grant the pool with Raging (`World::rage`); the cooldown is Raging and what it `follows`
   (`ability.rs::class_cooldown`). The pool's own `builds` (#842) are `struck` 1, `critical` 2,
@@ -124,9 +124,9 @@ statuses).
   (`spend_resource`, so the rage ends at 0), and `World::live` numbs the statuses while Raging
   lasts. Raging `blocks` `cast`, so `World::spend_mana` refuses while it lasts. While the
   player's own Raging lasts they are in the frenzy stance and cannot leave it, and its end
-  leaves them aggressive (`world/frenzy.rs`, #680; spec §8 "Stances"): `frenzy::settle`
-  runs where a status begins or ends; `world/frenzy_tests.rs` covers it. War cry
-  (#844, `world/war_cry.rs`) is a class active paid in rage (`resource = { id = "rage", cost =
+  leaves them aggressive (`world/combat/frenzy.rs`, #680; spec §8 "Stances"): `frenzy::settle`
+  runs where a status begins or ends; `world/combat/frenzy_tests.rs` covers it. War cry
+  (#844, `world/classes/war_cry.rs`) is a class active paid in rage (`resource = { id = "rage", cost =
   4 }` on its talent): `short_of` greys it with the pool's `lacking`, and `World::may_use_class`
   says a pool's `lacking` words, capitalized, when it has them ("You have not the rage for
   it."), else "You have too little X.".
@@ -139,47 +139,47 @@ statuses).
   for the spend): the second blow is decided only once its cost is spent; short, none. Patient
   defence (level 18, S5, #849) costs `resource = { id = "ki", cost = 1 }` on its talent
   (`MartialEffect::PatientDefence { status }`, `MartialMods::patient_defence`): `World::patient_defence`
-  (`world/ascetic.rs`) gives a degree of Poised for a wait's price; refused only by
+  (`world/classes/ascetic.rs`) gives a degree of Poised for a wait's price; refused only by
   `may_use_class` with no ki. Given during the priced action, the status sits on `World::fresh`,
-  so the creatures' turns meet it and the next action eases it. Tests: `world/ascetic_tests.rs`.
+  so the creatures' turns meet it and the next action eases it. Tests: `world/classes/ascetic_tests.rs`.
   Quivering
   palm costs `resource = { id = "ki", cost = 5 }` on its talent and lost its cooldown
   (`MartialEffect::QuiveringPalm { status, severity }`); `use_class` refuses it with a weapon in
   hand before the spend (`ClassActive::bare_handed`). Stunning strike (12, #848) costs
   `resource = { id = "ki", cost = 1 }` on its talent (`MartialEffect::StunningStrike { status,
-  severity }`), refused the same way; both blows are `World::palm_blow` (`world/ascetic.rs`).
-  Tests: `world/ki_tests.rs`, `world/stunning_strike_tests.rs`. Step of the wind (level 6, S3, #847) costs `resource = { id = "ki",
+  severity }`), refused the same way; both blows are `World::palm_blow` (`world/classes/ascetic.rs`).
+  Tests: `world/classes/ki_tests.rs`, `world/combat/stunning_strike_tests.rs`. Step of the wind (level 6, S3, #847) costs `resource = { id = "ki",
   cost = 1 }` on its talent (`MartialEffect::WindStep { status }`, `MartialMods::wind_step`):
-  `World::wind_step` (`world/ascetic.rs`) gives a degree of Light-footed and returns
+  `World::wind_step` (`world/classes/ascetic.rs`) gives a degree of Light-footed and returns
   `Spent::NoTime`; `World::may_wind_step` refuses it before the spend while Light-footed already.
   The status is taken off `World::fresh` (a status given in a priced action is not eased by it):
-  no time passed, so the next action eases it. Tests: `world/ki_tests.rs`,
-  `world/ascetic_tests.rs`. Stillness (Still mind, level 25, S6, #850) costs `resource = { id =
+  no time passed, so the next action eases it. Tests: `world/classes/ki_tests.rs`,
+  `world/classes/ascetic_tests.rs`. Stillness (Still mind, level 25, S6, #850) costs `resource = { id =
   "ki", cost = 2 }` on Still mind (`MartialEffect::Stillness { name, statuses }`,
   `MartialMods::stillness`): `World::stillness` ends every listed status the ascetic suffers and
   returns `Spent::NoTime`; with none of them to end `Unavailable::Still` refuses it before the
   spend ("Your mind is already still."), and so does too little ki.
   Diamond soul (level 40, S7, #851) carries
   `MartialEffect::CatchMissiles { resource, cost }` (`MartialMods::catch_missiles`), a passive
-  spend like Flurry's: `World::caught_missile` (`world/ascetic.rs`) spends it by itself when a
+  spend like Flurry's: `World::caught_missile` (`world/classes/ascetic.rs`) spends it by itself when a
   missile (`resolve` for a shot or throw, `trap_strikes` for a trap's) hits a holder with no
   weapon and no shield in hand, and the hit becomes `Blow::missed(None)`; the transient
   `World::caught` stops the flight there (`fly`, `trap_shot`) so the missile falls on that
   cell; the player is told through `news`, after the attack's own words. Tests:
-  `world/ki_tests.rs`, `world/ascetic_tests.rs`.
+  `world/classes/ki_tests.rs`, `world/classes/ascetic_tests.rs`.
 - **Inspiration** (R4, #252): Inspire grants it, and its `song` effect (#870) costs `cost` of
   it and nothing else (`talent::SongCost::Resource`; Virtuoso's `TalentMods::song` clears the
-  cost, so its songs are free). `World::sing` (`world/song.rs`) spends it (`spend_resource`);
+  cost, so its songs are free). `World::sing` (`world/classes/song.rs`) spends it (`spend_resource`);
   `Ability::unavailable` greys it out `Unavailable::Short` while short. Tests:
-  `world/ki_tests.rs`, `world/song_tests.rs`.
-- **Openings** (R3, #251; `world/openings.rs`; the mark and its builds in **docs/dev/openings.md**):
+  `world/classes/ki_tests.rs`, `world/classes/song_tests.rs`.
+- **Openings** (R3, #251; `world/classes/openings.rs`; the mark and its builds in **docs/dev/openings.md**):
   the thief's Sneak attack (level 1, #682) grants the pool
   (`grants_resource`); `marked = true` (its points are in one creature's guard); its builds are
   the data's `sneak_attack`, `feint`, and `mark_kill`; Exploit (`use:exploit:E`) spends every
   opening held, and the class talents' ladder grows it (Master thief's finisher is folded into
   it since #1464: a sure critical from five spent, `Profile::sure_critical`, no confirmation
   draw; `combat::strike_with`). `use_class` refuses an aimed active with nobody hostile that way
-  before it spends anything. Tests: `world/openings_tests.rs`, and `combat.rs`'s sure-critical
+  before it spends anything. Tests: `world/classes/openings_tests.rs`, and `combat.rs`'s sure-critical
   test.
 - **Zeal** (P1, #910; `docs/design/paladin-smites.md` §4): the last entry of `resources.toml`.
   The paladin's Smite (level 1) grants it (`grants_resource`) at `start = 5`; `max = 10`,
@@ -193,12 +193,12 @@ statuses).
   asks `World::answered` before it spends, so an unanswered smite or heal spends nothing.
   Retribution (P3, #912, the paladin's at 25) spends 4 a blow it answers:
   `FaithEffect::Retribution { resource, cost }` (`FaithMods::retribution`), read in one place,
-  `World::retribution` (`world/smite.rs`), after its other checks (the attack hit, the attacker
+  `World::retribution` (`world/classes/smite.rs`), after its other checks (the attack hit, the attacker
   beside, the bands), so a blow it does not answer spends nothing; the blow taken has already
   built its point (`Struck` fires in `resolve`, before the attack's end), so 3 held answers. A deed
   toward evil empties it (`World::shift_alignment`, `docs/dev/alignment.md`). The priest no
-  longer has Smite (#891), so the paladin alone holds it. Tests: `world/smite_tests.rs`,
-  `world/smite_mode_tests.rs`, `world/smite_wrath_tests.rs`, `world/class_active_tests.rs`.
+  longer has Smite (#891), so the paladin alone holds it. Tests: `world/classes/smite_tests.rs`,
+  `world/classes/smite_mode_tests.rs`, `world/classes/smite_wrath_tests.rs`, `world/classes/class_active_tests.rs`.
 - **Stamina** (SP1, #560; the combat progression design §4.5): the entry of
   `resources.toml` (file order is save order), `short = "Sta"`, `max = 10`, `max_from = { stat =
   "toughness", per_levels = 10, least = 5 }`, `regenerates = 12`, resting too, starting full.
@@ -206,14 +206,14 @@ statuses).
   which removed Trained wind) is in the level-1 row of the warrior's table (`data/classes/`), so
   `class::grant` holds it at creation and `World::grant_class` on load; every other character
   gets it from the first weapon active a rank teaches (`fight.rs::grant_stamina`). The weapon
-  actives spend it (#564, `world/weapon_active.rs::pay_active`, through `spend_resource`, after
-  their refusals), and so does Charge (`world/charge.rs`: its talent's `resource`, 1, plus
+  actives spend it (#564, `world/combat/weapon_active.rs::pay_active`, through `spend_resource`, after
+  their refusals), and so does Charge (`world/classes/charge.rs`: its talent's `resource`, 1, plus
   `per_cell` a cell moved, checked and spent by the charge itself, since the price is the
   distance's); its `lacking` words ("you are short of breath") are how `Unavailable::Short` reads
   for it. Its talents (`[[system]] id =
   "stamina"`): Charge, Deep lungs (`resource_max` +4), Steady breathing (`resource_rate`
   +50, a weapon skill at 5). Tests:
-  `world/stamina_tests.rs`; the parse and `MaxFrom::max` in `content/resource.rs`.
+  `world/turn/stamina_tests.rs`; the parse and `MaxFrom::max` in `content/resource.rs`.
 - **Abilities**: `Unavailable::Short(ResourceId)` ("not enough focus", `short:focus`; a
   resource's `lacking` words instead when it has them), checked last in the Class arm of
   `Ability::unavailable` (`ability.rs::short_of`), and in the weapon actives'
@@ -227,14 +227,14 @@ statuses).
   since R5 (#253) by Battle trance, Inner calm, Steady hand, Patient blade, and Zealot (#914; the
   only class-limited picks, Zealot by its prerequisite), and the class abilities Rage, Blood frenzy, Mighty rage, Unstoppable,
   Rapid shot, Volley, Improved sneak attack, Master thief, Smite, Lay on hands, and Avatar. Tests:
-  `world/resource_talent_tests.rs`.
+  `world/character/resource_talent_tests.rs`.
 - **Wiki**: `xtask/src/wiki/resources.rs` (the table) for `wiki/src/resources.md`.
 - **Tests**: `content/resource.rs` (parsing, refusals, a resource's status, a followed status
-  that never ends), `world/class_active_tests.rs` (Rage's course on the pool, Mighty rage's
+  that never ends), `world/classes/class_active_tests.rs` (Rage's course on the pool, Mighty rage's
   maximum, Blood frenzy's builds, Unstoppable's cost and the end it brings, Raging ended
-  otherwise, no mana while raging), `world/buff_tests.rs` (Raging's scores and end), `world/resource_tests.rs` (granting,
+  otherwise, no mana while raging), `world/health/buff_tests.rs` (Raging's scores and end), `world/character/resource_tests.rs` (granting,
   decay to the end and the bar going, time cut differently and resting, regeneration, spending,
   several at once, builds from events and from a real fight, a class active's cost, content
-  checks of costs, dumps, saves, the hash, a replay), `world/smite_tests.rs` (zeal: its grant,
+  checks of costs, dumps, saves, the hash, a replay), `world/classes/smite_tests.rs` (zeal: its grant,
   builds, pace, costs, the sin, a save without it, a replay), `ui/mod.rs` (the status bar), and the
   `resources` screen snapshot (the character screen and the status bar).

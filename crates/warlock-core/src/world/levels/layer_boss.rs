@@ -16,13 +16,13 @@
 //! the next floor. From then on a floor made at that depth reads the slain list
 //! (`mapgen::Visit::slain`) and is an ordinary floor.
 
-use super::World;
 use crate::content::{StairsDir, StairsLink, the};
+use crate::world::World;
 
 impl World {
     /// Unique creature type `id` died on level `level`: if that level hides its lair's way down,
     /// the stairs open, and the player is told if they see them, or hear it on the level.
-    pub(super) fn open_lair(&mut self, level: &str, id: &str) {
+    pub(in crate::world) fn open_lair(&mut self, level: &str, id: &str) {
         let Some(state) = self.state.levels.get_mut(level) else {
             return;
         };

@@ -190,7 +190,7 @@ impl LightCache {
     }
 
     /// Drops everything cached of `level`, which is gone: a later level of the same id is another
-    /// (`world/endless.rs`).
+    /// (`world/levels/endless.rs`).
     pub fn forget(&mut self, level: &str) {
         self.levels.remove(level);
     }
@@ -238,7 +238,7 @@ impl LevelLights {
             pos,
             preset: fire.light,
         }));
-        // A fire zone's cells, each a fire of light (`world/zone.rs`).
+        // A fire zone's cells, each a fire of light (`world/magic/zone.rs`).
         let zones = (level.zones.iter()).filter(|zone| zone.until > state.time);
         for zone in zones {
             if let Some(preset) = zone.light {
@@ -252,7 +252,7 @@ impl LevelLights {
         let own_light = state.carried_light(content);
         for actor in state.actors.on_level(&level.id) {
             let id = u64::from(actor.id.0);
-            // An invisible creature sheds no light of its own (`world/unseen.rs`).
+            // An invisible creature sheds no light of its own (`world/creatures/unseen.rs`).
             if let Some(preset) = content.creature(actor.creature).light
                 && !actor.effects.unseen(content)
             {
@@ -322,7 +322,7 @@ impl LevelLights {
                 });
             }
         }
-        // Nor does one in a darkness (`world/zone.rs`).
+        // Nor does one in a darkness (`world/magic/zone.rs`).
         sources.retain(|s| !level.is_opaque(content, s.pos) && !level.darkened(s.pos, state.time));
         sources
     }

@@ -1,11 +1,11 @@
 //! Traps in the world (spec §8 "Traps"): hidden until sprung, then known and remembered; arrows,
 //! spears, fireballs, lightning, pits, alarms, and teleports; charges; deaths; saves; replays.
 
-use super::*;
 use crate::action::{MissileEnd, SpellShape, parse_actions};
 use crate::content::{ContentFiles, TrapId};
 use crate::replay::Replay;
 use crate::test_support::{builtin, run, said as texts};
+use crate::world::*;
 
 const TERRAIN: &str = r##"
 [[terrain]]
@@ -283,7 +283,7 @@ fn builtin_traps_load_and_bad_ones_are_reported() {
     );
     // A burst names a burst effect of data/effects.toml, a bolt a bolt one.
     let mut builtin = ContentFiles::builtin();
-    let traps = include_str!("../../../../assets/data/traps.toml")
+    let traps = include_str!("../../../../../assets/data/traps.toml")
         .replace("spell = \"fireball\"", "spell = \"lightning_bolt\"");
     builtin.insert("data/traps.toml", &traps);
     let err = Content::load(&builtin).expect_err("a burst drawn as a bolt");

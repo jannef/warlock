@@ -12,12 +12,12 @@
 //! return." No stream is drawn but the check's and Scroll savant's, and nothing new is saved.
 //!
 //! The cleanse itself ([`World::restore`]) is shared with the potion of restoration (kind
-//! `restore`, `world/potion.rs`), which mends and restores both.
+//! `restore`, `world/health/potion.rs`), which mends and restores both.
 
-use super::World;
 use crate::action::Event;
 use crate::content::Cleansing;
 use crate::stats::Stat;
+use crate::world::World;
 
 /// The means the scroll of restoration cures by (`cured_by`): Stiffening's.
 pub const RESTORATION: &str = "restoration";
@@ -75,7 +75,11 @@ impl World {
     /// (`restores`), and every status `restoration` cures ended (Stiffening, its end line
     /// said); each stat that comes back is named. Draws nothing. Returns whether anything was
     /// done.
-    pub(super) fn restore(&mut self, cleansing: Cleansing, events: &mut Vec<Event>) -> bool {
+    pub(in crate::world) fn restore(
+        &mut self,
+        cleansing: Cleansing,
+        events: &mut Vec<Event>,
+    ) -> bool {
         let back = self.cleansed_stats(cleansing);
         let player = self.state.player;
         if cleansing.mends

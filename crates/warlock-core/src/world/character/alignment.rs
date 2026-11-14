@@ -17,9 +17,9 @@
 //! prices follow the band ([`keeper_favour`]); a holy gift works only for the bands it names
 //! ([`World::answered`]), and is never barred.
 
-use super::{Actor, ActorId, World};
 use crate::alignment::Alignment;
 use crate::content::{Content, CreatureId, Dialogue, QuestDef, Shifts, Shops, Stance};
+use crate::world::{Actor, ActorId, World};
 
 /// What moved an alignment score. Talents that change what a deed costs (one that spares an
 /// evil character's conscience the killing of peaceful folk) will read it in
@@ -77,7 +77,7 @@ impl Deed {
 /// How far a shop's keeper moves its prices in `actor`'s favour for their alignment, in percent
 /// (spec §7 "Shops"): a good keeper by the actor's band (`[shops] favour` in
 /// `data/alignment.toml`); others not at all. Every keeper is of the `[keeper]` type.
-pub(super) fn keeper_favour(content: &Content, shops: &Shops, actor: &Actor) -> i32 {
+pub(in crate::world) fn keeper_favour(content: &Content, shops: &Shops, actor: &Actor) -> i32 {
     let keeper = content.creature(shops.keeper.creature).alignment;
     match content.alignment() {
         Some(rules) if keeper == Alignment::Good => rules.favour(actor.band(content)),
@@ -91,7 +91,7 @@ impl World {
     /// told when it crosses into another band, after the deed's own messages, as a note that
     /// does not stop a rest; anything smaller is silent. Nothing happens to an actor without a score (creatures stand where
     /// their type does) or without alignment rules.
-    pub(super) fn shift_alignment(&mut self, actor: ActorId, amount: i32, cause: Deed) {
+    pub(in crate::world) fn shift_alignment(&mut self, actor: ActorId, amount: i32, cause: Deed) {
         // The cause is the hook for the talents that will change a deed's cost.
         let _ = cause;
         let Some(rules) = self.content.alignment() else {
@@ -130,7 +130,7 @@ impl World {
 
     /// The player did `deed`, whose worth the alignment rules fix (attacking a shopkeeper,
     /// theft, paying a debt, eating kin).
-    pub(super) fn player_did(&mut self, deed: Deed) {
+    pub(in crate::world) fn player_did(&mut self, deed: Deed) {
         let worth = (self.content.alignment()).and_then(|rules| deed.worth(&rules.shift));
         if let Some(amount) = worth {
             self.shift_alignment(self.state.player, amount, deed);
@@ -141,7 +141,7 @@ impl World {
     /// their alignment says (an evil one: a little good); killing someone not hostile is evil,
     /// the more so if they are good, but a beast (a neutral creature that does not talk) may be
     /// hunted.
-    pub(super) fn judge_kill(&mut self, victim: ActorId) {
+    pub(in crate::world) fn judge_kill(&mut self, victim: ActorId) {
         let (Some(rules), Some(actor)) = (self.content.alignment(), self.state.actors.get(&victim))
         else {
             return;
@@ -163,7 +163,7 @@ impl World {
 
     /// The player ate a corpse of `creature`: eating one of their own race (the creature's
     /// `race`), or a creature that talks and is not hostile to them by its type, is eating kin.
-    pub(super) fn ate_corpse(&mut self, creature: CreatureId) {
+    pub(in crate::world) fn ate_corpse(&mut self, creature: CreatureId) {
         let def = self.content.creature(creature);
         let race = (self.state.character.as_ref()).map(|c| c.spec.race.as_str());
         let kin = def.race.is_some() && def.race.as_deref() == race;
@@ -180,14 +180,20 @@ impl World {
     /// ([`crate::alignment::Band::scorned_by`]).
     pub(super) fn scorns(&self, actor: &Actor) -> bool {
         let band = self.state.player().band(&self.content);
-        actor.kind != super::ActorKind::Player && band.scorned_by(actor.nature(&self.content))
+        actor.kind != crate::world::ActorKind::Player
+            && band.scorned_by(actor.nature(&self.content))
     }
 
     /// What creature `id`, speaking `d`, says in place of its greeting and its lines while it
     /// scorns the player: one of its `greet_evil` lines (a good speaker) or `greet_good` lines
     /// (an evil one), in turn like the one-liners (`said` of them so far); `None` while it does
     /// not scorn them, or has no such lines.
-    pub(super) fn cold_greeting(&self, id: ActorId, d: &Dialogue, said: u32) -> Option<String> {
+    pub(in crate::world) fn cold_greeting(
+        &self,
+        id: ActorId,
+        d: &Dialogue,
+        said: u32,
+    ) -> Option<String> {
         let actor = self.state.actors.get(&id).filter(|a| self.scorns(a))?;
         let lines = match actor.nature(&self.content) {
             Alignment::Good => &d.greet_evil,
@@ -195,13 +201,13 @@ impl World {
             Alignment::Neutral => return None,
         };
         let key = self.rotation_key(id, b"cold");
-        let k = super::talk::rotation(key, said, lines.len());
+        let k = crate::world::people::talk::rotation(key, said, lines.len());
         lines.get(k).cloned()
     }
 
     /// Whether quest `def` may be offered to the player: their band meets its
     /// `requires_alignment`. A giver who scorns them offers it all the same (#692).
-    pub(super) fn offers(&self, def: &QuestDef) -> bool {
+    pub(in crate::world) fn offers(&self, def: &QuestDef) -> bool {
         let band = self.state.player().band(&self.content);
         (def.requires_alignment).is_none_or(|r| r.allows(band))
     }

@@ -149,7 +149,7 @@ branch's whole population and strays (no uniques, any faction: the prey), its co
 (`data/objects/bones.toml`, junk) on another. Both lie with no `died`, so `rot::made_at` makes them
 when the level is first entered: fresh then. `loot_level` is unused.
 
-Sleep (`world/den.rs`): a creature whose effects include a status with `sleeps` (Asleep:
+Sleep (`world/creatures/den.rs`): a creature whose effects include a status with `sleeps` (Asleep:
 `data/status/`, `max = 1`, no `eases`, `seen = "asleep"`) — `World::asleep`:
 
 - `creature_turn` first asks `World::slumbers`: a sleeper's turn is a wait (× `stride::STRIDE`
@@ -214,7 +214,7 @@ and a hoard starts the stream afresh for each, which only happens with `per_leve
 `population.rs` keeps its creatures out of a hoard and `special::make` refuses one where a
 generator patrol walks, as for a den: it lies unguarded.
 
-Sealing (`world/hoard.rs`): `World::lift_in_hoard(at, stacks)` is the one line in
+Sealing (`world/fixtures/hoard.rs`): `World::lift_in_hoard(at, stacks)` is the one line in
 `carry.rs::pick_up`, after the pick-up is said. Inside a room with a `hoard` that has not sealed,
 `SpecialRoom::lifted` grows by the stacks lifted; once it passes the player's
 `DelvingMods::hoard_grace` (Old hand: 1) the room is `sealed` and `seal` runs: every cell of the
@@ -270,7 +270,7 @@ out while 0/false, so other rooms hash as before. The `rooms` dev layer adds `, 
   there would lie on a wall); chests take theirs away, heaps and gems share. A room too small for its chests holds what fits.
 - The floor's population keeps out of it (`population.rs`), and `make` refuses one a patrol
   walks through, as for a den or a hoard. Floor chests (`chest::fill`) may still land inside.
-- **The hint** (`world/treasury.rs`, `arrive_lines`): in `World::travel` after the `pervade`
+- **The hint** (`world/fixtures/treasury.rs`, `arrive_lines`): in `World::travel` after the `pervade`
   line, and in `World::new`; per effect with an `arrive` line, if the level has a room of it not
   `entered` that the player does not stand in, the line once (effects in id order). Nothing
   saved.
@@ -295,9 +295,9 @@ out while 0/false, so other rooms hash as before. The `rooms` dev layer adds `, 
   creatures must still be reached, so none is ever inside, save a mimic standing in for one of
   its chests (`mapgen/chest.rs::lay`; `content.is_mimic`), found with the room.
 - **Kept out**: `hide_traps` skips its cells, `population.rs` (as any room with `treasure`),
-  the spawner (`world/spawn.rs`, as a sanctuary), floor chests (their eight neighbours must be
+  the spawner (`world/creatures/spawn.rs`, as a sanctuary), floor chests (their eight neighbours must be
   open, so never beside the breach), and `treasury::fill`'s chests (`by_door` counts the breach).
-- **The hollow wall** (`world/search.rs`): `Hidden::Hollow`, listed by `hidden_near` for each
+- **The hollow wall** (`world/skills/search.rs`): `Hidden::Hollow`, listed by `hidden_near` for each
   room's breach in reach that still stands (`LevelState::breach_at`) and is not yet found, at
   `search().secret_door` plus the branch's depth; ease 0; the stone sense notices it. Found:
   `LevelState::hollows` (a `BTreeSet<Pos>`, saved, left out while empty), the wall remembered,
@@ -309,7 +309,7 @@ out while 0/false, so other rooms hash as before. The `rooms` dev layer adds `, 
   (the wall that opens it is the author's to lay, #1205); `breach` on another effect is refused.
   The showcase's `chests` scenario
   (level `treasure_hall`, #619) has a hand-made treasure room behind a secret door and a greater
-  one with its breach beside a pick-axe (`world/chest_hall_tests.rs`).
+  one with its breach beside a pick-axe (`world/fixtures/chest_hall_tests.rs`).
 - **Dumps**: `rooms` adds `, breach (x, y)`; `truth` draws a standing breach `H`.
 - `band_up` (the design's chests of the band above) is not done: a chest's band follows from its
   saved level alone, so it needs a saved band offset and touches `chest::lay`; the greater
@@ -327,7 +327,7 @@ floor (no stairs, light, or trap) drawn after it, all from `Rng::swarm` started 
 and the hoard do). The test `mapgen/scriptorium_tests.rs` checks the level is otherwise the same
 without the loot.
 
-Training (`world/train.rs`, the one hook): `World::train` scales each mark rule's chance by
+Training (`world/character/train.rs`, the one hook): `World::train` scales each mark rule's chance by
 `Here::train(skill)` at the player's cell (percents multiply, room and level); each whole hundred is a mark for certain and the rest a chance
 of one more. Decipher script's marks (#1270: all reading) double inside: a check to read a scroll and a
 grimoire read to its end (100 %) are one mark anywhere and two in the scriptorium (200), a
@@ -367,17 +367,17 @@ none, and the room is not made), lays it, and puts the side's light on it (`canv
 Level files: `[[room]] side = "..."` (only for an effect with `sides`; default neutral), and the
 side's light on each feature cell the level draws in the room (`content/level.rs`).
 
-Prayer (`world/pray.rs`): `Ability::Pray` (`Source::Place`, *Here*; had by no one,
+Prayer (`world/fixtures/pray.rs`): `Ability::Pray` (`Source::Place`, *Here*; had by no one,
 `Ability::here(level, content, pos)` lists it beside a feature that offers it, and
 `PerceptionView::abilities` appends it). `Action::Pray` (`start_prayer`: refused with no altar
 beside the player; `Spent::Pray`), `World::pray`: `keep_at` until the table's `seconds` have
 passed (each turn the `pray` price, the last cut to `price_until`), a broken prayer says so and
 nothing else; done, `prayer_answered`: `Deed::Prayed(side)`, `leaned_kinds(table, side, band,
-devout)` (`world/outcome.rs`), `draw_outcome` (kind, then outcome, gameplay stream),
+devout)` (`world/fixtures/outcome.rs`), `draw_outcome` (kind, then outcome, gameplay stream),
 `befall`, then, while the altar's cell is still the feature and the player lives, the exhaustion
 draw (`exhaust` above 0 only): `set_terrain(spent)` with the placed light removed.
 
-Outcomes (`world/outcome.rs`, `World::befall`): the line first (drawn among `messages`; for an
+Outcomes (`world/fixtures/outcome.rs`, `World::befall`): the line first (drawn among `messages`; for an
 outcome with `otherwise`, only once a hook found something to do, else `otherwise`), then the
 hooks: `heal`/`mana` (dice or `full`, capped), `cure` (statuses, `ended`), `cure_by`
 (`World::cure` with the means: `prayer` cures diseases), `mend` (`World::mend`), `drain`,
@@ -405,7 +405,7 @@ of a spent or blown altar. The `rooms` dev layer adds `, side good` and `, spent
 altar side by side. Talent: Pious (system `special_rooms`, which holds prayer,
 #773; `devout`, `FaithMods::devout`; hook `leaned_kinds`).
 
-The great outcomes (#407, `world/boons.rs`; tests `world/boons_tests.rs`) are five more hooks,
+The great outcomes (#407, `world/fixtures/boons.rs`; tests `world/fixtures/boons_tests.rs`) are five more hooks,
 applied after `becomes`: `gift` (`Stats::gift` on a random stat), `wrath` (`Stats::lessen`,
 floor `DRAIN_FLOOR`, then stat damage clamped and `keep_hp_within_max`), `levels` (positive:
 `gain_level`, `add_xp` to the next threshold exactly, unscaled by `xp_percent`; negative:
@@ -435,7 +435,7 @@ its own: a shrine is never neutral, so its side's light is always placed), the s
 the altar's code. A level file's shrine room takes its `side` as written (a neutral one ignores
 everyone, `Regard::Ignored`).
 
-Rules (`world/shrine.rs`): `LevelState::shrine_at(content, pos)` (the room's `Shrine` and its
+Rules (`world/fixtures/shrine.rs`): `LevelState::shrine_at(content, pos)` (the room's `Shrine` and its
 side) and `Shrine::regard(side, Actor::nature)` (`Welcome`, `Unwelcome`, `Ignored`). Three
 hooks, one line each: `World::dwell` ends with `dwell_shrine` (the status through `afflict`, as
 a room's `status`; `World::dwelling_here` counts a level with a shrine, so `pass_time` and
@@ -464,7 +464,7 @@ into the anvil (`ui/step_dialogs.rs::step_screen`, reading `Content::offer`) ask
 Metalcraft's screen for the trained; untrained, the step goes to the rules, which refuse it with
 "You need Metalcraft to work at the anvil." (`World::anvil_needs`, no time).
 
-`world/temper.rs`: `temperable` (an item kind of weapon, launcher, shield, or armour, main part of
+`world/crafting/temper.rs`: `temperable` (an item kind of weapon, launcher, shield, or armour, main part of
 `group = "metal"`, not a spirit weapon, and with an aspect to better), `workable` (and under
 `most` improvements); `start_temper` (the refusals, no time), `Spent::Temper(Tempering)`,
 `World::temper` (`keep_at` for `seconds`, as a prayer), then `tempered`: the natural roll
@@ -497,13 +497,13 @@ craftsperson; arms and armour on the floor) is the place to try it.
 the maximum, rounded down) and `catch` (`OutcomeEffect::catch`, a disease id: `World::infect`
 with that one; Fouled's marsh ague).
 
-Drinking (`world/drink.rs`): `Ability::Drink` (`Source::Place`, listed by `Ability::here` beside
+Drinking (`world/fixtures/drink.rs`): `Ability::Drink` (`Source::Place`, listed by `Ability::here` beside
 a feature that offers it), `Action::Drink` (`start_drink`: refused with no spring beside the
 player; `Spent::Drink`), `World::drink`: `keep_at` until the table's `seconds` have passed (each
 turn the `drink` price, the last cut to `price_until`), a broken drink says so ("You stop
 drinking.") and nothing else; done, `draw_outcome` with the table's own kinds (no side, no lean)
 and `befall`. No exhaustion draw and no deed. Nothing is saved. The showcase's `spring` scenario
-has one (`move:N*5 drink`). Tests: `world/spring_tests.rs`.
+has one (`move:N*5 drink`). Tests: `world/fixtures/spring_tests.rs`.
 
 ## State and the one question
 
@@ -524,7 +524,7 @@ dim its own transient light.
 
 ## Cursed rooms
 
-`world/curse.rs` (#408, design §5). `World::curse_corpse(dead, by_player)` is the one hook, one
+`world/fixtures/curse.rs` (#408, design §5). `World::curse_corpse(dead, by_player)` is the one hook, one
 line in `fight.rs::creature_dies` right after `leave_corpse` (so at the corpse's cell, after an
 incorporeal creature's landing): with `Here::rise` at the cell (the room's, else the level's), a
 dead type not of the rise's faction, with `corpse` and a corpse object, and not the player's kill
@@ -542,7 +542,7 @@ rising line if seen, else `make_noise_at(risen, Act::Mutter, 100)`. Levels the p
 are never ticked, so their due risings rise on the first turn back. `World::risings` (the current
 level's) feeds the `actors` dev layer's `rising <from> at (x, y) as <into> at hh:mm:ss` rows.
 
-Consecrate (`world/consecrate.rs`): `ClassActive::Consecrate` (`FaithEffect::Consecrate { mana,
+Consecrate (`world/classes/consecrate.rs`): `ClassActive::Consecrate` (`FaithEffect::Consecrate { mana,
 time }`, `FaithMods::consecrate`; the `consecrate` talent, priest 9 and paladin 12, `alignment =
 { min = "neutral" }`). `use_class` → `begin_consecrate`: `hallowable` (the unholy room the player
 stands in, else an unholy `pervading`), refused with no time when none; then, outside the bands
@@ -556,7 +556,7 @@ mana (`Ability::unavailable`'s class branch: Consecrate's mana with a song's).
 
 ## Haunted rooms
 
-`world/haunt.rs` (#417, design §9.8). `World::haunt_tick(began)` is the one hook, one line at the
+`world/fixtures/haunt.rs` (#417, design §9.8). `World::haunt_tick(began)` is the one hook, one line at the
 end of `schedule.rs::run_turn` (after `rise_tick`; `began` is the time the turn began). Only while
 `World::resting` (a rest, not the other `keep_at` users), with `Here::haunt` (the room's only) at
 the player's cell, when the turn passed a full multiple of `every` on the clock (`began / every !=
@@ -572,7 +572,7 @@ is said otherwise. Consecrate lifts it (`unholy`).
 
 ## Hallowed ground
 
-`world/sanctuary.rs` (#885, the priest design §6.4): the priest's level-50 class active
+`world/classes/sanctuary.rs` (#885, the priest design §6.4): the priest's level-50 class active
 Sanctuary (`ClassActive::Sanctuary`, `use:sanctuary`; `FaithEffect::Sanctuary { mana, time,
 radius, lasts, regen }` → `FaithMods::sanctuary`; the `sanctuary` talent, `classes/03-priest.toml`
 50, load checks: mana 1–500, time 10 s–1 h, radius 1–5, lasts 10 min–12 h, regen 100–1000).
@@ -614,11 +614,11 @@ Not a special room: no effect id, no `effects_at`, so nothing that folds `Here` 
   (`ui/look.rs`, after a room's name). No light, no status bar. Dumps: `truth` (dev) lists
   `hallow at (12, 5) r2 until 09:15:00` (`, dark`), JSON with `--state` `hallows: [{ pos,
   radius, until, dark }]`.
-- Nothing draws at random. Tests: `world/sanctuary_tests.rs`.
+- Nothing draws at random. Tests: `world/classes/sanctuary_tests.rs`.
 
 ## Statuses while inside
 
-`World::dwell(id)` (`world/rooms.rs`): every status `Here::statuses` gives at the actor's cell (the
+`World::dwell(id)` (`world/fixtures/rooms.rs`): every status `Here::statuses` gives at the actor's cell (the
 room's, then the level's) is given at one degree through `World::afflict` (so `refresh` stacking
 renews its easing; immunity to its `damage_type` refuses it). Skipped for an actor whose
 `DelvingMods::room_status_immune` lists it (Old delver), for an unholy effect's status for one that
@@ -652,7 +652,7 @@ fights in melee like any other. Not a mana-only status, so creatures without man
 A room's `temperature` sets its cells' temperature and nothing else (design §8, decisions 9 and
 10): no status, damage, or effect on items or food; whatever the temperature does is the
 environment's. `Here::warmth` adds the effects' degrees (the room's and the level's);
-`WorldState::temperature_at(level, content, time, pos)` (`world/ice.rs`) is the one place a
+`WorldState::temperature_at(level, content, time, pos)` (`world/levels/ice.rs`) is the one place a
 cell's temperature is decided: `temperature_on` (the level's, outside every room) plus
 `LevelState::warmth_at`. Readers: perception (`PerceptionView::temperature`, the status bar's
 number, at the player's cell), `World::temperature` (the player's cell; dump headers) and
@@ -676,7 +676,7 @@ status bar and the inventory agree with the rules. Every penalty follows from th
 `burden_news` says the change after the step in or out (in `World::apply`, so before the
 room's `enter` line, which `perceive` says). Nothing
 is saved. `WorldState::load_at` is the load as it would be on another cell:
-`World::can_step_to` (`world/travel.rs`, the player's ordinary step) refuses a step onto a cell
+`World::can_step_to` (`world/levels/travel.rs`, the player's ordinary step) refuses a step onto a cell
 where the player would be Overloaded ("You carry too much to go in there.", or the usual line
 when they are Overloaded where they stand too), so a step in is refused rather than leaving them
 stuck, and a step out of a hall they overloaded themselves in is allowed. Edge exits, stairs, and
@@ -684,7 +684,7 @@ creatures keep the load where they stand (`can_move`, `ai.rs`).
 
 ## Halls of mirrors
 
-`world/mirrors.rs` (#419). `WorldState::images(content, level)` is the one place images are
+`world/fixtures/mirrors.rs` (#419). `WorldState::images(content, level)` is the one place images are
 decided (ground truth, `World::images` for the current level): for each room whose effect has
 `mirrors`, in the level's room order, the free cells (`cells()` that are walkable, no door, no
 actor standing there) are listed in cell order, and each actor inside, in id order, takes
@@ -719,7 +719,7 @@ large: a dev can tell, the game screen cannot).
 
 ## Unstable rooms
 
-`world/warp.rs`: `World::warp_step(at, who)` runs after every step lands, last in
+`world/fixtures/warp.rs`: `World::warp_step(at, who)` runs after every step lands, last in
 `World::step_onto_trap` (the player's step, a creature's in `ai.rs`, a creature making way in
 `talk.rs::swap_places`) and in `World::step_willingly` when a known trap is sidestepped. When the
 effects at `at` warp (`Here::warp`: the chance either effect leaves, 1 - (1 - a)(1 - b)) and the
@@ -734,7 +734,7 @@ before a trap, so it takes those steps turn by turn and may warp. Nothing is sav
 
 ## Collapsed floors
 
-`world/collapse.rs` (#420). `World::collapse_step(at)` is one line at the end of
+`world/fixtures/collapse.rs` (#420). `World::collapse_step(at)` is one line at the end of
 `travel.rs::player_moves`, after the step's trap and warp (`step_willingly`/`step_onto_trap`):
 only the player's moves, so creatures never fall and draw nothing. It returns at once, drawing
 nothing, unless `Here::collapse` (the room's only, never a pervading effect) holds at `at`, the
@@ -761,11 +761,11 @@ saved beyond the level change; the cracked floor stays.
 
 ## What the player is told
 
-`world/rooms.rs`: `glimpse_rooms` (in `perceive`, before `enter_room`) marks each room of which
+`world/fixtures/rooms.rs`: `glimpse_rooms` (in `perceive`, before `enter_room`) marks each room of which
 the player sees a cell `glimpsed` and says its `near` line, unless they are inside it;
-`enter_room` (`world/travel.rs`) says `enter` once per room and marks it entered and glimpsed;
+`enter_room` (`world/levels/travel.rs`) says `enter` once per room and marks it entered and glimpsed;
 A feature of the ground (terrain with `announce`, `data/terrain/`: `altar`, `uv_rune`,
-`statue`) is named by `world/feature.rs`: `World::announce_feature` says `There is an altar
+`statue`) is named by `world/fixtures/feature.rs`: `World::announce_feature` says `There is an altar
 here.` (and the terrain's `description`, if any, then the note of the place on the cell,
 `LevelState::place`) when the player stands on another cell or level than at its last call
 (`World::stood_on`, not saved; a loaded world starts where it stands). A walkable one is named
@@ -776,7 +776,7 @@ then those beside in `Dir::ALL` order), so walking round a statue says it once. 
 room's `enter` line (said in `perceive`); `perceive` calls it after `enter_room` for every other
 arrival (stairs, falls, teleports), and `World::new` says it at the start of a run. Blood is
 left out of it (look mode's blood word follows the blood effect switch, a presentation setting;
-messages do not). Tests: `world/feature_tests.rs`.
+messages do not). Tests: `world/fixtures/feature_tests.rs`.
 `pervade_line` is said on every arrival on a pervaded level (`World::travel`, and at the start of
 a run). `PerceptionView::room` names a room once entered on cells seen or remembered; look mode
 reads it.
@@ -798,8 +798,8 @@ warden, Hallowed rest, and Hoard-wise; Mirror-wise (`sees_reflections`) and Trea
 The class ability Consecrate (above) carries the
 system too. Prayer is part of the system (the `prayer` tag folded into it, #773): **Pious**
 (wayfarer, free, #788, which merged Devout and Pilgrim; also `talk`, for the temple's services,
-`docs/dev/npcs.md`): `devout` (hook `world/outcome.rs::leaned_kinds`) and `pilgrim` (hook
-`world/service.rs`). The forge
+`docs/dev/npcs.md`): `devout` (hook `world/fixtures/outcome.rs::leaned_kinds`) and `pilgrim` (hook
+`world/people/service.rs`). The forge
 adds no talent (the issue's "None new"): Metalcraft is its lean.
 
 ## Tests
@@ -807,56 +807,56 @@ adds no talent (the issue's "None new"): Metalcraft is its lean.
 `content/room_effect.rs` (fields, defaults, refusals, `Here` folding), `content/dungeon.rs`
 (`favoured`/`banned` resolve and layer, the refusals), `mapgen/special_tests.rs` (the draw),
 `mapgen/tests.rs` (how often levels get one, the fixture branches, the snapshots),
-`mapgen/fennmynster_tests.rs`, `world/room_tests.rs` (each effect in play, messages, pervading
-levels, the talents, saving), `world/dwell_tests.rs` (a room's status: Ebbing on the player and on
+`mapgen/fennmynster_tests.rs`, `world/fixtures/room_tests.rs` (each effect in play, messages, pervading
+levels, the talents, saving), `world/creatures/dwell_tests.rs` (a room's status: Ebbing on the player and on
 creatures, not on one without mana, through a rest, over a drained level, eased after leaving,
-Old delver, saving), `world/den_tests.rs` (the den's data and refusals, sleepers take no
+Old delver, saving), `world/creatures/den_tests.rs` (the den's data and refusals, sleepers take no
 turn and never wake by time, quiet and loud noises and the cry cascade, a kicked door, a step,
 a blow, sneak attacks, the waking line and look mode's word, the spawn cap, Sixth
 sense, saving, and a generated den's sleepers and hoard over a fixture branch),
-`world/beast_den_tests.rs` (the beast den's data, unknown or twice-named factions and an unknown
+`world/creatures/beast_den_tests.rs` (the beast den's data, unknown or twice-named factions and an unknown
 hoard refused, a generated one's sleepers all beasts with bones and corpses for a hoard, and a
 branch without beasts that never draws one),
-`world/silent_tests.rs` (the silent vault: its data, the player's
+`world/combat/silent_tests.rs` (the silent vault: its data, the player's
 refusals and the easing, the hundredth of noise, creatures silenced and a shaman fighting in
 melee, silenced from the start, saving), `content/room_shrine_tests.rs` (the `shrine` field
-parsed with its status, and its refusals), `world/shrine_tests.rs` (the shrine: its data and
+parsed with its status, and its refusals), `world/fixtures/shrine_tests.rs` (the shrine: its data and
 the regard table, the side's light, Unwelcome on the other side and its easing, twice the
 healing for its side, nothing for a neutral one, creatures by their own side, a level file's
 side refused unless good or evil, saving), `mapgen/shrine_tests.rs` (generated shrines: one
 stone, good or evil one to one, the side's light), `content/room_temperature_tests.rs` (the field, its range, `Here::warmth`),
-`world/room_temperature_tests.rs` (hot and cold rooms: the cells' temperature, the player's and
+`world/levels/room_temperature_tests.rs` (hot and cold rooms: the cells' temperature, the player's and
 the status bar's, no status, a cold room's pool frozen on a mild level and not beside it, ice
 melting in a hot room in a frost, the pre-roll only with such a room, alike however time passes,
 a year's catch-up), `content/room_burden_tests.rs` (the `burden` field, its range,
-`Here::burden`), `world/heavy_hall_tests.rs` (the heavy hall: the limit halved inside for the
+`Here::burden`), `world/fixtures/heavy_hall_tests.rs` (the heavy hall: the limit halved inside for the
 player and creatures, the messages in and out, perception agreeing, the step refused into
-Overloaded but always allowed out), `content/room_mirrors_tests.rs` (`mirrors` parses, its range, never over a whole level), `world/mirrors_tests.rs` (images on free floor, the same however asked
+Overloaded but always allowed out), `content/room_mirrors_tests.rs` (`mirrors` parses, its range, never over a whole level), `world/fixtures/mirrors_tests.rs` (images on free floor, the same however asked
 and moving with the turns, none outside, the player's own, the glass, a missile flying on, the
 creatures' aim, the dumps, a rest among reflections), `content/room_warp_tests.rs` (the `warp` field, its range,
 `Here::warp`), `content/outcome_tests.rs` (the altar's table, `offer_at`, defaults, the lean,
 refusals), `mapgen/altar_tests.rs` (one altar a room, never by a door, its side's light, the
-level still joined, the sides one to two to one), `world/outcome_tests.rs` (Pray only beside an
+level still joined, the sides one to two to one), `world/fixtures/outcome_tests.rs` (Pray only beside an
 altar not spent, a minute, a broken prayer, the lean and Pious, the draw's shares, the nothing
 lines, each hook, the explosion, the deed, exhaustion near half and a spent altar after a save
-and load), `world/temper_tests.rs` (Temper only beside an anvil, refusals with no time, ten
+and load), `world/crafting/temper_tests.rs` (Temper only beside an anvil, refusals with no time, ten
 minutes, identifying and the Metalcraft mark, an interrupted one changing nothing and counting
 nothing, metal only, the rising check through damage and repair, each row of the table, the
 numbers, names, and worth, affixes kept and lost, one of a stack worked apart, saves and the hash,
 the anvil never spent), `content/room_lore_tests.rs` (`loot` and `train`: parsed, checked, resolved, unknown names
 refused, never over a whole level, `Here::train` folding, the built-in scriptorium),
 `mapgen/scriptorium_tests.rs` (one shelf a room, two to four scrolls, the rest of the level
-unchanged), `world/scriptorium_tests.rs` (Decipher script's marks two a check inside and one outside, other skills
+unchanged), `world/campaigns/scriptorium_tests.rs` (Decipher script's marks two a check inside and one outside, other skills
 as anywhere, a check inside marking and a study not, the near and enter lines and look
-mode's shelves), `world/unstable_room_tests.rs` (the unstable room: about one step in ten inside
+mode's shelves), `world/fixtures/unstable_room_tests.rs` (the unstable room: about one step in ten inside
 warps the player and a creature, never outside, no draw outside, the messages, a free landing
 cell, saving), `content/room_collapse_tests.rs` (the `collapse` field, its refusals, never
-over a whole level, `Here::collapse`), `world/collapse_tests.rs` (the collapsed floor: its data,
+over a whole level, `Here::collapse`), `world/fixtures/collapse_tests.rs` (the collapsed floor: its data,
 about 15 % of steps on cracked floor fall and none on sound floor or outside, twice as often
 Burdened, Old delver and the other no-draw cases, creatures never fall, the landing, hurt and
 Staggered, a fall that kills and its `Cause::Fall`, the messages, a walk through `World::apply`,
 and over a fixture branch of rooms and caves every generated collapsed floor's sound rim and a
-sound way between its ways in), `world/hoard_tests.rs` (the
+sound way between its ways in), `world/fixtures/hoard_tests.rs` (the
 tempting hoard: its data and refusals, the first stack sealing it with both doors shut and locked
 and two to four hostile guardians, the guardians on the edge and out of view, nothing lifted
 outside counting, Old hand, sealing once, an open door with something in it left open, a
@@ -867,16 +867,16 @@ chests, the gold and gems the dice give, and the level outside the room the same
 treasure; a greater treasure room walled up on both generators, its breach a wall beside a
 reached cell, nothing inside reached until it is dug, no stairs, creature, or trap inside, its
 richer contents, `validate` refusing a missing or bad breach, `fits_box` only in rock beside a
-reached cell), `world/treasury_tests.rs` (the data, the hint on every arrival until the room is
+reached cell), `world/fixtures/treasury_tests.rs` (the data, the hint on every arrival until the room is
 entered, after a save too, once for two rooms; the greater room's data,
 a level file's breach and its refusals, the breach found by searching, remembered and saved,
 digging it and a blast opening the room, the `rooms` dump), `ui/look.rs` ("A hollow stone
-wall."), `world/curse_tests.rs` (the cursed room's data and refusals, rising after two
+wall."), `world/fixtures/curse_tests.rs` (the cursed room's data and refusals, rising after two
 minutes as undead of the dead's level, the twitch and rising lines, not when the corpse is gone or
 carried out, not outside, never the undead, the nearest-level fallback and the campaign's own,
 Old delver, a cursed level, a frozen level catching up, saving and the dump; Consecrate lifting a
 room and a level, refused elsewhere with no time, asking goodness and mana, an interrupted
 prayer), `content/room_haunt_tests.rs` (the `haunt` field, its refusals, never over a whole
-level, `Here::haunt`), `world/haunt_tests.rs` (the haunted room's data, a rest haunted on the hour
+level, `Here::haunt`), `world/fixtures/haunt_tests.rs` (the haunted room's data, a rest haunted on the hour
 and stopped, out of view where it can, in view where not, never outside, while waiting, within
 the hour, or without a danger, every hour of rests strung together, Consecrate lifting it).

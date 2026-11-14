@@ -2,7 +2,7 @@
 
 use super::*;
 
-/// Dev: the zones on the current level (`world/zone.rs`), one a line in the order laid:
+/// Dev: the zones on the current level (`world/magic/zone.rs`), one a line in the order laid:
 /// `zone fire by #0 until 09:15:00, harm 4: (12, 5) (13, 5)`.
 pub(super) fn zone_rows(world: &World) -> Vec<String> {
     (world.zones().iter())
@@ -104,7 +104,7 @@ pub(super) fn truth_rows(world: &World) -> Vec<String> {
     })
 }
 
-/// Dev: the hallowed ground on the current level (Sanctuary; `world/sanctuary.rs`), one a line
+/// Dev: the hallowed ground on the current level (Sanctuary; `world/classes/sanctuary.rs`), one a line
 /// in the order laid: `hallow at (12, 5) r2 until 09:15:00` (`, dark` for dreaded ground).
 pub(super) fn hallow_rows(world: &World) -> Vec<String> {
     (world.hallows().iter())
@@ -168,7 +168,7 @@ pub(super) fn statue_rows(world: &World) -> Vec<String> {
                 1 => "holds 1 stack".to_string(),
                 n => format!("holds {n} stacks"),
             };
-            // A name from the graveyard (`world/graveyard.rs`): `statue (kobold, Brakka the
+            // A name from the graveyard (`world/fixtures/graveyard.rs`): `statue (kobold, Brakka the
             // dwarf) at (12, 5): empty`.
             let name = (statue.name.as_ref())
                 .map_or_else(String::new, |f| format!(", {}", f.words(content)));
@@ -181,7 +181,7 @@ pub(super) fn statue_rows(world: &World) -> Vec<String> {
 }
 
 /// Dev: a line per Pit the run keeps a record of, wherever the player is (spec §7 "The Pits";
-/// `world/pit.rs`): `pit 7 from depths:3: open` (`sealed` once its warden is dead).
+/// `world/levels/pit.rs`): `pit 7 from depths:3: open` (`sealed` once its warden is dead).
 pub(super) fn pit_rows(world: &World) -> Vec<String> {
     (world.state().pits().iter())
         .map(|(s, pit)| {

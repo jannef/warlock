@@ -27,19 +27,19 @@ pub enum BeastEffect {
     /// second viewpoint, `familiars.toml`'s `nose` at the least); no buff crosses.
     FamiliarSight,
     /// A buff status that lands on it or its companion lands on the other too (Hunter's bond;
-    /// `world/bond.rs`); never a hex.
+    /// `world/allies/bond.rs`); never a hex.
     SharedBuffs,
     /// A creature beside both it and its companion is flanked: its melee blows and the
-    /// companion's at it are `to_hit` likelier to hit (Pack tactics; `world/pack.rs`).
+    /// companion's at it are `to_hit` likelier to hit (Pack tactics; `world/allies/pack.rs`).
     PackTactics { to_hit: i32 },
     /// Its companion's attacks carry its Favoured prey bonus against its favoured prey (Pack
-    /// tactics; `world/pack.rs`).
+    /// tactics; `world/allies/pack.rs`).
     SharesFavouredPrey,
     /// Creatures of animal factions are neutral to it until it attacks one of that type
     /// (Beast-friend).
     BeastFriend,
     /// Creatures whose type carries tag `tag` are neutral to it until it attacks one of that
-    /// type: Beast-friend's rule by tag (Rat-king's court's vermin; `world/beast_friend.rs`).
+    /// type: Beast-friend's rule by tag (Rat-king's court's vermin; `world/allies/beast_friend.rs`).
     KinTo { tag: String },
 }
 
@@ -63,9 +63,9 @@ impl BeastEffect {
 /// What an actor's beast talents do, summed: one field per effect kind, read by one rule each.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct BeastMods {
-    /// An animal companion from the first turn (Animal companion; `world/companion.rs`).
+    /// An animal companion from the first turn (Animal companion; `world/allies/companion.rs`).
     pub companion: bool,
-    /// A familiar from the first turn (Familiar; `world/familiar.rs`).
+    /// A familiar from the first turn (Familiar; `world/allies/familiar.rs`).
     pub familiar: bool,
     /// Added to its taming checks (Animal companion's edge; the Tame skill ability reads it).
     pub tame: i32,
@@ -73,12 +73,12 @@ pub struct BeastMods {
     pub shared_sight: bool,
     /// It sees what its familiar sees (Familiar's sight; `Perception::compute`).
     pub familiar_sight: bool,
-    /// Its buffs and its companion's are shared (Hunter's bond; `world/bond.rs`).
+    /// Its buffs and its companion's are shared (Hunter's bond; `world/allies/bond.rs`).
     pub shared_buffs: bool,
     /// To hit on its melee blows and its companion's at a creature beside them both (Pack
-    /// tactics; `world/pack.rs`).
+    /// tactics; `world/allies/pack.rs`).
     pub pack_tactics: i32,
-    /// Its companion's attacks carry its Favoured prey (Pack tactics; `world/pack.rs`).
+    /// Its companion's attacks carry its Favoured prey (Pack tactics; `world/allies/pack.rs`).
     pub shares_favoured_prey: bool,
     /// Creatures of animal factions are neutral to it until it attacks one of their type.
     pub beast_friend: bool,

@@ -27,15 +27,15 @@ heads share a brute's budget). XP, max HP and dice follow the guideline and the 
 
 Two small extensions of what D1–D9 built, each for one of these types:
 
-- **A breath's riders** (`content/breath.rs`, `world/breath.rs`): `[creature.breath]` takes an
+- **A breath's riders** (`content/breath.rs`, `world/creatures/breath.rs`): `[creature.breath]` takes an
   optional `riders` list (`on_hit` entries, statuses and drains as a gaze's), each falling by its
   chance on everyone the cone harmed and still alive (`World::rider`). The gorgon's. The wiki's
-  breaths table has a *Then* column. Test: `world/statue_tests.rs`
+  breaths table has a *Then* column. Test: `world/creatures/statue_tests.rs`
   (`the_gorgons_breath_stiffens_...`).
 - **`corrodes` both ways** (`CorrodesWhat::Both`, `CorrodesWhat::eats`): the armour and the
   weapon forms at the one chance. The rust monster's and the black pudding's. Test:
-  `world/corrode_tests.rs::the_rust_monster_rusts_both_ways_and_never_cloth`.
+  `world/combat/corrode_tests.rs::the_rust_monster_rusts_both_ways_and_never_cloth`.
 
-The hydra's heads: `world/split_tests.rs::heads_crawl_out_of_a_dead_hydra`.
+The hydra's heads: `world/creatures/split_tests.rs::heads_crawl_out_of_a_dead_hydra`.
 
 **Material drops** (#1341; `data/drops/`, docs/dev/objects.md "Material drops"): own rows on the cockatrice, gorgon, and hydra (and the basilisk): bone 1d2 (50 %), hardened leather 1 (40 %). The gorgon (`combat = "dragon"`) carries `dragon` since, as every dragon type does, and rolls `dragon.toml` before its own. The black pudding (`eyeless`, no corpse) and the hydra's heads (untagged) leave nothing; the rust monster stays untagged.

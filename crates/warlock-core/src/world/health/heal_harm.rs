@@ -18,13 +18,13 @@
 //! creature never casts a heal (`creature_cast.rs`, [`World::heal_hurts`]). No player race is
 //! undead. Determinism: the attack roll and the dice, as Cause wounds' draw them.
 
-use super::cast::Cast;
-use super::spell::Caster;
-use super::{Actor, ActorId, World};
 use crate::action::Event;
 use crate::content::{Content, SpellData, SpellPurpose};
 use crate::damage::Damage;
 use crate::geom::Pos;
+use crate::world::magic::cast::Cast;
+use crate::world::magic::spell::Caster;
+use crate::world::{Actor, ActorId, World};
 
 /// The tag of the creatures a heal harms.
 pub const UNDEAD: &str = "undead";
@@ -42,18 +42,23 @@ pub(super) fn harm_of(def: &SpellData, content: &Content) -> SpellData {
 
 impl World {
     /// Whether actor `a` is undead: a heal harms it.
-    pub(super) fn is_undead(&self, a: &Actor) -> bool {
+    pub(in crate::world) fn is_undead(&self, a: &Actor) -> bool {
         self.content.has_tag(a.creature, UNDEAD)
     }
 
     /// Whether a heal would harm actor `id` (gone: no).
-    pub(super) fn heal_hurts(&self, id: ActorId) -> bool {
+    pub(in crate::world) fn heal_hurts(&self, id: ActorId) -> bool {
         (self.state.actors.get(&id)).is_some_and(|a| self.is_undead(a))
     }
 
     /// The player's healing touch `cast` on the undead at `at`, beside them: an attack with the
     /// heal's roll as fire (module docs). Whether it went off.
-    pub(super) fn heal_sears(&mut self, cast: &Cast<'_>, at: Pos, events: &mut Vec<Event>) -> bool {
+    pub(in crate::world) fn heal_sears(
+        &mut self,
+        cast: &Cast<'_>,
+        at: Pos,
+        events: &mut Vec<Event>,
+    ) -> bool {
         let Some(roll) = cast.roll else {
             return false;
         };
@@ -83,7 +88,7 @@ impl World {
 
     /// Benison's `back` on the undead `undead` in its burst about the player at `here`: each
     /// takes it as an area's harm of fire (Evasion halving it), said as one cast.
-    pub(super) fn heal_sears_about(
+    pub(in crate::world) fn heal_sears_about(
         &mut self,
         cast: &Cast<'_>,
         (undead, back, here): (&[ActorId], i32, Pos),

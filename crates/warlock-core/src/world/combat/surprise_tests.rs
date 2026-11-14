@@ -1,15 +1,15 @@
-//! Surprise (spec §8 "Surprise and sneak attacks"; `world/surprise.rs`): unaware both ways round,
+//! Surprise (spec §8 "Surprise and sneak attacks"; `world/combat/surprise.rs`): unaware both ways round,
 //! the initiative check's two outcomes and its two draws, the Surprised status (flat-footed, no
 //! free blows out of turn, the dear action and Cool head's ease), hidden traps and their
 //! bystanders, sleepers and mimics without a check, the messages, saves and replays, no draw
 //! while nobody is unaware, Hair trigger's blow, and Stalker's eye's word in the snapshot.
 
-use super::*;
 use crate::action::parse_actions;
 use crate::combat::{Category, Defence, Target};
 use crate::content::{ActionKind, ContentFiles};
 use crate::replay::Replay;
 use crate::test_support::texts;
+use crate::world::*;
 
 /// A hall split by a wall: the player in the west part, a goblin at `k` beside them, another
 /// at `K` behind the wall, a hidden alarm trap at `^` and a known one at `!`.
@@ -40,7 +40,7 @@ pub(super) fn world(ambient: u8, rules: Rules) -> World {
     match rules {
         Rules::Shipped => {}
         Rules::Difficulty(d) => {
-            let text = include_str!("../../../../assets/data/surprise.toml");
+            let text = include_str!("../../../../../assets/data/surprise.toml");
             // Nobody slips past anyone here (`slip_tests.rs`): a creature in the dark sees.
             files.insert(
                 path,

@@ -3,7 +3,6 @@
 //! on the ladder (one step up for a known-for skill, +1 for a class's or race's other skill),
 //! spends half the marks, and draws from the levels stream only; replays and saves agree.
 
-use super::*;
 use crate::action::parse_actions;
 use crate::character::CharacterSpec;
 use crate::content::Factor;
@@ -11,6 +10,7 @@ use crate::replay::Replay;
 use crate::skills::Trained;
 use crate::stats::{PerStat, Stat, Stats};
 use crate::test_support::{CONTENT as BUILTIN, last, run};
+use crate::world::*;
 
 fn world(character: &str) -> World {
     let spec: CharacterSpec = character.parse().expect("a character");
@@ -383,7 +383,7 @@ fn training_rolls_by_itself_and_replays() {
 fn the_professions_skills_load_can_be_trained_and_rolled() {
     // Jewelcraft, Mining, Herbalism, Alchemy, and Enchanting (#1331): every one but Jewelcraft
     // has its first effect (#1343); Mining, Herbalism, Alchemy (brewing, #1357), and Enchanting (salvage, #1428) mark, and Jewelcraft's craft and
-    // salvage mark (#1333, `world/salvage_tests.rs`).
+    // salvage mark (#1333, `world/crafting/salvage_tests.rs`).
     let mut w = world("human,male,warrior");
     for id in ["alchemy", "enchanting", "herbalism", "mining"] {
         let def = w.content().skill(skill(&w, id));

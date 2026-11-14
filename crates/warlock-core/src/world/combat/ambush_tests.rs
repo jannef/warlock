@@ -2,13 +2,13 @@
 //! ladder of dice, their sum with the talents', the reach of missiles and Long reach, Surprised
 //! as the second door, the spell path, the marks, and the craft and Initiative in the check.
 
-use super::cast_tests::cast_at;
-use super::caster_tests::{kobold, reach, world_with};
 use super::vitals_tests::{lull, one, train, world};
-use super::*;
 use crate::combat::{Blow, Strike};
 use crate::content::ContentFiles;
 use crate::skills::{Effect, Use};
+use crate::world::magic::cast_tests::cast_at;
+use crate::world::magic::caster_tests::{kobold, reach, world_with};
+use crate::world::*;
 
 #[test]
 fn the_skill_buys_a_d6_trained_and_one_more_at_each_step() {

@@ -26,7 +26,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     Weak), on the character screen (§6) and in the `stats` dump layer; the perception snapshot carries those and nothing else of stats
     (`PerceptionView::own_scores`). A creature's stats are never shown; ground-truth dev dumps
     (`actors`, the world state) show every actor's scores and potentials.
-  - **Training** (`data/stats.toml`, `content/stat_training.rs`, `world/stat_training.rs`;
+  - **Training** (`data/stats.toml`, `content/stat_training.rs`, `world/character/stat_training.rs`;
     #231, #722, `docs/design/stat-training.md`): the player's uses of their stats earn
     **training marks** into a signed pile per stat (`Actor::stat_marks`, `PerStat<i32>`, saved
     and hashed, left out of the JSON while all zero; creatures earn none). The pile is the
@@ -97,7 +97,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     to the new maxima, never below 1; it says "You feel weaker." (clumsier, frailer, duller;
     "Your resolve wavers.", "You feel less sure of yourself."). **Deeds** (`[[training.deed]]`:
     `stat`, `on`, and exactly one of `chance` 1 to 100, a mark with one training draw, or
-    `marks`, taken at once without a draw; `StatDeed`, `world/stat_deeds.rs`) are few and
+    `marks`, taken at once without a draw; `StatDeed`, `world/character/stat_deeds.rs`) are few and
     deliberate, one hook each, the player only: `hungry_dawn` (the 06:00 check made Weak,
     Fainting, or Starving, dealt before its draws; Strength and Toughness 15 marks each),
     `starved` (each hit point starvation takes; Toughness, chance 50), `vomited` (Toughness 10),
@@ -125,7 +125,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     checks take off the scores for a while; the rules read the scores less them, never below 1,
     and they mend a point a day each once no disease shows ("Diseases" below). The player sees
     their scores lowered, never the damage as a number apart.
-  - **Drain** (#382; `world/drain.rs`, `Stats::drain`, `Actor::drained`; saved, hashed): the
+  - **Drain** (#382; `world/health/drain.rs`, `Stats::drain`, `Actor::drained`; saved, hashed): the
     touch of some undead takes points off a stat **for good**. A natural attack's `on_hit` may
     name a drain (§7 "Data"); a hit that lands, leaves its target alive, and wins its chance
     makes the target check the drain's stat (Willpower by default; its modifier, what talents add

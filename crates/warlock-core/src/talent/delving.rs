@@ -47,7 +47,7 @@ pub enum DelvingEffect {
     /// A collapsed floor never gives way under it (Old delver; `World::collapse_step`).
     CollapseProof,
     /// A tempting hoard seals only after this many stacks more are lifted inside it (Old delver;
-    /// `World::lift_in_hoard`, `world/hoard.rs`).
+    /// `World::lift_in_hoard`, `world/fixtures/hoard.rs`).
     HoardGrace { value: i32 },
     /// What it kills never rises in a cursed room (Old delver; `World::curse_corpse`).
     GraveWarden,

@@ -24,7 +24,6 @@
 //! - **Opening** happens after the action's turn (`World::encounter_tick`, one line in
 //!   `World::apply`), so the step's or the wait's time passes on the overworld, never in the area.
 
-use super::{ActorId, Spent, World};
 use crate::check;
 use crate::content::{
     ActionKind, BASE_TURN, Content, CreatureId, EncounterEntry, EncounterTable, EncounterWhen,
@@ -37,6 +36,7 @@ use crate::skills::{Effect, Use};
 use crate::stats::Stat;
 use crate::text::capitalized;
 use crate::weather::Weather;
+use crate::world::{ActorId, Spent, World};
 use serde::{Deserialize, Serialize};
 
 /// What the player answers a pending encounter with (`encounter:CHOICE`).
@@ -191,7 +191,7 @@ pub struct Pending {
 
 /// What the player was doing on the overworld when an encounter is rolled (#807).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(super) enum Watch {
+pub(in crate::world) enum Watch {
     /// A step: the rate for its time, both lookouts.
     Travel,
     /// A rest: `[rest] rate_percent` of the rate, the sleeper's lookout by ear alone.
@@ -211,7 +211,7 @@ pub struct Party {
 
 /// How a fight opens (`encounter_area.rs`).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(super) enum How {
+pub(in crate::world) enum How {
     Fight,
     Ambush,
     Ambushed,
@@ -222,14 +222,14 @@ pub(super) enum How {
 
 /// An area to open once the action's turn has run.
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub(super) struct Opening {
+pub(in crate::world) struct Opening {
     pub pending: Pending,
     pub how: How,
 }
 
 /// What an encounter has under way within one action (not saved: resolved before it returns).
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
-pub(super) struct Underway {
+pub(in crate::world) struct Underway {
     /// The overworld step just taken: its price, for the roll after its turn.
     pub step: Option<i64>,
     pub opening: Option<Opening>,
@@ -344,7 +344,7 @@ impl World {
 
     /// After the action's turn: the roll for an overworld step just taken, then any area an
     /// encounter opens (perceived at once). One line in `World::apply`.
-    pub(super) fn encounter_tick(&mut self, events: &mut Vec<crate::action::Event>) {
+    pub(in crate::world) fn encounter_tick(&mut self, events: &mut Vec<crate::action::Event>) {
         let step = self.encounter.step.take();
         if self.state.death.is_some() {
             self.encounter.opening = None;
@@ -383,7 +383,7 @@ impl World {
     /// `[rest] rate_percent` of it), drawn exactly (`below` of 10 000 × 3600 × 100: the chance
     /// in basis points × seconds × percent), so turns of a few seconds add up to the rate an
     /// hour. Draws nothing where a step's roll draws nothing, or while an area is to open.
-    pub(super) fn watch_roll(&mut self, watch: Watch, price: i64) {
+    pub(in crate::world) fn watch_roll(&mut self, watch: Watch, price: i64) {
         if self.encounter.opening.is_some() {
             return;
         }
@@ -526,9 +526,10 @@ impl World {
     fn when_holds(&self, when: &EncounterWhen, here: &Here) -> bool {
         let quests = &self.state.quests;
         let active =
-            |q: &String| (quests.record(q)).is_some_and(|r| r.stage == super::Stage::Active);
+            |q: &String| (quests.record(q)).is_some_and(|r| r.stage == crate::world::Stage::Active);
         let done = |q: &String| {
-            (quests.record(q)).is_some_and(|r| r.completed > 0 || r.stage == super::Stage::Done)
+            (quests.record(q))
+                .is_some_and(|r| r.completed > 0 || r.stage == crate::world::Stage::Done)
         };
         (when.regions.is_empty()
             || here
@@ -836,7 +837,7 @@ impl World {
 
     /// The resting player's lookout (gameplay stream, two draws; #807): whether they wake in
     /// time. By ear alone: Willpower modifier + talents' Willpower checks + their hearing
-    /// (Listen's `hearing` and Keen ears, as [`super::Actor::hearing`] reads them, at most
+    /// (Listen's `hearing` and Keen ears, as [`crate::world::Actor::hearing`] reads them, at most
     /// [`crate::skills::MAX_ENCOUNTER_BONUS`]; none for the deaf) + Alert's `notice`, against
     /// `difficulty` + the lead type's `stalk` + the rain (neither cover nor the dark hides a
     /// sound). Marks Listen's `hear`.
@@ -875,7 +876,10 @@ impl World {
 
     /// Refuses `action` while an encounter is pending, unless it answers it or takes no game
     /// time and makes nothing happen (a stance, the level's picks, the dev switches).
-    pub(super) fn refuse_pending(&mut self, action: &crate::action::Action) -> Option<Spent> {
+    pub(in crate::world) fn refuse_pending(
+        &mut self,
+        action: &crate::action::Action,
+    ) -> Option<Spent> {
         use crate::action::Action as A;
         self.state.encounter.as_ref()?;
         let free = matches!(
@@ -909,7 +913,7 @@ impl World {
 
     /// `encounter:CHOICE` ([`crate::action::Action::Encounter`]): the answer to the pending
     /// encounter. Refused (no time) with nothing pending or a choice it does not offer.
-    pub(super) fn answer_encounter(&mut self, choice: Choice) -> Spent {
+    pub(in crate::world) fn answer_encounter(&mut self, choice: Choice) -> Spent {
         let Some(pending) = self.state.encounter.clone() else {
             self.say("There is nothing to decide.");
             return Spent::Nothing;
@@ -1017,7 +1021,7 @@ impl World {
     /// player's overworld cell, by the lookouts or with `forced`'s outcome. Takes no time;
     /// refused (no time) off the overworld, on a cell without a local area, for an unknown entry,
     /// or while one is pending.
-    pub(super) fn meet_dev(&mut self, id: &str, forced: Option<Forced>) -> Spent {
+    pub(in crate::world) fn meet_dev(&mut self, id: &str, forced: Option<Forced>) -> Spent {
         let content = self.content.clone();
         let Some((_, entry)) = content.encounter_entry(&self.state.campaign, id) else {
             self.say(format!("There is no encounter `{id}` (dev)."));

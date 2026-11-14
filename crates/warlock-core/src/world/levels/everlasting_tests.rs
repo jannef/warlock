@@ -3,12 +3,12 @@
 //! fresh by a trained eye), and leaves it even when stoned. The Soulglass case is in
 //! `soulglass_tests.rs`; the loader's refusals in `layer_boss_tests.rs`.
 
-use super::class_active_tests::beside;
-use super::*;
 use crate::content::ContentFiles;
 use crate::object::Stack;
 use crate::rot::Stage;
 use crate::time::{DAY, Duration, GameTime};
+use crate::world::classes::class_active_tests::beside;
+use crate::world::*;
 
 /// The ten keepers of Grundlēas, by depth.
 const KEEPERS: [&str; 10] = [
@@ -103,7 +103,7 @@ fn a_keepers_corpse_a_month_old_is_fresh_stays_put_and_is_judged_fresh() {
     w.rot_pack(player, later);
     assert_eq!(w.state.player().inventory, vec![corpse.clone()]);
     assert_eq!(
-        super::rot::until_rots(&w.state.player().inventory, w.content(), later),
+        crate::world::health::rot::until_rots(&w.state.player().inventory, w.content(), later),
         None
     );
     // A trained eye judges it fresh whenever its check passes, never anything else.
@@ -114,7 +114,7 @@ fn a_keepers_corpse_a_month_old_is_fresh_stays_put_and_is_judged_fresh() {
     let told: Vec<Option<Stage>> = (0..200u64)
         .map(|h| {
             let at = GameTime::from_seconds(now.seconds() + h * 3600);
-            super::freshness::judged(&content, w.state.player(), seed, &corpse, at)
+            crate::world::health::freshness::judged(&content, w.state.player(), seed, &corpse, at)
         })
         .collect();
     assert!(told.iter().all(|t| matches!(t, None | Some(Stage::Fresh))));

@@ -31,12 +31,12 @@
 //! Gatekeeper gift's blow is struck by chance, by the stance ([`World::gatekeeper_odds`]), drawn
 //! from a stream of the approach's own, never the gameplay stream.
 
-use super::{Actor, ActorId, World};
 use crate::action::{AttackKind, Event};
 use crate::combat::{Blow, Category, Profile, Strike};
 use crate::content::{ObjectId, Stance};
 use crate::geom::{Dir, Pos};
 use crate::rng::Rng;
+use crate::world::{Actor, ActorId, World};
 use serde::{Deserialize, Serialize};
 
 /// The free blows an actor is given (spec §8 "Free blows"): the switches talents and class
@@ -89,7 +89,7 @@ fn is_false(b: &bool) -> bool {
 /// What happened that may give a blow more, as [`World::second_blow`] is asked: by the striker,
 /// at the target.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(super) enum Cue {
+pub(in crate::world) enum Cue {
     /// The first blow of the striker's melee attack on the target came to this (`None`: nothing
     /// was rolled): the second blow.
     First(Option<Blow>),
@@ -115,7 +115,7 @@ pub(super) enum Cue {
 
 /// What a blow more is.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(super) enum Free {
+pub(in crate::world) enum Free {
     /// The off hand's blow, or a shield bash, after an attack's first.
     Second,
     /// At another hostile, after a kill.
@@ -153,14 +153,14 @@ impl Free {
 
 /// A blow more ([`World::second_blow`]): who strikes whom, what it is, and with what.
 #[derive(Clone, Debug)]
-pub(super) struct FreeBlow {
-    pub(super) by: ActorId,
-    pub(super) at: ActorId,
-    pub(super) kind: Free,
+pub(in crate::world) struct FreeBlow {
+    pub(in crate::world) by: ActorId,
+    pub(in crate::world) at: ActorId,
+    pub(in crate::world) kind: Free,
     /// What it is made with: the off hand's weapon or the shield; `None` for a blow with what
     /// the striker wields (else its natural attack or bare hands).
-    pub(super) with: Option<ObjectId>,
-    pub(super) profile: Profile,
+    pub(in crate::world) with: Option<ObjectId>,
+    pub(in crate::world) profile: Profile,
 }
 
 /// Whether `blow` missed by its target's Dexterity or Dodge: the blow was dodged.
@@ -176,7 +176,7 @@ pub(super) fn dodged(blow: Option<Blow>) -> bool {
 }
 
 /// Whether `blow` missed by its target's Parry.
-pub(super) fn parried(blow: Option<Blow>) -> bool {
+pub(in crate::world) fn parried(blow: Option<Blow>) -> bool {
     blow.is_some_and(|b| {
         b.strike
             == Strike::Missed {
@@ -187,7 +187,7 @@ pub(super) fn parried(blow: Option<Blow>) -> bool {
 
 impl World {
     /// The free blows actor `actor` is given: the one place the switches are read.
-    pub(super) fn free_blows_of(&self, actor: &Actor) -> FreeBlows {
+    pub(in crate::world) fn free_blows_of(&self, actor: &Actor) -> FreeBlows {
         // Its own switches (class abilities), those its talents turn on, and those its weapon
         // abilities do with what it holds (`weapon_ability.rs`).
         let blows = (actor.free_blows)
@@ -224,7 +224,7 @@ impl World {
     /// The free blows the end of actor `attacker`'s melee attack on `target` brings, `parried`
     /// if one of its blows missed by the target's Parry: a cleave if it killed the target (and
     /// with great cleave another after each cleave that kills), else the target's riposte.
-    pub(super) fn after_attack(
+    pub(in crate::world) fn after_attack(
         &mut self,
         attacker: ActorId,
         target: ActorId,
@@ -265,7 +265,12 @@ impl World {
     /// Actor `id` is about to step to `to`: every hostile opportunist beside it whose reach the
     /// step leaves strikes it first, in actor order. Returns whether it still stands to take the
     /// step.
-    pub(super) fn step_away(&mut self, id: ActorId, to: Pos, events: &mut Vec<Event>) -> bool {
+    pub(in crate::world) fn step_away(
+        &mut self,
+        id: ActorId,
+        to: Pos,
+        events: &mut Vec<Event>,
+    ) -> bool {
         let Some(me) = self.state.actors.get(&id) else {
             return false;
         };
@@ -285,7 +290,7 @@ impl World {
     /// Actor `id` has just stepped from `from` up beside a hostile gatekeeper (spec §8 "Birth
     /// sign": Gatekeeper): each one it was not beside before strikes it as it comes, in actor
     /// order, while it stands.
-    pub(super) fn step_up(&mut self, id: ActorId, from: Pos, events: &mut Vec<Event>) {
+    pub(in crate::world) fn step_up(&mut self, id: ActorId, from: Pos, events: &mut Vec<Event>) {
         let Some(me) = self.state.actors.get(&id) else {
             return;
         };
@@ -374,7 +379,7 @@ impl World {
 
     /// Whether `me` stepping to `to` takes it out of the reach of `other`, a hostile beside it
     /// now (spec §8 "Stances": the coward's flight; "Free blows": the opportunist's blow).
-    pub(super) fn leaves(&self, me: &Actor, other: &Actor, to: Pos) -> bool {
+    pub(in crate::world) fn leaves(&self, me: &Actor, other: &Actor, to: Pos) -> bool {
         other.id != me.id
             && other.level == me.level
             && other.pos.chebyshev(me.pos) == 1
@@ -449,7 +454,7 @@ impl World {
     /// The flurry's second blow of actor `striker` at `target` (spec §8 "Class abilities":
     /// Flurry): with nothing in hand, its bare hands again at −2 to hit, spending what it costs
     /// (a point of Ki, `flurry_cost`; holding less, no blow). No draw.
-    pub(super) fn flurry(
+    pub(in crate::world) fn flurry(
         &mut self,
         striker: ActorId,
         target: ActorId,
@@ -532,7 +537,11 @@ impl World {
     /// Strikes `blow`, a blow like any other (`fight.rs`). The player's is said as they strike
     /// it, or, in another's turn, after that turn's reports: what is said meanwhile is held
     /// ([`World::say`]) and joins the news, which `perceive` says last. Returns the blow.
-    pub(super) fn strike_free(&mut self, blow: FreeBlow, events: &mut Vec<Event>) -> Option<Blow> {
+    pub(in crate::world) fn strike_free(
+        &mut self,
+        blow: FreeBlow,
+        events: &mut Vec<Event>,
+    ) -> Option<Blow> {
         let player = self.state.player;
         let (by, at) = (blow.by, blow.at);
         if by != player {

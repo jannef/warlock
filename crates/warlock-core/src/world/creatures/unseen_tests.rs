@@ -1,14 +1,14 @@
-//! The unseen (`world/unseen.rs`; docs/design/monster-dread.md §5.10, §5.11): the shadowy by
+//! The unseen (`world/creatures/unseen.rs`; docs/design/monster-dread.md §5.10, §5.11): the shadowy by
 //! the light and beside the player, the invisible by status and by type, what shows them (Seeing,
 //! Blood scent, the companion's nose, a blow that found it), striking at the unseen, the sound of
 //! its blows, the self-buff step, the wisp's light, the stalker's hunt, and the roster rows.
 
-use super::*;
 use crate::content::{Content, ContentFiles, Invisible};
 use crate::geom::Pos;
 use crate::noise::SoundKind;
 use crate::perception::Perception;
 use crate::test_support::{CONTENT as BUILTIN, run, said};
+use crate::world::*;
 use std::sync::Arc;
 
 /// A room, the player at its west end, then a second room behind a wall (no way between them

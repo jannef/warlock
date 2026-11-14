@@ -1,11 +1,11 @@
 //! The class actives in the world (spec §8 "Class abilities"): what a class's level table gives
 //! that is used from the abilities menu ([`crate::ability::Ability::Class`]) as [`Action::Use`]
-//! (`use:rage`, `use:smite:E`): Rage, War cry (for rage, `world/war_cry.rs`), Veteran's wind, Lay on hands, Smite (for zeal, `world/smite.rs`), Holy
-//! radiance, Stunning strike, Quivering palm and Step of the wind (for ki, `world/ascetic.rs`; the last takes no time), the songs (Inspire, for inspiration, `world/song.rs`), the thief's
-//! Lurk (`world/thief.rs`), Exploit and Thrown exploit (for openings,
-//! `world/openings.rs`; the ranger's Volley, aimed at a cell, is `world/volley.rs`, and the
-//! warrior's Charge, aimed at a creature, `world/charge.rs`). The
-//! abilities themselves are talents of the class tree, given as levels come (`world/class.rs`)
+//! (`use:rage`, `use:smite:E`): Rage, War cry (for rage, `world/classes/war_cry.rs`), Veteran's wind, Lay on hands, Smite (for zeal, `world/classes/smite.rs`), Holy
+//! radiance, Stunning strike, Quivering palm and Step of the wind (for ki, `world/classes/ascetic.rs`; the last takes no time), the songs (Inspire, for inspiration, `world/classes/song.rs`), the thief's
+//! Lurk (`world/classes/thief.rs`), Exploit and Thrown exploit (for openings,
+//! `world/classes/openings.rs`; the ranger's Volley, aimed at a cell, is `world/classes/volley.rs`, and the
+//! warrior's Charge, aimed at a creature, `world/classes/charge.rs`). The
+//! abilities themselves are talents of the class tree, given as levels come (`world/classes/class.rs`)
 //! and read through `Actor::talent_mods`. Each active refuses, taking no time, without the
 //! ability, while its cooldown (or the rage and the exhaustion after it) lasts, and (an aimed
 //! blow) with nobody hostile there, before anything is spent. Nothing here draws at random but
@@ -20,18 +20,18 @@
 //! [`Action::Use`]: crate::action::Action::Use
 
 use super::smite::SmiteMode;
-use super::{ActorId, Spent, World};
 use crate::ability::{Ability, Unavailable};
 use crate::action::Event;
 use crate::content::{ActionKind, ClassActive, Stance};
 use crate::geom::Dir;
 use crate::status::Effect;
+use crate::world::{ActorId, Spent, World};
 
 impl World {
     /// `use:ID[:DIR]` ([`crate::action::Action::Use`]): the player uses class active `active`,
     /// aimed `dir` if it asks for a direction. Refused, taking no time, without it, while it is
     /// unavailable, and without a direction it asks for.
-    pub(super) fn use_class(
+    pub(in crate::world) fn use_class(
         &mut self,
         active: ClassActive,
         dir: Option<Dir>,
@@ -158,7 +158,7 @@ impl World {
 
     /// Whether the player may use class active `active` now: they have it, and it is available
     /// (said when not).
-    pub(super) fn may_use_class(&mut self, active: ClassActive) -> bool {
+    pub(in crate::world) fn may_use_class(&mut self, active: ClassActive) -> bool {
         let content = self.content.clone();
         let ability = Ability::Class(active);
         let me = self.state.player();
@@ -295,7 +295,7 @@ impl World {
 
     /// The hostiles beside the player, clockwise from the north, each with whether the player
     /// sees it.
-    pub(super) fn hostiles_beside(&self) -> Vec<(ActorId, bool)> {
+    pub(in crate::world) fn hostiles_beside(&self) -> Vec<(ActorId, bool)> {
         let player = self.state.player;
         let here = self.player_pos();
         let level = &self.state.current().id;
@@ -308,7 +308,7 @@ impl World {
 
     /// The hostile in `dir` of the player and whether they see it; `None` (said) when nobody,
     /// or nobody hostile, stands there.
-    pub(super) fn hostile_toward(&mut self, dir: Dir) -> Option<(ActorId, bool)> {
+    pub(in crate::world) fn hostile_toward(&mut self, dir: Dir) -> Option<(ActorId, bool)> {
         let to = self.player_pos().step(dir);
         let level = &self.state.current().id;
         let Some((target, creature)) = (self.state.actor_at(level, to)).map(|a| (a.id, a.creature))
@@ -356,7 +356,7 @@ impl World {
     }
 
     /// The player gets `back` hit points, never past their maximum (nor fewer than they have).
-    pub(super) fn heal_player(&mut self, back: i32) {
+    pub(in crate::world) fn heal_player(&mut self, back: i32) {
         let max = self.state.player().max_hp(&self.content);
         let me = self.player_mut();
         me.hp = (me.hp + back).min(max).max(me.hp);

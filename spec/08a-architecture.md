@@ -114,7 +114,7 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
       goal. Being Bloated (§8 "Hunger") raises them again the same way, after the burden: ×1.25
       (`[bloated] slow`), so four normal actions take 30 s (`World::bloated`).
     - A meal (§8 "Hunger") is several turns of `eat`, one per turn of the food's `turns`.
-  - **Speed** (`warlock-core/src/world/schedule.rs`), ADOM-like: every creature type has a
+  - **Speed** (`warlock-core/src/world/turn/schedule.rs`), ADOM-like: every creature type has a
     `speed` (§7), 1000 being normal and the player's; twice the speed is twice as many actions in
     the same game time. An energy scheduler, integer only: each actor on the current level gains
     its speed in energy per second of game time; an action costs its price, cost × base seconds
@@ -169,7 +169,7 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
     by the rules of sight for their cells alone, are those seen before: the same answer a
     perception would give (not on the overworld, nor with Blood scent or light-blind eyes,
     where a perception sees by more than line of sight and light).
-  - **Coarse turns while resting** (#349; `world/stride.rs`): while the player rests, a creature
+  - **Coarse turns while resting** (#349; `world/turn/stride.rs`): while the player rests, a creature
     on a local level that has no dialogue and is **away** from them takes its turns coarsely.
     Away: it means the player no harm, or neither the player nor a spot its mind is set on
     (where it last saw a hostile, a noise it goes to look into) is within its sight radius of

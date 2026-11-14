@@ -55,7 +55,7 @@ impl VisionProfile {
     }
 
     /// Whether perceived `light` is **dim** to this eye: under twice its threshold, darkvision
-    /// or not (a shadowy creature there is unseen, `world/unseen.rs`). Never for an eye that
+    /// or not (a shadowy creature there is unseen, `world/creatures/unseen.rs`). Never for an eye that
     /// needs no light.
     pub fn dim(&self, light: Light) -> bool {
         self.perceive(light).brightness() < self.threshold.saturating_mul(2)

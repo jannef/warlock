@@ -2,10 +2,10 @@
 //! at twice the chance inside, at most certain (a check to read a scroll is certain anywhere,
 //! #1024), other skills train as anywhere, and look mode and the messages name the room and its shelves.
 
-use super::*;
 use crate::content::ContentFiles;
 use crate::skills::{SkillId, Trained, Use};
 use crate::test_support::run;
+use crate::world::*;
 
 /// A lit hall, 25 wide: the west part plain, the east part (x 12 on) a scriptorium with its
 /// shelves at `S`.

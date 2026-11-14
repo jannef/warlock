@@ -1,7 +1,7 @@
 //! Feinting (`assets/data/rules/feint.toml`, spec §8 "Skills": Bluff; #1016): the numbers of
 //! Bluff's use, a lie in combat.
 //!
-//! The rule itself lives in `world/feint.rs`: who can (anyone trained in a skill with the `feint`
+//! The rule itself lives in `world/skills/feint.rs`: who can (anyone trained in a skill with the `feint`
 //! benefit, `data/skills/`), at whom (a hostile creature they see next to them, with a mind),
 //! the check (its Willpower against `difficulty` + their Presence modifier + their Bluff), and
 //! the status a failed check leaves.

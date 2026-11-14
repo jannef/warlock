@@ -3,9 +3,9 @@
 //! Peran in Gimmwīc it is done, and he pays with a cut stone and gives the moot's answer, which
 //! Wulfrun takes back in Cēaptūn. Dēopgang is never hidden, so neither quest reveals anything.
 
-use super::*;
 use crate::content::ContentFiles;
 use crate::test_support::{run as act, texts};
+use crate::world::*;
 use std::sync::LazyLock;
 
 const WULFRUN: Pos = Pos::new(72, 26);
@@ -36,7 +36,7 @@ fn beside(world: &mut World, at: Pos) {
 
 fn carried(world: &World, object: &str) -> u32 {
     let object = world.content().object_id(object).expect("an object");
-    super::shop::count_of(&world.state().player().inventory, object)
+    crate::world::people::shop::count_of(&world.state().player().inventory, object)
 }
 
 fn stage(world: &World, quest: &str) -> Option<Stage> {

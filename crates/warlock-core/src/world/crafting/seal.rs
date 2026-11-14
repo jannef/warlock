@@ -15,12 +15,12 @@
 //!   first carried; **the soul-fetter** (`[rare] fetter`): Recast keeping an affix takes one, the
 //!   first carried. Both spent made, failed, or warped.
 
-use super::Actor;
 use super::craft_make::{CraftOption, CraftStep, CraftStepKind};
 use crate::content::{AffixKind, Content, EnchantKind, ObjectDef, ObjectId};
 use crate::magic::Affix;
 use crate::magic::describe::phrase;
 use crate::magic::loot::rolls_within;
+use crate::world::Actor;
 use std::ops::Range;
 
 /// The most seals one roll may take.

@@ -1,10 +1,9 @@
-//! Slipping past (spec §8 "Surprise and sneak attacks"; `world/slip.rs`): the one moment (dark
+//! Slipping past (spec §8 "Surprise and sneak attacks"; `world/combat/slip.rs`): the one moment (dark
 //! or lit, hunting or not, by darkvision or by light or not at all, another hostile never), the
 //! contest's two outcomes and its four draws, no second roll in a stalk, each ending, the
 //! creature that came to look and was caught unawares, saves and replays, and no draw where
 //! nobody can slip past.
 
-use super::*;
 use crate::action::parse_actions;
 use crate::check;
 use crate::content::ContentFiles;
@@ -14,6 +13,7 @@ use crate::rng::Rng;
 use crate::sight::LineOfSight;
 use crate::skills::Effect;
 use crate::stats::Stat;
+use crate::world::*;
 
 /// A dark corridor: the player at the west end, a kobold at `k`.
 const CORRIDOR: &str = "\
@@ -35,14 +35,14 @@ enum Slip {
 /// The built-in content with [`CORRIDOR`] at `ambient` light; the kobold sees with `eyes`.
 fn world_with(ambient: u8, slip: Slip, eyes: &str) -> World {
     let mut files = ContentFiles::builtin();
-    let text = include_str!("../../../../assets/data/surprise.toml");
+    let text = include_str!("../../../../../assets/data/surprise.toml");
     if slip == Slip::Off {
         files.insert(
             "data/surprise.toml",
             &text.replacen("enabled = true", "enabled = false", 1),
         );
     }
-    let kobold = include_str!("../../../../assets/data/creatures/kobold.toml");
+    let kobold = include_str!("../../../../../assets/data/creatures/kobold.toml");
     files.insert(
         "data/creatures/kobold.toml",
         &kobold

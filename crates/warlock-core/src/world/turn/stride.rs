@@ -8,7 +8,7 @@
 //! look into), is within its sight radius of the player (Chebyshev, which covers the circle).
 //! An away creature:
 //!
-//! - **strides** if it is also **idle**: calm ([`super::Mind::is_calm`]), with nothing heard
+//! - **strides** if it is also **idle**: calm ([`crate::world::Mind::is_calm`]), with nothing heard
 //!   since it last acted that it would go to look into (it has enemies), no status effects, able
 //!   to move, and no hostile actor within its sight radius. Instead of one action it takes up to
 //!   [`STRIDE`] steps of its patrol route at once, priced as those steps are, each onto a plain
@@ -29,19 +29,19 @@
 //! fights and searches of the busy ones go slower. [`World::out_of_view_for`] counts a stride's
 //! head start. Deterministic: no randomness, actors in the scheduler's order.
 
-use super::{ActorId, Patrol, World};
 use crate::action::Event;
 use crate::content::{ActionKind, LevelKind, Stance, TerrainId};
 use crate::geom::Pos;
 use crate::noise::{self, Act};
 use crate::sight;
+use crate::world::{ActorId, Patrol, World};
 
 /// How many steps (or waits) an idle creature away from a resting player takes at once, and
 /// how many times its price a busy one's action costs: two minutes' walk at normal speed.
-pub(super) const STRIDE: i32 = 20;
+pub(in crate::world) const STRIDE: i32 = 20;
 
 /// How a creature takes its turn as the player rests.
-pub(super) enum Coarse {
+pub(in crate::world) enum Coarse {
     /// It strode, for this price.
     Strode(i64),
     /// It acts as usual, at [`STRIDE`] times the price.
@@ -53,7 +53,7 @@ pub(super) enum Coarse {
 impl World {
     /// Creature `id`'s turn as the player rests (the module docs): a stride, done, if it is away
     /// and idle; slowed if it is away and busy; else as usual.
-    pub(super) fn coarse_turn(&mut self, id: ActorId, events: &mut Vec<Event>) -> Coarse {
+    pub(in crate::world) fn coarse_turn(&mut self, id: ActorId, events: &mut Vec<Event>) -> Coarse {
         if !self.away(id) {
             return Coarse::Usual;
         }

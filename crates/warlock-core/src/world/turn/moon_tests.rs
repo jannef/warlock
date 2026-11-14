@@ -2,11 +2,11 @@
 
 use super::light_tests::{check_invariants, check_wall_completion};
 use super::sun_tests::{field, sky_world};
-use super::*;
 use crate::light::Light;
 use crate::perception::{CellView, Emitter, PerceptionView, SeenLight};
 use crate::replay::Replay;
 use crate::test_support::builtin;
+use crate::world::*;
 use proptest::prelude::*;
 use std::collections::BTreeSet;
 

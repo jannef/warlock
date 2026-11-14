@@ -25,8 +25,6 @@
 //! whoever stood on it falls in. A burst reaches the cells within its radius in line of sight of
 //! its centre.
 
-use super::fight::Harm;
-use super::{ActorId, LevelState, Spent, World, WorldState};
 use crate::action::{Event, SpellShape};
 use crate::content::StatUse;
 use crate::content::required::FROST_BURST;
@@ -40,6 +38,8 @@ use crate::stats::Stat;
 use crate::temperature::{self, Temperature};
 use crate::text::capitalized;
 use crate::time::GameTime;
+use crate::world::combat::fight::Harm;
+use crate::world::{ActorId, LevelState, Spent, World, WorldState};
 use std::collections::{BTreeMap, BTreeSet};
 
 /// What the player is told when they plunge through the ice.
@@ -47,7 +47,7 @@ const PLUNGE: &str = "The ice cracks beneath you and you plunge into the freezin
 
 /// What stepping onto a cell did to the ice there ([`World::tread`]).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(super) enum Footing {
+pub(in crate::world) enum Footing {
     /// No ice to speak of: an ordinary step (wading through a skin of ice breaks it).
     Plain,
     /// The ice held: a step onto it, climbing out of the water if the actor stood in it.
@@ -289,14 +289,14 @@ impl World {
 
     /// Brings the ice on the player's level up to the clock: as the clock moves, so the rules
     /// always meet the ice of the moment.
-    pub(super) fn update_ice(&mut self) {
+    pub(in crate::world) fn update_ice(&mut self) {
         self.state.update_ice(&self.content);
     }
 
     /// Actor `id` steps from `from` onto `to` on the player's level: decides whether ice there
     /// holds it (it may break through), before the step is priced and taken. See the module
     /// docs.
-    pub(super) fn tread(&mut self, id: ActorId, from: Pos, to: Pos) -> Footing {
+    pub(in crate::world) fn tread(&mut self, id: ActorId, from: Pos, to: Pos) -> Footing {
         let Some(ice) = self.state.current().ice_at(to) else {
             return Footing::Plain;
         };
@@ -356,7 +356,7 @@ impl World {
 
     /// After a step from `from` to `at`: actor `id` plunged through the ice or climbed out onto
     /// it, and what a zone at either end does to it (`zone.rs`).
-    pub(super) fn after_tread(
+    pub(in crate::world) fn after_tread(
         &mut self,
         id: ActorId,
         (from, at): (Pos, Pos),
@@ -384,7 +384,7 @@ impl World {
 
     /// The price of what `footing` adds to a step: climbing out of the water onto ice (less
     /// for Winter-born, by its talents' `climb_percent`).
-    pub(super) fn tread_price(&self, id: ActorId, footing: Footing) -> i64 {
+    pub(in crate::world) fn tread_price(&self, id: ActorId, footing: Footing) -> i64 {
         match footing {
             Footing::Held { climb: true } => {
                 let price = self.price_of(id, ActionKind::Climb);
@@ -528,7 +528,7 @@ impl World {
         }
         let level = self.state.current();
         let opaque = |p| level.is_opaque(&self.content, p);
-        let cells = super::spell::burst_cells(center, radius, opaque);
+        let cells = crate::world::magic::spell::burst_cells(center, radius, opaque);
         if !cells.is_empty() {
             events.push(Event::Spell {
                 effect: FROST_BURST.to_string(),
@@ -541,7 +541,7 @@ impl World {
 
     /// The cells a burst of `radius` around `center` reaches on the player's level: within the
     /// radius and in line of sight of the centre.
-    pub(super) fn burst(&self, center: Pos, radius: i32) -> BTreeSet<Pos> {
+    pub(in crate::world) fn burst(&self, center: Pos, radius: i32) -> BTreeSet<Pos> {
         let level = self.state.current();
         let content = &self.content;
         let mut cells = BTreeSet::new();
@@ -556,7 +556,12 @@ impl World {
 
     /// The dev action `freeze:x,y,r` ([`crate::action::Action::Freeze`]): a frost burst at `at`
     /// within `radius`, said and shown. Takes no time.
-    pub(super) fn freeze_dev(&mut self, at: Pos, radius: i32, events: &mut Vec<Event>) -> Spent {
+    pub(in crate::world) fn freeze_dev(
+        &mut self,
+        at: Pos,
+        radius: i32,
+        events: &mut Vec<Event>,
+    ) -> Spent {
         if self.off_level_dev(at) {
             return Spent::Nothing;
         }
@@ -571,7 +576,12 @@ impl World {
 
     /// The dev action `thaw:x,y,r` ([`crate::action::Action::Thaw`]): a burst of heat at `at`
     /// within `radius`, said. Takes no time.
-    pub(super) fn thaw_dev(&mut self, at: Pos, radius: i32, events: &mut Vec<Event>) -> Spent {
+    pub(in crate::world) fn thaw_dev(
+        &mut self,
+        at: Pos,
+        radius: i32,
+        events: &mut Vec<Event>,
+    ) -> Spent {
         if self.off_level_dev(at) {
             return Spent::Nothing;
         }

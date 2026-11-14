@@ -1,10 +1,10 @@
-//! The unstable room (spec §7 "Special rooms", design §9.6; `world/warp.rs`): every step inside,
+//! The unstable room (spec §7 "Special rooms", design §9.6; `world/fixtures/warp.rs`): every step inside,
 //! the player's or a creature's, has a tenth's chance to move the stepper elsewhere on the level
 //! as a teleport trap does, said with the trap's own lines; steps outside never do.
 
-use super::*;
 use crate::content::ContentFiles;
 use crate::test_support::{builtin, said_text as said};
+use crate::world::*;
 
 /// A hall, 30 wide, with an unstable room over x 10 to 19; `r` is a giant rat inside it.
 const HALL: &str = "\

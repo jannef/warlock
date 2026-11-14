@@ -217,4 +217,4 @@ pub fn arm(template: &mut LevelTemplate, content: &Content, seed: u64) {
     }
 }
 
-// Tests: `world/animated_tests.rs`.
+// Tests: `world/creatures/animated_tests.rs`.

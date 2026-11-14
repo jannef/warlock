@@ -100,17 +100,17 @@ pub struct MaterialDef {
     #[serde(default)]
     pub binding: i8,
     /// How it withstands each kind of item damage, in percent (spec §7 "Materials";
-    /// `world/item_damage.rs`): `resists = { acid = 20, rust = 10, fire = 95 }`, every kind
+    /// `world/combat/item_damage.rs`): `resists = { acid = 20, rust = 10, fire = 95 }`, every kind
     /// given. One without withstands nothing.
     #[serde(default)]
     pub(super) resists: Option<Resists>,
-    /// Never damaged by anything (`world/item_damage.rs`): acid, rust, heat, a failed working,
+    /// Never damaged by anything (`world/combat/item_damage.rs`): acid, rust, heat, a failed working,
     /// a spell's ruin, and never found damaged in a creature's gear (adamantium; default false).
     #[serde(default)]
     pub proof: bool,
 }
 
-/// A kind of item damage (spec §7 "Materials", `world/item_damage.rs`): what leaves an item
+/// A kind of item damage (spec §7 "Materials", `world/combat/item_damage.rs`): what leaves an item
 /// damaged, the smith's one state ([`crate::magic::Worked`]), and destroys one damaged already.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -121,10 +121,10 @@ pub enum ItemHarm {
     Rust,
     /// Heat scorching it.
     Fire,
-    /// A failed attempt at the anvil or with the knife (`world/temper.rs`): no material
+    /// A failed attempt at the anvil or with the knife (`world/crafting/temper.rs`): no material
     /// withstands it, being the craft's own blunder.
     Work,
-    /// An enchanting recipe's natural 2 (`world/enchant.rs`): magic bound wrong warps the thing;
+    /// An enchanting recipe's natural 2 (`world/crafting/enchant.rs`): magic bound wrong warps the thing;
     /// no material withstands it.
     Enchant,
 }

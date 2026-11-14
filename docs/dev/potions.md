@@ -36,23 +36,23 @@ Spec §8 "Potions" (`spec/08g-magic-items.md`); the combat progression design §
   `greater_potion_of_*`, `potion_of_cats_eyes`, `_owls_eyes`, `_moths_eyes`,
   healing and mana (ids renamed; saves change).
 
-## Drinking: `world/potion.rs`
+## Drinking: `world/health/potion.rs`
 
 - No action of its own: `Action::Eat` (`eat:b`, `eat:floor:a`) reaches `World::eat`, which
   hands a stack with a `drink` table to `World::drink_potion` before any hunger check
-  (`world/eat.rs`). What is neither food nor a potion is refused with no time ("You cannot
-  consume a dagger."). `world/drink.rs` is the healing spring's Drink ability, a different thing;
+  (`world/health/eat.rs`). What is neither food nor a potion is refused with no time ("You cannot
+  consume a dagger."). `world/fixtures/drink.rs` is the healing spring's Drink ability, a different thing;
   the two share only the `drink` action price (`data/actions.toml`, one turn).
 - Order: priced at the start; one taken (`take_draught`: pack or floor; the keep
   (`Actor::potion_kept`: Thrifty drinker, worn affixes) is one gameplay draw, only above 0); "You drink the {title}." by the name the player
   knew; `learn_scroll` and "It is a potion of healing." for news; in a shop `drank_goods`
-  (`world/shop.rs`, `ate_goods`'s twin, naming the potion as the player knows it); the effect;
+  (`world/people/shop.rs`, `ate_goods`'s twin, naming the potion as the player knows it); the effect;
   `train_stat_times(StatUse::Drank, Some(stat), count)` per mark (sure marks, no draw); the
   KEPT line if kept. Returns `Spent::Turn`.
 - Effects: `Heal` rolls its dice on the gameplay stream, raises hp to at most the maximum, then
   `World::cure` per means; `Cure` cures per means and, with `diseases`, `end_disease` for every
   infection; `Mana` raises mana to at most the maximum; `Elixir` is `World::drink_elixir`
-  (`world/elixir.rs`): the potential's roll first (one gameplay draw), then `points` ×
+  (`world/health/elixir.rs`): the potential's roll first (one gameplay draw), then `points` ×
   `Stats::train(stat)` (the score +1; a trained rise leaves the potential, so the elixir lifts
   it to the score where it was below with `Stats::widen`),
   then `Stats::widen(stat, roll)` (never past `SCORES`), the hit points a Toughness rise adds
@@ -68,16 +68,16 @@ Spec §8 "Potions" (`spec/08g-magic-items.md`); the combat progression design §
   visions (`vision`, `eases = 1800`), four resistances (`resist`, 50 %, `eases = 1800`); what
   they do is the statuses' (docs/dev/status-effects.md). Status and disease beginnings and ends are not said here: they are the action's events,
   which perception reports ("You feel sick.", "The poison wears off.").
-- The utility kinds (#1228): `Nourish` is `World::satiate` (`world/eat.rs`, beside `feed`):
+- The utility kinds (#1228): `Nourish` is `World::satiate` (`world/health/eat.rs`, beside `feed`):
   the nutrition added at once, held below `states.bloated` (never lowered when already past
   it), no overeating, choking, or vomiting; nothing without `data/hunger.toml`. `Restore` is
-  `World::restore` (`world/restore.rs`), the scroll of restoration's cleanse lifted out of
+  `World::restore` (`world/magic/restore.rs`), the scroll of restoration's cleanse lifted out of
   `read_cleanse` (its two callers: the read, with the scroll's `Cleansing`, and the potion,
   mending and restoring both); with nothing to do the potion is drunk all the same ("You feel
   whole."), since refusing would tell what an unknown potion is. `Blink` is the teleport trap's
-  `World::teleport` (`world/trap.rs`: a free cell by a hash of seed, level, turn, actor, and
+  `World::teleport` (`world/fixtures/trap.rs`: a free cell by a hash of seed, level, turn, actor, and
   cell, no stream draw), refused in effect on the overworld ("The land lurches, and holds you
-  where you are."). `World::cleanse` was taken (the Cleanse spell's, `world/cast.rs`), hence
+  where you are."). `World::cleanse` was taken (the Cleanse spell's, `world/magic/cast.rs`), hence
   the name `restore`.
 - The gambles (#1229, the potions wave 2 design §4.3): `Gamble { outcomes }` names a table of
   `data/outcomes/` (`content/outcome.rs`; the tables load after the objects, so
@@ -92,11 +92,11 @@ Spec §8 "Potions" (`spec/08g-magic-items.md`); the combat progression design §
   `otherwise` line). Content: `draught_of_chance`, `trolls_blood` (named "vial of troll's
   blood" for the article), `brewers_blunder`, each with its table of the same id, iridescent
   `#c0a0e0`; the description line "Does good, or harm, or nothing: a gamble". Tests:
-  `world/potion_gamble_tests.rs`; the wiki's tables: `potion-gambles.md`
+  `world/health/potion_gamble_tests.rs`; the wiki's tables: `potion-gambles.md`
   (`xtask/src/wiki/outcomes.rs::gamble_outcomes`).
 - Creatures do not drink.
 
-## Flasks: `world/flask.rs`
+## Flasks: `world/health/flask.rs`
 
 The potions wave 2 design §3, §5 (`docs/design/potions-wave-2.md`), slice S1 (#1223). The path
 every later flask (smoke, fire, frost, acid, the bombers) builds on.
@@ -142,7 +142,7 @@ every later flask (smoke, fire, frost, acid, the bombers) builds on.
   explosion 100), each drunk a `harm`; `holy_water` (Rebuke: only the undead, by the spell's
   `only_tags`), drunk a `cure` of `holy_water`, the means in Ill-wished's and Branded's
   `cured_by`. The flasks of thunder and blasting are in general stores' and provisioners'
-  `never` lists. Tests: `world/flask_content_tests.rs` (each one's throw and drink once).
+  `never` lists. Tests: `world/health/flask_content_tests.rs` (each one's throw and drink once).
 - **Content, S3** (#1225): the flask of smoke (Fume: a smoke zone, radius 2, 15 turns;
   drunk, Stunned 1; ash grey), the flask of brilliance (Flare: Stunned 1 on all with eyes,
   radius 1; drunk, the safe one, `status` Lit 1 and Willpower marks; silver), the vial of acid
@@ -156,10 +156,10 @@ every later flask (smoke, fire, frost, acid, the bombers) builds on.
   its `scroll_of_pitch_fire`, Q4 and Q11; `range = 4`; drunk, Burning 2; scarlet). No new
   rule: the splash is `flask.rs`'s damage branch (`cast_burst_at`, the type's rules, then
   `lay_spell_zone`). All three in the general store's, the town store's, and the provisioner's `never` lists.
-  Tests: `world/flask_fire_tests.rs` (each throw and drink, the pool's cells, turns, harm, and
+  Tests: `world/health/flask_fire_tests.rs` (each throw and drink, the pool's cells, turns, harm, and
   owner, pitch fire's range, the scroll's cast).
-- **Tests**: `world/flask_tests.rs` (fixture flasks on Fireball, Hex of weakness, and Slick;
-  the three S3 flasks thrown at a dummy and brilliance drunk; `world/smoke_tests.rs` for smoke):
+- **Tests**: `world/health/flask_tests.rs` (fixture flasks on Fireball, Hex of weakness, and Slick;
+  the three S3 flasks thrown at a dummy and brilliance drunk; `world/health/smoke_tests.rs` for smoke):
   the throw and the burst on the dummy, the first creature in the way, the thrower's kill and
   experience, learned only when seen and heard when not, a ray's hex, a zone by the thrower, a
   potion that spills, refusals, a death by one's own flask, saves and replays, the loader's
@@ -169,7 +169,7 @@ every later flask (smoke, fire, frost, acid, the bombers) builds on.
   pack's flasks never thrown or drunk, Q10); `docs/dev/ranged-combat.md` has the hook. The
   three types (`docs/dev/creatures/campaign-waves.md` "Bombers"): `kobold_alchemist`
   (`flask_of_oil`), `goblin_firebomber` (`flask_of_fire`),
-  `cult_chymist` (`stinking_flask`). Tests: `world/creature_flask_tests.rs` (the oil's slick
+  `cult_chymist` (`stinking_flask`). Tests: `world/creatures/creature_flask_tests.rs` (the oil's slick
   zone by the kobold and learned on sight, the blast with no `Attacked` event and nothing
   landing, melee up close, the three's throws and gear, the loader's damage-less throw rule, a
   replay).
@@ -182,7 +182,7 @@ every later flask (smoke, fire, frost, acid, the bombers) builds on.
 - `Lore::labelled_names` puts the type's `colour` in `{colour}`; `Lore::fg` keeps a labelled
   potion's own `fg` (the type's colour, its family's hue) instead of the file's single `fg`.
 - Known types live in `WorldState::known_scrolls` with scrolls, wands, and rods: learned by
-  drinking, by brewing one (`world/craft_make.rs`), by `World::identify` (the scroll of identify, the appraisal service, dev
+  drinking, by brewing one (`world/crafting/craft_make.rs`), by `World::identify` (the scroll of identify, the appraisal service, dev
   `identify`), and from a chosen character's kit (`World::begin` adds kit potions as it adds
   kit scrolls; every class's, #1104).
 - The item description (`magic/describe.rs::potion_lines`): a known potion's effect in words
@@ -234,7 +234,7 @@ effect kinds (`potion_marks_percent`, `potion_heals`, `potion_smell`) and `World
 
 ## Tests
 
-- `world/potion_status_tests.rs` (#567): boosts raise and wear off, greater ones ease to
+- `world/health/potion_status_tests.rs` (#567): boosts raise and wear off, greater ones ease to
   common ones, `highest`, visions change `Actor::eyes` and what is seen in the dark,
   resistances add as gear and never reach immunity, haste, Lasting draughts, a save with a
   lengthened easing, descriptions, drinks that lend the wrong status refused; #1224's six
@@ -243,15 +243,15 @@ effect kinds (`potion_marks_percent`, `potion_heals`, `potion_smell`) and `World
   severity refused, a `per_action` one allowed).
   `content/status.rs` tests `vision`, `resist`, and `per_degree`. Text snapshot
   `potion-boost` (the character screen and status bar with Fortified and Owl-eyed).
-- `world/potion_tests.rs`: every kind through `eat:`, a floor potion, food still eaten,
+- `world/health/potion_tests.rs`: every kind through `eat:`, a floor potion, food still eaten,
   refusals with no time, words and colours, `known_scrolls`, identify, marks by count, Thrifty
   drinker (no draw without it), the witch's kit, earlier labels unchanged,
   content refusals.
-- `world/potion_utility_tests.rs` (#1228): sustenance feeds 1500 and stops below Bloated,
+- `world/health/potion_utility_tests.rs` (#1228): sustenance feeds 1500 and stops below Bloated,
   restoration mends, restores, and ends Stiffening (and is drunk with nothing to do), blinking
   moves the drinker without a draw (and not on the overworld), clear head ends its six
   statuses, the kinds' content refusals.
-- `world/elixir_tests.rs`: score +1 and potential +1 or +2 over seeds (both come up), the
+- `world/health/elixir_tests.rs`: score +1 and potential +1 or +2 over seeds (both come up), the
   potential lifted first, hit points after a Toughness elixir and maximum mana after an
   Intelligence one, 60 marks and Quick study's 120, each elixir its own stat, the top of the
   scores, no general store or provisioner stocks one, the altar's outcome names all six,

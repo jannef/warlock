@@ -1,39 +1,39 @@
 //! Magic: mana, spells, scrolls, wands (docs/dev/mana.md, spells.md, caster-styles.md, scrolls.md).
 
 mod backfire;
-mod cast;
+pub(in crate::world) mod cast;
 mod cast_style;
 mod caster;
 mod concentration;
 mod corpse_spell;
-mod decipher;
+pub(in crate::world) mod decipher;
 mod forget;
-mod learn;
+pub(in crate::world) mod learn;
 mod malison;
-mod mana;
-mod miscast;
+pub(in crate::world) mod mana;
+pub(in crate::world) mod miscast;
 mod read;
 mod restore;
 mod rod;
 mod ruin;
-mod scribe;
-mod spell;
+pub(in crate::world) mod scribe;
+pub(in crate::world) mod spell;
 mod spell_arc;
 mod spell_mods;
 mod spell_rank;
 mod spell_rule;
-mod spell_rung;
+pub(in crate::world) mod spell_rung;
 mod spell_type;
-mod spell_words;
+pub(in crate::world) mod spell_words;
 mod summon_spell;
 mod zap;
-mod zone;
+pub(in crate::world) mod zone;
 cfg_if! {
     if #[cfg(test)] {
         mod backfire_tests;
-        mod cast_tests;
+        pub(in crate::world) mod cast_tests;
         mod caster_style_tests;
-        mod caster_tests;
+        pub(in crate::world) mod caster_tests;
         mod circle_tests;
         mod concentration_tests;
         mod corpse_spell_tests;
@@ -58,7 +58,7 @@ cfg_if! {
         mod spell_rank_tests;
         mod spell_rule_tests;
         mod spell_type_force_tests;
-        mod spell_type_tests;
+        pub(in crate::world) mod spell_type_tests;
         mod summon_spell_tests;
         mod transmutation_rank_tests;
         mod zap_tests;

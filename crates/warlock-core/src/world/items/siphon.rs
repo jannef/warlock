@@ -11,10 +11,10 @@
 //! (a kill builds Inspiration, Second breath) stay in `dies`, for any kill. No draw, no saved
 //! state: a slayer wearing none of these changes nothing.
 
-use super::{ActorId, World};
 use crate::content::{Effect as ItemEffect, ResourceId};
 use crate::fov::radius2;
 use crate::geom::Pos;
+use crate::world::{ActorId, World};
 
 impl World {
     /// Actor `by`'s own blow, shot, or spell killed actor `slain`, which stood at `at`: when
@@ -22,7 +22,7 @@ impl World {
     /// player is told "close by", the wiki says how far), its worn `mana_on_kill` raises its mana,
     /// never past its maximum, and its worn `resource_on_kill` raises each pool it holds that the
     /// affix names, never past that pool's maximum (an affix never grants a pool).
-    pub(super) fn siphon(&mut self, by: ActorId, (slain, at): (ActorId, Pos)) {
+    pub(in crate::world) fn siphon(&mut self, by: ActorId, (slain, at): (ActorId, Pos)) {
         if by == slain {
             return;
         }

@@ -13,12 +13,12 @@ does, `read`: `docs/dev/scrolls.md`; a grimoire, generated for each spell scroll
 (`content/object.rs`: `ObjectDef`, `ObjectId`, and the `"id*N"` placement strings;
 `content/material.rs`); the tables are directories read in path order, see "Content
 directories" in `docs/dev/content.md`. Every creature has a base `weight`. `object.rs` holds the runtime side: `Stack` (object + count; stackable objects join,
-others are stacks of one (a stack worked at an anvil, `Stack::worked`, `magic/worked.rs`, is like no other and never joins one; docs/dev/special-rooms.md; `Worked::marked`, saved, default false, is a craftsperson's Maker's mark: a marked plain item carries a `Worked` with nothing else on it; `Worked::value` adds `TalentBook::mark_percent` to its worth, `magic/capacity.rs` one enchantment, `world/patron.rs` through the worth, `magic/describe.rs::mark_line` "It bears Brakka's mark.", the dev `actors` dump ` (marked)`; docs/dev/crafting.md "Maker's mark"); food knows when it was made, `Stack::died`, and joins whatever its age,
+others are stacks of one (a stack worked at an anvil, `Stack::worked`, `magic/worked.rs`, is like no other and never joins one; docs/dev/special-rooms.md; `Worked::marked`, saved, default false, is a craftsperson's Maker's mark: a marked plain item carries a `Worked` with nothing else on it; `Worked::value` adds `TalentBook::mark_percent` to its worth, `magic/capacity.rs` one enchantment, `world/crafting/patron.rs` through the worth, `magic/describe.rs::mark_line` "It bears Brakka's mark.", the dev `actors` dump ` (marked)`; docs/dev/crafting.md "Maker's mark"); food knows when it was made, `Stack::died`, and joins whatever its age,
 keeping the oldest: `docs/dev/hunger.md`), piles (`add_to_pile`: dropped stacks go on top, index 0 is the top the
 map shows), inventories (`add_to_inventory`: any number of stacks, weight is the only limit; new
 stacks go last),
 `Weight` (base + carried), `format_weight`, and `phrase` for messages. An area spell may destroy
-items lying in piles (`world/ruin.rs`, `data/ruin.toml`; docs/dev/spells.md "Ruin"). Piles live in
+items lying in piles (`world/magic/ruin.rs`, `data/ruin.toml`; docs/dev/spells.md "Ruin"). Piles live in
 `LevelState::objects` (by position, never empty) with `object_memory` beside them (piles as last
 seen, updated by `Perception::remember` on cells where creatures would be seen); inventories in
 `Actor::inventory` (spawned from a level's `carry`). The rules know every actor's weight
@@ -81,7 +81,7 @@ list every part
 Materials are not hidden: nothing about them waits for identification. Construction lists per
 part (`made_of`, #194) are resolved by `part::construction` (below, "Materials and variants").
 Tests: `content/part.rs` (the
-vocabulary, the forms, shares, naming, worth), `world/parts_tests.rs` (built-in objects, names
+vocabulary, the forms, shares, naming, worth), `world/items/parts_tests.rs` (built-in objects, names
 and descriptions, unidentified items, value by shares, generated loot and creature kits, saves
 and replays).
 
@@ -110,7 +110,7 @@ or `frequency`, are never in loot or shops; `Content::ammunition`'s lowest id ke
 alone). `arrowhead` (class `materials`, 5 g, worth its metal, never loot) is the smith's
 intermediate: one object for arrows and bolts, its main part its metal.
 
-Whittle (#1028) works the same `Stack::worked` state as Temper, on a weapon, launcher, shield, or armour whose main part is of a material of `group = "wood"` (`world/temper.rs`).
+Whittle (#1028) works the same `Stack::worked` state as Temper, on a weapon, launcher, shield, or armour whose main part is of a material of `group = "wood"` (`world/crafting/temper.rs`).
 
 **Materials and variants** (spec §7 "Materials", #193, #194). `content/material.rs`:
 `MaterialDef` gains `group`, `color`, `weight` (percent of steel's), `to_hit` and `damage`
@@ -165,10 +165,10 @@ name a material, `"great_sword:bronze"` (`parse_stacks` / `placement`, checked b
 `item_parts::check`), and `[[item]]` `parts = [{ of = "bronze" }]` (no size or cut); a unique item
 is placed by its id, `"unique:widowmaker"`, once in all content (`docs/dev/magic-items.md`, "Unique
 items"). Tests:
-`world/variant_tests.rs` (material checks, construction lists and their refusals, the math,
+`world/creatures/variant_tests.rs` (material checks, construction lists and their refusals, the math,
 names and colours, the description, placements and refusals, combat, saves and replays, the
 weights and the cap, loot determinism, the built-in tables, a property test over thousands of
-loot items and drops across seeds and depths); `world/material_draw_tests.rs` (#1191: the base
+loot items and drops across seeds and depths); `world/items/material_draw_tests.rs` (#1191: the base
 share and the odd share of every object's weights at every level, sampled loot by use against
 the targets (own 85–93 %, poor under 3 %, odd under 0.5 % at levels 1 and 5), the fits of tin
 swords and wool rings, the factions' favourites within the list, and rolled skeleton gear).
@@ -177,18 +177,18 @@ swords and wool rings, the factions' favourites within the list, and rolled skel
 { acid, rust, fire }` (`content/material.rs::Resists`, percent, every kind given;
 `deny_unknown_fields`), its chance to withstand that kind of
 `ItemHarm` (`Acid`, `Rust`, `Fire`, and `Work`, a failed temper or whittle, which no material
-withstands). A material without it withstands nothing. `world/item_damage.rs` is the one path: `World::withstands(at, harm)`
+withstands). A material without it withstands nothing. `world/combat/item_damage.rs` is the one path: `World::withstands(at, harm)`
 (the one check every source makes; 0 and 100 draw nothing, else one gameplay draw; a protected
 item withstands everything first, drawing nothing) and `World::harm_item(at, harm) -> Harmed::{Withstood, Damaged,
 Destroyed}`: withstood, nothing; else an undamaged item is damaged (`Worked::damage(harm)`, its
 `by` kept for the word: "corroded", "rusted", "scorched", "damaged"), one damaged already
 destroyed (`remove_stacks`, off the equipment too). The sources: a creature's `corrodes`
-(`world/corrode.rs`, its `kind` acid, rust, or fire; `docs/dev/creatures.md`'s gimmicks) and a
-failed attempt (`world/temper.rs`, kind `Work`). Ruin (`world/ruin.rs`) is not item damage: it
+(`world/combat/corrode.rs`, its `kind` acid, rust, or fire; `docs/dev/creatures.md`'s gimmicks) and a
+failed attempt (`world/crafting/temper.rs`, kind `Work`). Ruin (`world/magic/ruin.rs`) is not item damage: it
 destroys floor items outright by its own table, which already goes by material and group, but
 it honours the same protection.
 
-**Protection** (#1170): `World::item_protected(stack)` (`world/item_damage.rs`, over the free
+**Protection** (#1170): `World::item_protected(stack)` (`world/combat/item_damage.rs`, over the free
 `protected(content, quest_objects, stack)` that ruin calls with the set gathered once a cast) is
 the one rule every source of item damage reads, ruin, corrosion, rust, heat, and a failed temper
 or whittle alike: a unique (`Magic::unique`), an item of the `proof` affix effect ("of Proof",
@@ -234,10 +234,10 @@ glyph colour every screen and the map read: a loose gem's, or a ring's gem's by 
 `"gem:ruby*3"` (`parse_stacks`, plain size and cut) and any gem with `[[item]]` `parts`
 (`dagger:ruby` is refused: only a loose gem names its gem).
 Loot, drops, and the item description are in `docs/dev/magic-items.md`. Tests:
-`world/gem_tests.rs` (data, value, names, naming order, colour, stacking, placements, loot
+`world/items/gem_tests.rs` (data, value, names, naming order, colour, stacking, placements, loot
 frequency across seeds, drops, saves and a replay, the general store).
 
-**Carried lights** (spec §5 "Light sources", #643; `world/lamp.rs`): an object with a `light`
+**Carried lights** (spec §5 "Light sources", #643; `world/items/lamp.rs`): an object with a `light`
 and a `slot` but no `burns` is a carried light (`ObjectDef::carried_light`; the lantern,
 `objects/lantern.toml`, a tool). Its mode is the stack's `light` (`object::LightMode`: unlit,
 lit, hooded; saved, left out while unlit, and named after the item, "a lantern (lit)"), kept
@@ -245,7 +245,7 @@ wherever the stack goes. `Actor::ready_light` finds the one in the equipment (th
 `World::use_tool` (`Action::UseTool`, `use_tool`, `u`) turns it to its next mode, and
 `WorldState::carried_light` is the one place its light is read (a talent's `lantern_light`
 while lit, the preset's `hooded` while hooded): the light cache's player source. In the pack or
-on the ground it gives no light. Tests: `world/lamp_tests.rs` (`with_lantern` gives fixture
+on the ground it gives no light. Tests: `world/items/lamp_tests.rs` (`with_lantern` gives fixture
 content one), the light itself in `light_tests.rs`.
 
 **Pieces and breaking** (spec §7 "Pieces and breaking", #484; `piece.rs`): `objects/piece.toml`
@@ -276,7 +276,7 @@ and `verb` together (`Profession`); `gems = { skill, stat, verb }` is the gems' 
 loader refuses a group twice or one no material has, empty words, a partial profession, unknown
 skills, and a skill named with two stats. `Stock::profession_of(content, material)` (a gem the
 gems' row, else its group's) and `World::profession_of(material) -> Option<(SkillId, Stat)>`
-(`world/stock.rs`) are the one read: nothing in code names a group or a skill. Jewelcraft
+(`world/items/stock.rs`) are the one read: nothing in code names a group or a skill. Jewelcraft
 (Dexterity, verb Cut) works stone, resin, and the gems.
 
 **Stock extensions** (#1349; docs/design/recipes.md §3): a `[[group]]` row's `unit` (default 1,
@@ -304,7 +304,7 @@ the general store `never` lays out a herb or an essence (it stocks the class for
 green, gold; `*` in the colour, 20 g, 25 gold, made of stone) and the two rare materials
 `heart_crystal` and `soul_fetter` (30 g, 300 gold), caught in salvage and never sold (every shop
 that stocks `materials` has them in `never`; docs/dev/enchanting.md).
-Gathering is Herbalism's Gather (#1340, `world/gather.rs`, `data/herbs.toml`; docs/dev/skills.md),
+Gathering is Herbalism's Gather (#1340, `world/skills/gather.rs`, `data/herbs.toml`; docs/dev/skills.md),
 and a herbalist's forage finds the surface ones; drops are below (P15).
 
 `piece::count_for(content, grams, material)` =
@@ -314,7 +314,7 @@ and recipe check (salvage reads it, docs/dev/crafting.md). Shops (`shops.toml`):
 stores stock `materials`; they, the weaponsmith, the armourer, and the fletcher buy them;
 Cēaptūn lays out steel and iron ingots in its smithy (a wood billet is worth nothing yet, so no shop trades it). Tests:
 `piece.rs` (names with and without a row, the §3 counts, units, sinew and pelts),
-`content/stock.rs` (professions, overrides, the loader's refusals), `world/stock.rs`
+`content/stock.rs` (professions, overrides, the loader's refusals), `world/items/stock.rs`
 (`profession_of`, Cēaptūn's piles through a save, the shops, herbs and essences, the alchemist).
 
 **Material drops** (#1341, P15; the design: docs/design/recipes.md §9, §10; spec §7 "Material
@@ -332,7 +332,7 @@ small 50: a halved 25 % stays exact as 125 ‰). `Content::tag_drops` keeps the 
 wiki. Loader refusals: neither or both of `material` and `object`, an unknown one, a gem (gems
 come by the gems' chance) or a material with no group, bad dice, a chance outside 1 to 100, a
 tag no creature carries (a typo would drop nothing), a tag's second file. The roll,
-`World::drops_of` (`world/material_drops.rs`), runs in `fight.rs::creature_dies` after the
+`World::drops_of` (`world/items/material_drops.rs`), runs in `fight.rs::creature_dies` after the
 carried gear and `loot_of`, not for a body turned to stone (no corpse) nor a summoned or risen
 ally (which leave nothing): each row a draw below 1000 then its dice (a roll below 1 gives
 nothing), from the stream `materials/<actor id>`, so the loot (`drop/`) and gem draws and every
@@ -341,6 +341,6 @@ one stack. Whoever made the kill. The untagged beasts were tagged for it (warg, 
 deer, bat: `beast`; the gorgon `dragon`, as every `combat = "dragon"` type is), which also
 makes them count for `tag:beast` and `tag:dragon` kill quests. Wiki: `creature-drops.md`
 (`xtask/src/wiki/drops.rs`: each creature's resolved rows, and each tag's as written). Tests:
-`world/material_drops_tests.rs` (the union and its order, bodiless rows, a spirit, half for
+`world/items/material_drops_tests.rs` (the union and its order, bodiless rows, a spirit, half for
 small, the own stream with loot unchanged, one stack, the refusals, every file, the new tags,
 the arena's litter).

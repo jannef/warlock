@@ -112,12 +112,12 @@ file). Topics:
 - `docs/dev/caster-styles.md` — the caster styles (Sniper, Toucher, Battle caster): the grip by the spell, their benefit in the hooks, `practise_cast` and the `Outcome`, the caster curve, the Magic page (the schools of magic are only spell categories since #1263)
 - `docs/dev/spells.md` — the spell data: spell levels (0 to 70), the cost table, the `[[spell]]` files and their checks (none on strength), tags, learning
 - `docs/dev/resources.md` — alternative resources: the data, `Actor::resources`, grant, gain, spend, and end, time in the status loop, ability costs, the dev grant
-- `docs/dev/openings.md` — the thief's openings: the mark (`Actor::mark`, `world/mark.rs`), chosen attacks and free blows, the builds (`mark_kill`), the clears, the refusal, what the player sees
+- `docs/dev/openings.md` — the thief's openings: the mark (`Actor::mark`, `world/classes/mark.rs`), chosen attacks and free blows, the builds (`mark_kill`), the clears, the refusal, what the player sees
 - `docs/dev/blood.md` — wounds and stains, bleeding, how blood is drawn, blood by damage type, fire's char
 - `docs/dev/creatures.md` — factions and stance, the AI, paths, creature sight, spawning, gear (a stable index: roster PRs edit only their own `docs/dev/creatures/<tribe>.md`, e.g. `undead.md`, never this file)
 - `docs/dev/summoning.md` — creatures' summoning (enemy-only): the `summon` table, the cooldown status, who summoned whom, the AI hook, the words
 - `docs/dev/allies.md` — allies: `Actor::ally`, the side, the ally arm of the AI, the three orders, following across levels and the retinue, the clock, an ally's kill, Beast-bond, the dev `ally:`
-- `docs/dev/companion.md` — the animal companion: `AllySource::Companion(CompanionData)`, the starting beast by race and the rares (`data/companions.toml`), taming (`world/tame.rs`), the name, growth with the master's level (the hooks in `actor.rs`), always along, the nose, `CreatureDef::{tameable, nose}`, the story's chapter, the `companion` dump
+- `docs/dev/companion.md` — the animal companion: `AllySource::Companion(CompanionData)`, the starting beast by race and the rares (`data/companions.toml`), taming (`world/allies/tame.rs`), the name, growth with the master's level (the hooks in `actor.rs`), always along, the nose, `CreatureDef::{tameable, nose}`, the story's chapter, the `companion` dump
 - `docs/dev/familiar.md` — the witch's familiar: `AllySource::Familiar(CompanionData)` and `kept()`, the starting beast by race (`data/familiars.toml`), the touch, the harrying, the direction asked with two kept beasts beside, the `familiar` dump
 - `docs/dev/animated.md` — animated objects: creature types generated at load, their bodies and streams, drops, immunities, the look
 - `docs/dev/npcs.md` — unique characters, chat and ask, rotation lines and mutters, displacement
@@ -132,7 +132,7 @@ file). Topics:
 - `docs/dev/traps.md` — trap data, triggering, known traps, the dev trap actions
 - `docs/dev/searching.md` — secret doors, the active and passive checks, who notices, the secrets stream
 - `docs/dev/magic-items.md` — affixes, rarities, base items, loot, identification, the item description
-- `docs/dev/enchanting.md` — affix capacity (`magic/capacity.rs`, materials' `binding`), the trim as the last step of making any item (`loot::finished`, gear's after its condition), `quality` on hand-made items, the capacity line for the Appraise-trained, the recipes (Kindle, Quicken, Recast, Imbue, Ennoble, Unbind: `world/enchant.rs`, `roll_affix_within`, the reach)
+- `docs/dev/enchanting.md` — affix capacity (`magic/capacity.rs`, materials' `binding`), the trim as the last step of making any item (`loot::finished`, gear's after its condition), `quality` on hand-made items, the capacity line for the Appraise-trained, the recipes (Kindle, Quicken, Recast, Imbue, Ennoble, Unbind: `world/crafting/enchant.rs`, `roll_affix_within`, the reach)
 - `docs/dev/potions.md` — potions: the drink kinds, drinking through Consume, words and colours, sources, their talents
 - `docs/dev/prayer.md` — the priest's prayer: `data/prayer.toml`, the prayer talents and `FaithMods::prayer`, the face, the problems in priority order, the strain and its lock, the fixes, the dumps
 - `docs/dev/scrolls.md` — reading, spell scrolls on the traps' shared spell code, the scroll of identify, the read and identify lists

@@ -5,15 +5,16 @@
 //! people known by their proper names, Eadric the smith teaching Metalcraft (#1394), Godgifu's rumours (never a reveal; the ways they mark are `rumour_tests.rs`), the dev scenario, and
 //! a replay.
 
-use super::*;
 use crate::action::parse_actions;
 use crate::content::{ContentFiles, DialogueId, ServiceKind, Stance};
 use crate::dump::{self, Layer};
 use crate::replay::Replay;
 use crate::test_support::{run as act, texts};
+use crate::world::*;
 use std::sync::LazyLock;
 
-const SCENARIO: &str = include_str!("../../../../assets/campaigns/ascmearc/scenarios/ceaptun.toml");
+const SCENARIO: &str =
+    include_str!("../../../../../assets/campaigns/ascmearc/scenarios/ceaptun.toml");
 const TOWN_CELL: Pos = Pos::new(18, 28);
 const START: Pos = Pos::new(46, 17);
 const HILD: Pos = Pos::new(27, 25);
@@ -47,7 +48,7 @@ fn put_player(world: &mut World, at: Pos) {
 
 fn gold(world: &World) -> u32 {
     let coin = world.content().object_id("gold_coin").expect("gold");
-    super::shop::count_of(&world.state().player().inventory, coin)
+    crate::world::people::shop::count_of(&world.state().player().inventory, coin)
 }
 
 /// The creature on `at` in the town.
@@ -526,7 +527,7 @@ fn godgifu_tells_of_the_march_but_reveals_nothing() {
 fn the_town_at_the_start() {
     let w = town();
     let rows = dump::layer_rows(&w, Layer::View).join("\n");
-    insta::with_settings!({ snapshot_path => "../snapshots" }, {
+    insta::with_settings!({ snapshot_path => "../../snapshots" }, {
         insta::assert_snapshot!("ceaptun_start", rows);
     });
 }

@@ -18,7 +18,6 @@
 //!
 //! Each has a stream of its own, so no other roll of the run moves.
 
-use super::World;
 use crate::content::{Content, GOLD, TalentEffect};
 use crate::equipment;
 use crate::gem;
@@ -27,10 +26,11 @@ use crate::magic::loot;
 use crate::object::{self, Stack};
 use crate::rng::Rng;
 use crate::talent::{CraftEffect, FortuneEffect};
+use crate::world::World;
 
 impl World {
     /// Hands out what `effects` (a rank just taken) give once: gold, gems, an heirloom.
-    pub(super) fn hand_down(&mut self, effects: impl Iterator<Item = TalentEffect>) {
+    pub(in crate::world) fn hand_down(&mut self, effects: impl Iterator<Item = TalentEffect>) {
         let content = self.content.clone();
         let Some(spec) = self.state.character.as_ref().map(|c| c.spec.to_string()) else {
             return;

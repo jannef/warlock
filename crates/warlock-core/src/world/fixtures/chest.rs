@@ -6,7 +6,7 @@
 //!   open chest), and the player is told what they find. A locked one opens only to a key that
 //!   fits (only a skeleton key fits a lock without an id), unlocking it in the same action
 //!   (`unlock` + `open_chest`); without one, "The coffer is locked." and no time passes. Pick
-//!   lock (`world/lockpick.rs`) and Knock (`world/knock.rs`) open the lock without a key.
+//!   lock (`world/skills/lockpick.rs`) and Knock (`world/fixtures/knock.rs`) open the lock without a key.
 //! - **Kicking** a shut chest (`kick:DIR`, priced as a door kick, banging as one): one gameplay
 //!   draw, `1d(sturdiness) ≤ Strength` + athletics + Lockbreaker's `door_kick` + Hobnailed's
 //!   (`World::kick_force`), against its band's sturdiness. It holds ("You kick the coffer. It holds.") or bursts apart: smashed,
@@ -24,7 +24,6 @@
 //! A chest's entry stays on its cell once it is open or broken (empty), so it is still named by
 //! its band; nothing closes it again.
 
-use super::{ActorId, Spent, World};
 use crate::action::Event;
 use crate::chest::{Breaking, ChestState, destroyed};
 use crate::content::ActionKind;
@@ -34,6 +33,7 @@ use crate::noise::Act;
 use crate::object::{Stack, add_to_pile, phrase};
 use crate::skills::Use;
 use crate::text::capitalized;
+use crate::world::{ActorId, Spent, World};
 
 /// The sturdiness of a chest without a band (content without `data/chests.toml`).
 const STURDINESS: u8 = 20;
@@ -41,7 +41,7 @@ const STURDINESS: u8 = 20;
 impl World {
     /// The name of the chest at `p` on the current level: its band's ("coffer"), else its
     /// terrain's.
-    pub(super) fn chest_name(&self, p: Pos) -> String {
+    pub(in crate::world) fn chest_name(&self, p: Pos) -> String {
         let level = self.state.current();
         let band = (level.chests.get(&p)).and_then(|c| self.content.chests().band_of(c.level));
         match band {
@@ -79,7 +79,7 @@ impl World {
     /// The player opens the shut chest at `p` (unlocked by now): its trap, if any, goes off at
     /// them first, and a burst blows the chest apart instead of opening it; else the lid lifts
     /// ([`World::lift_lid`]).
-    pub(super) fn open_lid(&mut self, p: Pos, events: &mut Vec<Event>) {
+    pub(in crate::world) fn open_lid(&mut self, p: Pos, events: &mut Vec<Event>) {
         let (_, blown) = self.spring_chest_trap(p, self.state.player, events);
         if !blown {
             self.lift_lid(p, events);
@@ -91,7 +91,7 @@ impl World {
     /// apart, nothing spared (unless the burst's own blast already did it). Returns the energy a
     /// pit's climb costs (never on a chest) and whether a chest blew up. Nothing happens where no
     /// trap lies.
-    pub(super) fn spring_chest_trap(
+    pub(in crate::world) fn spring_chest_trap(
         &mut self,
         p: Pos,
         victim: ActorId,
@@ -169,7 +169,7 @@ impl World {
     /// chance; a blast spares nothing), the rest spills on its cell, and the terrain becomes the
     /// smashed chest. It is said (a kicked chest always, a blast's if the player sees it), then
     /// what broke and what is left.
-    pub(super) fn break_chest(&mut self, p: Pos, how: Breaking, events: &mut Vec<Event>) {
+    pub(in crate::world) fn break_chest(&mut self, p: Pos, how: Breaking, events: &mut Vec<Event>) {
         let name = self.chest_name(p);
         let seen = how == Breaking::Smashed || self.perception.is_visible(p);
         let holds = self.empty_chest(p);
@@ -216,7 +216,7 @@ impl World {
     /// Chest-wise (spec §8 "Chests"): a shut chest's hidden trap in the player's sight gives
     /// itself away to them, known and remembered at once and said ("You notice that the coffer
     /// is trapped: an arrow trap."). No draw: the talent sees it.
-    pub(super) fn chest_wise_look(&mut self) {
+    pub(in crate::world) fn chest_wise_look(&mut self) {
         let level = self.state.current();
         if level.chests.is_empty() || self.state.player().talents.is_empty() {
             return;

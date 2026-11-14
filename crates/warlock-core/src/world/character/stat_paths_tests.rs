@@ -2,7 +2,6 @@
 //! hook that reports a use of the player's stats, one test each (or a few where one call
 //! carries several), on content where every chance is 100 so a mark comes without a draw.
 
-use super::*;
 use crate::action::{AttackKind, parse_actions};
 use crate::combat::{Blow, Strike};
 use crate::content::{ContentFiles, HAUL_GRAMS, StatUse};
@@ -11,11 +10,12 @@ use crate::skills::Use;
 use crate::stats::{PerStat, Stat};
 use crate::temperature::Temperature;
 use crate::test_support::builtin;
+use crate::world::*;
 use std::sync::LazyLock;
 
 /// The built-in `data/stats.toml` with every chance at 100.
 fn sure_stats() -> String {
-    let text = include_str!("../../../../assets/data/stats.toml");
+    let text = include_str!("../../../../../assets/data/stats.toml");
     (text.lines())
         .map(|l| match l.starts_with("chance = ") {
             true => "chance = 100\n".to_string(),
@@ -240,9 +240,12 @@ fn wading_deep_water_trains_strength_but_not_walking_its_ice() {
     let water = SURE.terrain_id("water").expect("water");
     let floor = SURE.terrain_id("floor").expect("floor");
     let got = earned(&mut w, |w| {
-        w.train_wade(water, super::ice::Footing::Plain);
-        w.train_wade(water, super::ice::Footing::Held { climb: false });
-        w.train_wade(floor, super::ice::Footing::Plain);
+        w.train_wade(water, crate::world::levels::ice::Footing::Plain);
+        w.train_wade(
+            water,
+            crate::world::levels::ice::Footing::Held { climb: false },
+        );
+        w.train_wade(floor, crate::world::levels::ice::Footing::Plain);
     });
     assert_eq!(got, only(&[Stat::Strength], 1));
     // A step into the yard's pool, in the game.
