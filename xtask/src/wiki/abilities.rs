@@ -245,8 +245,8 @@ fn read_more(content: &Content, a: Ability) -> String {
             _ => page("Professions", "skill-uses.md#professions"),
         },
         Ability::Forage => page("Foraging", "skill-uses.md#foraging"),
-        Ability::SecondWind => link(Term::Talent, "second_wind", "Talents"),
-        Ability::BloodMagic => link(Term::Talent, "blood_magic", "Talents"),
+        Ability::SecondWind => super::talents::talent_link(content, "second_wind", "Talents"),
+        Ability::BloodMagic => super::talents::talent_link(content, "blood_magic", "Talents"),
         Ability::ShieldBash => link(Term::WeaponSkill, "shield_bash", "Weapon skills"),
         Ability::ThrowVoice => page("Throwing your voice", "hearing.md#throwing-your-voice"),
         Ability::Pray => page(

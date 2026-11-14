@@ -32,7 +32,7 @@ against the number it needs, as in [hitting](combat.md#hitting).
 
 - **Your lookout.** Your edge is your [Willpower](stats.md#stat-willpower)
   [modifier](stats.md#modifiers), plus what [Spot](skills.md#skill-spot) and
-  [Survival](skills.md#skill-survival) give the lookout, plus [Alert](talents.md#talent-alert) and
+  [Survival](skills.md#skill-survival) give the lookout, plus [Alert](talents-exploring.md#talent-alert) and
   the other talents below. You need the difficulty, plus their leader's stalk (what its
   [Stealth](skills.md#skill-stealth) gives), plus the land's cover, plus the
   [rain](weather.md#how-the-weather-changes), plus the dark at night or in twilight. The dark
@@ -121,7 +121,7 @@ needs no enemy within three cells of you.
 a quarter of the chance an hour's travel on that land has. Asleep, you keep no watch but your
 ears. Your check is your [Willpower](stats.md#stat-willpower) [modifier](stats.md#modifiers) plus
 your [hearing](hearing.md) ([Listen](skills.md#skill-listen) and
-[Keen ears](talents.md#talent-keen-ears)) plus [Alert](talents.md#talent-alert). It needs the
+[Keen ears](talents-exploring.md#talent-keen-ears)) plus [Alert](talents-exploring.md#talent-alert). It needs the
 difficulty plus their stalk plus the rain; neither cover nor the dark hides a sound.
 
 Whoever comes always finds your camp. If you make the check, you wake in time to meet them ("You

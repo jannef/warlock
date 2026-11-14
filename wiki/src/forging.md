@@ -7,7 +7,7 @@ an [anvil](terrain.md#terrain-anvil) from metal stock. How well a piece comes ou
 **You need:**
 - **Skill:** Metalcraft. [Dwarves](races.md#race-dwarf) and
   [duergar](races.md#race-duergar) start with it, a [craftsperson](class-craftsperson.md#trades)
-  may take the [Smith](talents.md#talent-smith) trade, and a [commoner](class-commoner.md) may have
+  may take the [Smith](talents-origins.md#talent-smith) trade, and a [commoner](class-commoner.md) may have
   it as their trade (others: [Which skills you start with](skills.md#which-skills-you-start-with)). [Eadric the smith](npcs.md#eadric-the-smith) in
   Cēaptūn teaches it for 2000 gold.
 - **Stock:** ingots of metal, bought, found, or [salvaged](salvage.md).

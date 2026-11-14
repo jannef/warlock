@@ -22,7 +22,7 @@ pub(super) fn text(content: &Content, effect: &CraftEffect) -> String {
                 (content.skill_id(&skill)).map_or(skill.clone(), |s| content.skill(s).name.clone());
             format!(
                 "at creation, [{name}](skills.md#skill-{}) trained at {dice}, \
-                 and the [tools of the trade](talents.md#crafts-a-craftspersons-trades); a \
+                 and the [tools of the trade](talents-origins.md#crafts-a-craftspersons-trades); a \
                  [skill roll](skills.md#improving-a-skill) on it throws the die one step up, as on a \
                  skill your class is known for (never two steps)",
                 skill.replace('_', "-")

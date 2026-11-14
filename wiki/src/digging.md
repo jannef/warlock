@@ -22,7 +22,7 @@ slowly, and [see across](sight.md#line-of-sight).
 Each turn of digging is a [normal action](turns.md#what-actions-cost), 6 seconds at a normal pace,
 and it takes many turns. The harder the wall, the longer it takes. A better tool and more
 [Strength](stats.md) get you through faster. A heavy load slows digging, as it slows everything
-you do ([Burden](burden.md)). The [Tunneler](talents.md#talent-tunneler) talent does half again as
+you do ([Burden](burden.md)). The [Tunneler](talents-exploring.md#talent-tunneler) talent does half again as
 much work a turn (see [Talents](talents.md)). [Magic](magic-items.md) that digs faster, on a
 pick-axe, gloves, or body armour, adds its percent of work a turn on top (see
 [Magic items](magic-items.md)). So does the [Mining](skills.md#skill-mining) skill: 25 % more at 100, 40 % more at

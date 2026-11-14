@@ -53,7 +53,7 @@ What shows them after all:
 
 - [Seeing](status-list.md#status-seeing), from the spell
   [See invisible](magic.md#spell-see-invisible) or the potion of seeing;
-- [Blood scent](talents.md#talent-blood-scent), on one it scents;
+- [Blood scent](talents-exploring.md#talent-blood-scent), on one it scents;
 - your companion's [nose](companions.md#companions);
 - a blow of yours that hits, for that turn.
 

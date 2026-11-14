@@ -112,7 +112,7 @@ duergar, and outlaws. What they wear is their [Protection](combat.md#protection)
 Hard bodies are what armour-piercing is for: the war hammer, the stiletto,
 [crossbow bolts](ammunition.md), and [criticals](combat.md#criticals). A critical's damage is
 multiplied first and the Protection taken off only once. The
-**[Armour-breaker](talents.md#talent-armour-breaker)** talent's criticals drive through 2 more.
+**[Armour-breaker](talents-body.md#talent-armour-breaker)** talent's criticals drive through 2 more.
 
 [Protection](combat.md#protection) by body and level, rounded down (each kind's own is in
 [Creatures in numbers](creature-numbers.md)):

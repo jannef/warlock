@@ -158,7 +158,7 @@ below zero and does you no other harm. Once you are out of the room it passes: "
 ebbing."
 
 Creatures with mana ebb in the room just as you do, and you can see it on them ("ebbing").
-Creatures without mana are left alone. The talent *[Old delver](talents.md#talent-old-delver)*
+Creatures without mana are left alone. The talent *[Old delver](talents-exploring.md#talent-old-delver)*
 keeps it from ever taking you.
 
 ## Asleep

@@ -468,7 +468,7 @@ mod tests {
             "{checks}"
         );
         assert!(
-            checks.contains("[Alert](talents.md#talent-alert) (+2)"),
+            checks.contains("[Alert](talents-exploring.md#talent-alert) (+2)"),
             "{checks}"
         );
         let odds = odds(&content);

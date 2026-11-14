@@ -18,7 +18,7 @@ The passive skills help you more the higher they are:
   also makes them harder for those they are sung against to shake off: +4 to their difficulty at
   100, +8 at 200. Its two rows in the table below are its ladders. Every song trains it.
 - **[Athletics](skills.md#skill-athletics)** makes you quicker in everything you do: a twentieth at 100 and a tenth at 200. It
-  adds to the quickness of [talents](talents.md) such as [Fleet-footed](horoscope.md#talent-fleet-footed) and [Quick](talents.md#talent-quick). Your load slows you on top of it.
+  adds to the quickness of [talents](talents.md) such as [Fleet-footed](horoscope.md#talent-fleet-footed) and [Quick](talents-body.md#talent-quick). Your load slows you on top of it.
   It also helps you kick doors in. Besides kicks, it trains now and
   then when you act under a load that slows you, on journeys on the [overworld](overworld.md#travel), and when you
   climb out of a [pit](traps.md#trap-pit).
@@ -32,7 +32,7 @@ The passive skills help you more the higher they are:
   local area or a dungeon. It also lets you forage in the wild, finding food more often the higher
   it is (see [Foraging](skill-uses.md#foraging)).
 - **[Swim](skills.md#skill-swim)** makes you quicker through [water](terrain.md#water) and [marsh](terrain.md#terrain-marsh): of what wading adds to a step, 60 % is
-  saved at 100 and all of it at 200. The [Swimmer](talents.md#talent-swimmer) talent saves all of it at once. When you
+  saved at 100 and all of it at 200. The [Swimmer](talents-exploring.md#talent-swimmer) talent saves all of it at once. When you
   [plunge through the ice](temperature.md#falling-in), you make a check on your [Toughness](stats.md#stat-toughness) plus the table's points against 11; if you
   make it, you lose half the hit points. Swim is also what lets you into [deep water](terrain.md#deep-water) at all.
 - **[Negotiation](skills.md#skill-negotiation)** gets you better prices in [shops](shops.md): you pay less and are offered more. A healer
@@ -93,9 +93,9 @@ The passive skills help you more the higher they are:
 - **[Sneak attack](skills.md#skill-sneak-attack)** adds d6s to a hit on a foe that has not seen you, or is [surprised](status-list.md#status-surprised).
   - You get 1d6 once you are trained at all, one more at 25, 50, 75, and 100, then one more every
     50 (5d6 at 100, 7d6 at 200). The dice come after [Protection](combat.md#protection), a [critical](combat.md#criticals) never doubles them,
-    and they add to the dice of talents such as [Ambusher](talents.md#talent-ambusher).
+    and they add to the dice of talents such as [Ambusher](talents-exploring.md#talent-ambusher).
   - A blow counts at any reach. A shot, a throw, or a [spell](magic.md) that rolls to hit counts only within
-    6 cells ([Long reach](talents.md#talent-long-reach): 9). Nothing without vitals takes the dice.
+    6 cells ([Long reach](talents-fighting.md#talent-long-reach): 9). Nothing without vitals takes the dice.
   - It also makes those you catch unawares slower to gather their wits: their initiative check is
     8 harder at 100, 12 at 200.
   - Each sneak attack that hits trains it half the time.
@@ -120,7 +120,7 @@ The passive skills help you more the higher they are:
 
 ## The numbers
 
-[Skill focus](talents.md#talent-skill-focus) makes one skill you are trained in count 25 higher in the table below, the way a
+[Skill focus](talents-mind.md#talent-skill-focus) makes one skill you are trained in count 25 higher in the table below, the way a
 magic item's bonus does. It works past 100 too, since 100 only slows a skill's [growth](skills.md#improving-a-skill) and is no
 ceiling. It stacks with [Master of none](class-bard.md#talent-master-of-none) and any magic item. Your Skills screen still shows the value
 you trained. On most skills the +25 is worth 2 points of what the skill gives below 100, and 1

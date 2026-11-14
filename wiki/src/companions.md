@@ -55,7 +55,7 @@ you.
 
 Only some kinds can be tamed: see the Tameable column of
 [Creatures in numbers](creature-numbers.md#pace-senses-and-size). The beast must also not be your
-foe (wildlife, or an animal a [Beast-friend](talents.md#talent-beast-friend) has calmed), or must
+foe (wildlife, or an animal a [Beast-friend](talents-exploring.md#talent-beast-friend) has calmed), or must
 not have seen you (asleep, say).
 
 You crouch beside it for a while, holding out food if you carry any. If you are hurt, or it leaves

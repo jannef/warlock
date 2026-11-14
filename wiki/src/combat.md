@@ -174,6 +174,12 @@ A hit does the weapon's damage dice, at least 1:
 
 {{#include generated/weapons.md}}
 
+How each weapon is held, its [weapon skill](weapon-skills.md), how far it can be thrown, and the
+few extras: a parry bonus to your [Defence](#defence) while you hold it, and the Strength a bow
+needs.
+
+{{#include generated/weapon-handling.md}}
+
 Messages never give numbers. They say what kind of blow it was: "The kobold stabs you.", "You
 slash the giant rat hard!", "The giant rat bites the kobold.", "You cleave the kobold." (see
 [Damage types](damage-types.md)).

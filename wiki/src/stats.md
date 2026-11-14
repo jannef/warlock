@@ -180,7 +180,7 @@ level's check comes on top):
 
 {{#include generated/stat-pace.md}}
 
-The **[Gourmand](talents.md#talent-gourmand)** [talent](talents.md) doubles the marks a fresh corpse gives.
+The **[Gourmand](talents-body.md#talent-gourmand)** [talent](talents.md) doubles the marks a fresh corpse gives.
 
 ### Losing marks
 
@@ -228,7 +228,7 @@ Your **[potential](stats.md#potentials)** stays where it was, so a drained stat 
 like any other. A temple's **mending** gives every drained point back at once, along with any
 stat damage (see [Services](npcs.md#services)).
 
-[Talents](talents.md) help you hold: **[Unbroken soul](talents.md#talent-unbroken-soul)** (+4 to the check), **[Iron will](talents.md#talent-iron-will)** (+2 to every Willpower check),
+[Talents](talents.md) help you hold: **[Unbroken soul](talents-body.md#talent-unbroken-soul)** (+4 to the check), **[Iron will](talents-body.md#talent-iron-will)** (+2 to every Willpower check),
 and the [paladin](class-paladin.md)'s **[Divine grace](class-paladin.md#talent-divine-grace)** (+2 to the check).
 
 The creatures that drain:

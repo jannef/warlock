@@ -21,15 +21,15 @@ pub(super) fn threat_range(threat: u8) -> String {
 }
 
 /// The weapons and missile weapons: their damage dice, critical (threat range and multiplier),
-/// parry, the Strength a bow needs, and how they are held. Rules from data, nothing about who
-/// wields them.
+/// and the time a blow takes; how they are held is [`weapon_handling`]. Rules from data, nothing
+/// about who wields them.
 pub(super) fn weapons(content: &Content) -> String {
     let mut out = String::from(
-        "| Weapon | Damage | Critical on | Critical damage | Parry | Needs Strength | Held | \
-         Thrown | Weapon skill | A blow takes |\n|---|:---:|:---:|:---:|:---:|:---:|---|:---:|---|---:|\n",
+        "| Weapon | Damage | Critical on | Critical damage | A blow takes |\n\
+         |---|:---:|:---:|:---:|---:|\n",
     );
     let melee = content.action_costs().cost(ActionKind::Melee);
-    for (id, o) in order::objects(content) {
+    for (_, o) in order::objects(content) {
         let Some(attack) = &o.attack else { continue };
         let in_hand = (content.slots().iter()).any(|s| s.hand && o.slot.as_ref() == Some(&s.fits));
         let blow = if in_hand {
@@ -37,12 +37,46 @@ pub(super) fn weapons(content: &Content) -> String {
         } else {
             "-".to_string()
         };
-        let parry = if o.parry > 0 {
-            format!("+{}", o.parry)
-        } else {
-            "-".into()
+        let _ = writeln!(
+            out,
+            "| {} | {} | {} | ×{} | {blow} |",
+            capital(&o.name),
+            attack.damage,
+            threat_range(attack.threat),
+            attack.crit,
+        );
+    }
+    let _ = writeln!(
+        out,
+        "\nBare hands: {} (plus your Strength, as every blow), critical on {}, ×{}.",
+        combat::Attack::unarmed(None).damage,
+        threat_range(combat::DEFAULT_THREAT),
+        combat::DEFAULT_CRIT
+    );
+    out
+}
+
+/// Each weapon's handling (#1668: apart from [`weapons`]' blows): its weapon skill, where it is
+/// held (and whether it shoots), how far it is thrown, and the rarer extras, its parry bonus and
+/// the Strength a bow needs.
+pub(super) fn weapon_handling(content: &Content) -> String {
+    let mut out = String::from(
+        "| Weapon | Weapon skill | Held | Thrown | Parry, Strength needed |\n\
+         |---|---|---|:---:|---|\n",
+    );
+    for (id, o) in order::objects(content) {
+        let Some(attack) = &o.attack else { continue };
+        let mut extras = Vec::new();
+        if o.parry > 0 {
+            extras.push(format!("parry +{}", o.parry));
+        }
+        if let Some(s) = attack.strength {
+            extras.push(format!("needs Strength {s}"));
+        }
+        let extras = match extras.is_empty() {
+            true => "-".to_string(),
+            false => extras.join(", "),
         };
-        let strength = attack.strength.map_or("-".to_string(), |s| s.to_string());
         let held = if o.launches.is_some() {
             format!("{}, shoots", goes_on(content, id).to_lowercase())
         } else {
@@ -57,20 +91,10 @@ pub(super) fn weapons(content: &Content) -> String {
         });
         let _ = writeln!(
             out,
-            "| {} | {} | {} | ×{} | {parry} | {strength} | {held} | {thrown} | {skill} | {blow} |",
+            "| {} | {skill} | {held} | {thrown} | {extras} |",
             capital(&o.name),
-            attack.damage,
-            threat_range(attack.threat),
-            attack.crit,
         );
     }
-    let _ = writeln!(
-        out,
-        "\nBare hands: {} (plus your Strength, as every blow), critical on {}, ×{}.",
-        combat::Attack::unarmed(None).damage,
-        threat_range(combat::DEFAULT_THREAT),
-        combat::DEFAULT_CRIT
-    );
     out
 }
 

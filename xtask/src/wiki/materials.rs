@@ -3,7 +3,7 @@
 //! metal.
 
 use super::order;
-use super::util::{capital, percent, signed, times, yes};
+use super::util::{capital, percent, signed, times};
 use std::fmt::Write as _;
 use warlock_core::content::{
     Content, Fit, MaterialDef, MaterialId, ObjectDef, PartRole, VERY_RARE,
@@ -40,19 +40,89 @@ fn how_often(weight: u32) -> &'static str {
     }
 }
 
-/// Every material by group, then name: its group, colour, weight, weapon modifiers (and the dice
-/// more a weapon of it rolls), the Protection an armour of it keeps, the Defence a shield of it
-/// gives, and worth, all on steel's scale; whether it is precious
-/// (shown in names); its chance to withstand each kind of item damage (acid, rust, fire), or
-/// "never damaged" for a `proof` one; its
-/// `work` (added to the difficulty of working it); its `binding` (what it adds to the
-/// enchantments an item of it can bear); and the objects made of it, in part or whole.
+/// Every material by group, then name (#1668: four tables of a topic each): its group, colour,
+/// weight, and worth on steel's scale, a precious one (shown in names) marked by its name.
 pub(super) fn materials(content: &Content) -> String {
+    let mut out =
+        String::from("| Material | Group | Colour | Weight | Worth |\n|---|---|---|---:|---:|\n");
+    for (_, m) in by_group(content) {
+        let group = m.group.as_deref().unwrap_or("-");
+        let colour = (m.color.or(m.gem.as_ref().map(|g| g.color)))
+            .map_or("-".to_string(), |c| format!("`{c}`"));
+        let name = match m.precious {
+            true => format!("{} (precious)", capital(&m.name)),
+            false => capital(&m.name),
+        };
+        let _ = writeln!(
+            out,
+            "| {name} | {group} | {colour} | {}% | {} |",
+            m.weight,
+            times(m.value)
+        );
+    }
+    out
+}
+
+/// Every material that can be a weapon's working part or armour, by group, then name: its weapon
+/// modifiers (and the dice more a weapon of it rolls), the Protection an armour of it keeps, and
+/// the Defence a shield of it gives, all on steel's scale.
+pub(super) fn material_arms(content: &Content) -> String {
     let mut out = String::from(
-        "| Material | Group | Colour | Weight | Weapon (to hit / damage) | Armour | Shield | Worth \
-         | Precious (shown in names) | Withstands acid | Withstands rust | Withstands fire | \
-         Work | Binding | Objects made of it, in part or whole |\n\
-         |---|---|---|---:|:---:|---:|---:|---:|:---:|---:|---:|---:|---:|---:|---|\n",
+        "| Material | Weapon (to hit / damage) | Armour | Shield |\n|---|:---:|---:|---:|\n",
+    );
+    for (_, m) in by_group(content) {
+        if m.weapon().is_none() && m.protection.is_none() {
+            continue;
+        }
+        let weapon = (m.weapon()).map_or("-".to_string(), |(hit, damage)| match m.dice {
+            0 => format!("{} / {}", signed(hit), signed(damage)),
+            1 => format!("{} / {}, a die more", signed(hit), signed(damage)),
+            n => format!("{} / {}, {n} dice more", signed(hit), signed(damage)),
+        });
+        let armour = (m.protection).map_or("-".to_string(), |p| format!("{p}%"));
+        // What cannot be armour is no shield either.
+        let shield = (m.protection).map_or("-".to_string(), |_| format!("{}%", m.defence));
+        let _ = writeln!(
+            out,
+            "| {} | {weapon} | {armour} | {shield} |",
+            capital(&m.name)
+        );
+    }
+    out
+}
+
+/// Every material by group, then name: its chance to withstand each kind of item damage (acid,
+/// rust, fire), or "never damaged" for a `proof` one.
+pub(super) fn material_wear(content: &Content) -> String {
+    let mut out = String::from(
+        "| Material | Withstands acid | Withstands rust | Withstands fire |\n\
+         |---|---:|---:|---:|\n",
+    );
+    for (_, m) in by_group(content) {
+        let resists = m.resists();
+        let withstands = |chance: u8| match m.proof {
+            true => "never damaged".to_string(),
+            false => format!("{chance}%"),
+        };
+        let _ = writeln!(
+            out,
+            "| {} | {} | {} | {} |",
+            capital(&m.name),
+            withstands(resists.acid),
+            withstands(resists.rust),
+            withstands(resists.fire),
+        );
+    }
+    out
+}
+
+/// Every material by group, then name: its `work` (added to the difficulty of working it), its
+/// `binding` (what it adds to the enchantments an item of it can bear), and the objects made of
+/// it, in part or whole.
+pub(super) fn material_work(content: &Content) -> String {
+    let mut out = String::from(
+        "| Material | Work | Binding | Objects made of it, in part or whole |\n\
+         |---|---:|---:|---|\n",
     );
     // A loose gem is made of its gem, never of what its object would be without one.
     let loose = content.gems().map(|g| g.object);
@@ -77,33 +147,10 @@ pub(super) fn materials(content: &Content) -> String {
         } else {
             made.join(", ")
         };
-        let group = m.group.as_deref().unwrap_or("-");
-        let colour = (m.color.or(m.gem.as_ref().map(|g| g.color)))
-            .map_or("-".to_string(), |c| format!("`{c}`"));
-        let weapon = (m.weapon()).map_or("-".to_string(), |(hit, damage)| match m.dice {
-            0 => format!("{} / {}", signed(hit), signed(damage)),
-            1 => format!("{} / {}, a die more", signed(hit), signed(damage)),
-            n => format!("{} / {}, {n} dice more", signed(hit), signed(damage)),
-        });
-        let armour = (m.protection).map_or("-".to_string(), |p| format!("{p}%"));
-        // What cannot be armour is no shield either.
-        let shield = (m.protection).map_or("-".to_string(), |_| format!("{}%", m.defence));
-        let resists = m.resists();
-        let withstands = |chance: u8| match m.proof {
-            true => "never damaged".to_string(),
-            false => format!("{chance}%"),
-        };
         let _ = writeln!(
             out,
-            "| {} | {group} | {colour} | {}% | {weapon} | {armour} | {shield} | {} | {} | {} | {} \
-             | {} | {} | {} | {made} |",
+            "| {} | {} | {} | {made} |",
             capital(&m.name),
-            m.weight,
-            times(m.value),
-            yes(m.precious),
-            withstands(resists.acid),
-            withstands(resists.rust),
-            withstands(resists.fire),
             signed(m.work),
             signed(i32::from(m.binding)),
         );

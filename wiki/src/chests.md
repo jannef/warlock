@@ -46,7 +46,7 @@ then loose [gems](gems.md). Its items are found as [loot](magic-items.md#finding
 so some may turn out to be gems. They are of the floor's level, or a few levels above it for the
 greater chests, and a share of them is sure to be [magic](magic-items.md) or
 [rare](magic-items.md#rarity). Talents that make your finds richer
-([Treasure hunter](talents.md#talent-treasure-hunter), [Hoard sense](horoscope.md#talent-hoard-sense))
+([Treasure hunter](talents-mind.md#talent-treasure-hunter), [Hoard sense](horoscope.md#talent-hoard-sense))
 count for what is in a chest too.
 
 {{#include generated/chest-loot.md}}
@@ -101,14 +101,14 @@ Without a key:
 Press `k` and a chest's direction to kick it, as you [kick a door](doors.md#kicking-a-door-open): 6 seconds,
 and just as [loud](hearing.md#how-loud). Your chance to break it is your
 [Strength](stats.md#stat-strength) against its **sturdiness**. Your
-[Athletics](skills.md#skill-athletics) skill and the [Lockbreaker](talents.md#talent-lockbreaker)
+[Athletics](skills.md#skill-athletics) skill and the [Lockbreaker](talents-exploring.md#talent-lockbreaker)
 talent add to your Strength for this, as for a door. A chest that holds says
 `You kick the coffer. It holds.`, and nothing else happens, so kick as often as you like.
 
 A chest that breaks is **smashed**: `The coffer bursts apart!` Its lock is gone, and **each
 [stack](objects.md#piles) inside has an even chance to break**, one after another. The rest lies in
 the splinters. **Coins and loose [gems](gems.md) never break** under a boot. The
-[Lockbreaker](talents.md#talent-lockbreaker) talent (Strength 12) halves the chance.
+[Lockbreaker](talents-exploring.md#talent-lockbreaker) talent (Strength 12) halves the chance.
 
 ```
 The coffer bursts apart!
@@ -176,11 +176,11 @@ skill, finds a chest's trap like any [hidden trap](traps.md#finding-traps)
 [look mode](controls-prompts.md#look-mode) says so: "A coffer, trapped: an arrow trap." The chest keeps its
 own look on the map. A known trap on a chest can be **disarmed** like any other (see
 [Traps](traps.md#disarming-traps)), and the chest is then an ordinary shut chest.
-[Trap sense](talents.md#talent-trap-sense) halves a chest trap's blow, as any trap's.
+[Trap sense](talents-exploring.md#talent-trap-sense) halves a chest trap's blow, as any trap's.
 
 ## The Chest-wise talent
 
-With the [Chest-wise](talents.md#talent-chest-wise) talent ([Intelligence](stats.md#stat-intelligence)
+With the [Chest-wise](talents-exploring.md#talent-chest-wise) talent ([Intelligence](stats.md#stat-intelligence)
 11 or [Detect traps](skills.md#skill-detect-traps) 15), you can tell at a glance whether a shut
 chest you see is locked. [Look mode](controls-prompts.md#look-mode) calls it "a locked coffer" or "an
 unlocked coffer". A trapped chest gives itself away as soon as you see it, with no search and no

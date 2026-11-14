@@ -62,10 +62,10 @@ resist it. The physical kinds have neither prefix nor suffix: [Protection](comba
 
 Two [talents](talents.md) work on damage types:
 
-- **[Elemental ward](talents.md#talent-elemental-ward)** is taken for one element: [fire](damage-types.md#damage-fire), [cold](damage-types.md#damage-cold), [electricity](damage-types.md#damage-electricity), [acid](damage-types.md#damage-acid), [poison](damage-types.md#damage-poison),
+- **[Elemental ward](talents-fighting.md#talent-elemental-ward)** is taken for one element: [fire](damage-types.md#damage-fire), [cold](damage-types.md#damage-cold), [electricity](damage-types.md#damage-electricity), [acid](damage-types.md#damage-acid), [poison](damage-types.md#damage-poison),
   [force](damage-types.md#damage-force), or [necrotic](damage-types.md#damage-necrotic). It resists that element 25 % per rank, up to two ranks. It counts like gear,
   under the same 75 % cap. A ward against poison also shrinks each dose of poison.
-- **[Crusher](talents.md#talent-crusher)** lets your striking blows and kicks ignore 2 points of the target's [Protection](combat.md#protection). That
+- **[Crusher](talents-body.md#talent-crusher)** lets your striking blows and kicks ignore 2 points of the target's [Protection](combat.md#protection). That
   covers a mace, a club, a staff, bare hands, and a [shield bash](abilities.md#ability-shield-bash). Shots and throws are not
   blows.
 

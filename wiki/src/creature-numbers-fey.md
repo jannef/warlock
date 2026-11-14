@@ -6,6 +6,8 @@ creature behaves on [Creatures](creatures.md#the-creatures).
 
 ## Stats and skills
 
+{{#include generated/creature-levels.md:fey}}
+
 {{#include generated/creature-stats.md:fey}}
 
 ## Hit points, Defence, and resistances
@@ -19,5 +21,7 @@ creature behaves on [Creatures](creatures.md#the-creatures).
 ## Pace, senses, and size
 
 {{#include generated/creature-senses.md:fey}}
+
+{{#include generated/creature-size.md:fey}}
 
 See also: [The dungeons one by one](dungeon-guide.md) and [Creature tricks](creature-tricks.md).

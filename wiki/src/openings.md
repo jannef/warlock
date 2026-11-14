@@ -82,7 +82,7 @@ ability, then something to throw, then the target.
   weapon in your hand.
 - **One of what you throw leaves your hand**, as any throw. It lands by the foe or breaks.
 - **Its reach** is the weapon's throw range, but never more than 6 cells (more with
-  [Long reach](talents.md#talent-long-reach)): past that the sneak dice would not land. A dagger
+  [Long reach](talents-fighting.md#talent-long-reach)): past that the sneak dice would not land. A dagger
   throws 5.
 - **It is refused**, taking no time and spending nothing, for everything Exploit refuses (no
   opening, no hostile you see there, a creature other than your mark, no vitals), for a flask
@@ -93,7 +93,7 @@ ability, then something to throw, then the target.
 
 ## The talent on it
 
-**[Patient blade](talents.md#talent-patient-blade)** (Shadow; [thief](class-thief.md), level
+**[Patient blade](talents-exploring.md#talent-patient-blade)** (Shadow; [thief](class-thief.md), level
 32): openings slip away half as fast, a point every 40 base turns instead of every 20. Killing
 your [mark](#the-mark) yourself gives two openings instead of one.
 

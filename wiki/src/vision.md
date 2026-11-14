@@ -29,11 +29,11 @@ all: they do not see it, and it does not light anything for them.
 Your vision type comes from your race: the table on [Races](races.md) lists each race's eyes.
 [Talents](talents.md) of the Shadow tree change them:
 
-- **[Night eyes](talents.md#talent-night-eyes)** (normal eyes) halves the light a cell needs.
-- **[Dark adaptation](talents.md#talent-dark-adaptation)** (darkvision or low-light) adds 2 cells of
+- **[Night eyes](talents-exploring.md#talent-night-eyes)** (normal eyes) halves the light a cell needs.
+- **[Dark adaptation](talents-exploring.md#talent-dark-adaptation)** (darkvision or low-light) adds 2 cells of
   darkvision. Darkvision reaches 2 cells farther, and low-light eyes see 2 cells around them
   however dark it is.
-- **[Blood scent](talents.md#talent-blood-scent)** (darkvision) sees a
+- **[Blood scent](talents-exploring.md#talent-blood-scent)** (darkvision) sees a
   [bleeding](status-effects.md#bleeding) [creature](creatures.md) in your line of sight within 9
   cells, however dark it is.
 
