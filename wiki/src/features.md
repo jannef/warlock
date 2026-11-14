@@ -105,11 +105,11 @@ walls.
 
 Wounds can [bleed](status-effects.md#bleeding), bites can [poison](status-effects.md#poisoned), and
 [diseases](diseases.md) take points off your stats. [Hit points](hit-points.md#hit-points) come
-back with [time](healing.md#how-fast), twice as fast while you [rest](resting.md#how-resting-works).
+back with [time](healing.md#how-fast-you-heal), twice as fast while you [rest](resting.md#how-resting-works).
 
 ## Magic
 
-[Spells](magic.md#the-spells) cost [mana](mana.md#how-much). A few come with a casting class; the
+[Spells](magic.md#the-spells) cost [mana](mana.md#how-much-mana-you-have). A few come with a casting class; the
 rest are learned from [scrolls](scrolls.md). [Wands](wands-and-rods.md#wands) cast their spell
 from charges, for anyone. [Rods](wands-and-rods.md#rods) do what no spell does, such as digging or
 sending a creature away, for your own mana. Some classes use [resources](resources.md) of their
@@ -134,9 +134,9 @@ You get [hungry](hunger.md). [Eat](food.md#eating) rations, bread, and apples be
 ## The dungeon's defences
 
 Some [doors](doors.md) are [locked](doors.md#locked-doors): open them with a [key](doors.md#keys),
-or [kick](doors.md#kicking) them in (`k`). [Traps](traps.md) lie hidden until someone steps on
+or [kick](doors.md#kicking-a-door-open) them in (`k`). [Traps](traps.md) lie hidden until someone steps on
 them. [Secret doors](doors.md#secret-doors) look like the wall until you
-[search](searching.md#searching-1) (`s`, or any wait) or [notice them in passing](searching.md#noticing-in-passing).
+[search](searching.md#how-to-search) (`s`, or any wait) or [notice them in passing](searching.md#noticing-in-passing).
 With a pick-axe you can [dig](digging.md) through walls.
 
 ## People, quests, and shops
@@ -164,3 +164,5 @@ one), °C or °F, and fully [rebindable keys](controls.md#rebinding-keys).
 
 The game [saves](saving.md) one file per run, when you quit and [as you play](saving.md#when-the-game-saves).
 When you die, the save is deleted. It runs on Windows, macOS, Linux, and in the browser (WebGPU).
+
+See also: [Controls](controls.md), [Your character](character.md), and [Combat](combat.md).

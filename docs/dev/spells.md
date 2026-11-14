@@ -6,9 +6,9 @@ the spell scaling design `docs/design/spell-scaling.md` (its slices S0 to S6, tr
 Keep it current with the code, as CLAUDE.md says.
 
 The spell system is built in waves (design §13). This file covers what is built: the **data
-foundation** (#394: the cost table, the spell files, the tags; spell levels in
-place of the tier table since S1, #748), the **one cast path** (#395: cost, reach, dice,
-resolution, the shapes, and the casters' placeholder spells migrated onto it), **learning**
+foundation** (#394: the cost table, the spell files, the tags; spell levels,
+#748), the **one cast path** (#395: cost, reach, dice,
+resolution, the shapes, the casters' spells), **learning**
 (#396: the learned set, study, the check, mishaps; "Learning" below), the **first spell list**
 (#397: the spells, their scrolls, the classes' guaranteed spells; "The first list" below),
 **wands** (#398; "Wands" below), **rods** (#399; "Rods" below), the **Spellcraft talents**
@@ -19,25 +19,25 @@ cast path shares.
 - **Spell levels** (S1, #748; the spell scaling design §5, decisions 1, 9, 10, 16): every spell
   has `level = N` (the design's 0 to `MAX_SPELL_LEVEL`, 70; the loader reads any `u8`), one
   number with two meanings: its **base mana**
-  (`max(floor, level)`, the floor `[mana] floor` of `data/spells.toml`, 4 since #1264:
+  (`max(floor, level)`, the floor `[mana] floor` of `data/spells.toml`, 4, #1264:
   `SpellRules::floor`, default 1 without the table, so every spell of level 0 to 4 is priced as
   a level-4 spell and a starting caster's pool buys four to eight casts of a cantrip, not twenty)
   and the **learning at which its grimoire teaches for certain**. A
-  spell of level 0 or 1 is a cantrip (a spell's own `mana` still replaces the base, Identify's;
-  Burning hands' and Grave breath's `mana = 3` went with the floor, #1264: the cone price at the
-  floor, 6, is theirs). There is no table of levels, no ceiling, no cap, and no
-  load-time check on how much a spell does, now or in any later slice (decision 16): authors
-  write the strength they intend. Each tier column became a rule of the level (§5.2): the
-  comfortable level is the spell's level; the cost is the level; the overreach surcharge,
-  `ceiling`, `max_lift`, the resolutions' `damage` percent, and the run-time cap are gone; a
+  spell of level 0 or 1 is a cantrip (a spell's own `mana` replaces the base, Identify's;
+  Burning hands and Grave breath pay the cone price at the floor, 6, #1264). There is no table
+  of levels, no ceiling, no cap, and no
+  load-time check on how much a spell does (decision 16): authors
+  write the strength they intend. What a tier decided is a rule of the level (§5.2): the
+  comfortable level is the spell's level; the cost is the level; there is no overreach
+  surcharge, `ceiling`, `max_lift`, damage percent by resolution, or run-time cap; a
   wand's charges are its own; study time and difficulty are by levels (`data/study.toml`).
 - **Ladders and hooks** (S2, #749; the spell scaling design §4, §6, §7, decisions 2 to 8, 12, 14
   to 16): a spell's growth is written in its own file as **ladders** (`[spell.grows]`,
   `content/spell_ladder.rs`), and talents and items act on it through **six named hooks**
   (`content/spell_mod.rs`'s `SpellMods`, summed by `Actor::spell_mods`, `world/spell_mods.rs`;
-  read by `world/spell_rung.rs` and the cast path). The S1 bridge (dice by the caster's
-  level, the lift, `SpellDice`, `[spell.scales]`, `max_range`/`max_length`/`max_radius`,
-  `spell_scale.rs`) is gone. Nothing of the caster's level grows a spell.
+  read by `world/spell_rung.rs` and the cast path). Nothing of the caster's level grows a
+  spell: there are no dice by the caster's level, no lift, and no `[spell.scales]` or
+  `max_range`/`max_length`/`max_radius` keys.
 - **Data**:
   - `assets/data/spells.toml` (`SpellRules`, `content/spell_def.rs`): the cost table:
     `[shapes]` (cost percents: `ray`, `bolt`, `touch`, `self`, `cone`, `line`, and `burst` a
@@ -50,9 +50,8 @@ cast path shares.
     comment-only file, like the classes'). Read by `ContentFiles::table("spells")`
     minus `data/spells.toml` itself, so campaigns may add spells; a spell without the cost table
     is an error. Ids are `SpellId` indices in path order and enter the content fingerprint (saves
-    name them: `Actor::spells`); a spell file added, removed, or renamed changes saves (S1
-    edits the 26 in place: `tier = N` became `level = N`, path order kept).
-  - Arcane training, the wizard's, is `skill { decipher_script, 10 }` (#988; Spellcraft until #1270).
+    name them: `Actor::spells`); a spell file added, removed, or renamed changes saves.
+  - Arcane training, the wizard's, is `skill { decipher_script, 10 }` (#988, #1270).
   - `mana_level = 60` in `data/experience.toml` (the last level), and the
     damage types `force` and `necrotic` at the end of `data/damage_types.toml` (non-physical:
     `Choice::Element` offers them, so Elemental ward may be taken for them).
@@ -125,7 +124,7 @@ cast path shares.
   field on the affix when it does). `Actor::spell_mods(content, spell)` is the one sum of
   the two and the caster's **rank** in the spell (`Actor::rank_mods`, "Ranks" below; the
   caster style's `Benefit::spell_mods` joins in `Actor::spell_mods_in_style`,
-  docs/dev/caster-styles.md; the schools' ranks went with #1263). `spell_mods_by(content,
+  docs/dev/caster-styles.md; the schools have no ranks, #1263). `spell_mods_by(content,
   spell, by)` and `spell_mods_in_style_by` take the `CastBy`: the rank joins an own cast only,
   never a scroll's or a wand's (`Cast::settle` passes its `by`; `spell_roll(by)` too). `cost` is the one field beside the six: School
   focus's percent, summed into `spell_mana_percent` in `Actor::spell_base` (the decision of this
@@ -192,7 +191,7 @@ cast path shares.
     }).with(benefit)` against
     `combat::Target::bare(target_against(target, missile).defence)` (no Protection; the strike's
     damage, crit included, is then resisted in `spell_strikes`, nothing holding it). The
-    `benefit` (#571) is the caster style's (`Actor::spell_skills`: no weapon skill since #1263,
+    `benefit` (#571) is the caster style's (`Actor::spell_skills`: no weapon skill, #1263,
     docs/dev/caster-styles.md; the style the spell is cast in, decided
     once a cast, `world/cast_style.rs`: Battle caster in armour that hinders casting, else
     Toucher for a touch, Sniper for a ray or a bolt (#1251); `Benefit::at_distance` adds Sniper's
@@ -228,9 +227,8 @@ cast path shares.
     a confirmation) and the damage dice for a single target, one draw a die in group order and
     one more for each die the reroll hook sends back; one roll for an area, its targets in
     ascending actor id. A buff, hex, cleanse, or rider draws nothing.
-  - **Saves**: nothing new in #395 (costs and reaches are derived); a spell is a `SpellId`
-    (an index, in the content fingerprint) since #397. Old replays that cast verify only if the spell's cost is the same as
-    the placeholder's; the regenerated costs change the state hash of any that cast.
+  - **Saves**: costs and reaches are derived, never saved; a spell is a `SpellId` (an index,
+    in the content fingerprint, #397).
 - **Creatures' casts** (#1102, `world/creature_cast.rs`, docs/dev/creatures.md "Casters"): a
   `combat = "caster"` creature casts its type's `spells` through the same pieces: `Cast::by_creature`
   (reach, roll, degrees at its stats, `Pay::Creature`, `CastBy::Own`), its mana spent first with
@@ -374,37 +372,24 @@ cast path shares.
     `wiki/src/miscasts.md`.
 - **Choices** (design §14 and the issue's open points, decided here):
   - The attack roll's skill: rays, bolts, and touches aim with their `aim` stat (Dexterity unless
-    the spell names another; none does), threat and critical at the blows' defaults, plus since
-    #571 a caster style (the schools' skills, which aimed too, went with #1263);
-    Spellcraft does not aim spells (it has no benefit since #1270, when learning went to
-    Decipher script).
+    the spell names another; none does), threat and critical at the blows' defaults, plus a
+    caster style (#571; the schools are no skills, #1263);
+    Spellcraft does not aim spells (it has no benefit: learning is Decipher script's, #1270).
   - A critical rolls the damage again, and nothing holds it (decision 4).
   - S2's decisions (the issue's open points): **School focus's cost** is a `cost` field on the
     one `SpellMods` (the design §7.2 writes it so), not a separate effect; the hooks are six
     (rung, dice, roll, rider, reach, degrees), `cost` the seventh field beside them and not a
     hook of growth. **Affix names** as the issue lists them (`spell_rungs`, `spell_bonus`,
-    `spell_sides`, `spell_dice`, `spell_reroll`, `wand_rungs`; `Effect::SpellDice` is free since
-    the `SpellDice` struct went). **No tag filter on affixes** yet: no shipped affix needs one,
+    `spell_sides`, `spell_dice`, `spell_reroll`, `wand_rungs`). **No tag filter on affixes** yet: no shipped affix needs one,
     and items sum into one table (`Mods`), so one is added with its first user. **The hex
     wands** (Sleep, Web) have no roll ladder, so their `rungs` range is 0 to 0 (the design's
     "the seven ship with `rungs = { min = 0, max = 2 }`" holds for the five that roll). **The
     reach a talent adds** is held only by the engine's limits (a cone at `MAX_CONE`): School
-    focus on Burning hands is a cone of 4, where S1 held it at its cap of 3. **Trained stats**
+    focus on Burning hands is a cone of 4. **Trained stats**
     are the ladders' stats (Intelligence when the roll has none): a spell with no reach ladder
-    (Burning hands) no longer trains Willpower by the old default. **An old Potent** was held to
-    the nearest tier's range at a lenient read until #840 pinned saves to their version.
+    (Burning hands) trains no stat for its reach.
   - A ray/bolt flies to the first creature on its line; a hex (`ray`, `auto`) keeps the
     placeholder's rule, the creature seen at the cell aimed at.
-  - The migrated tiers (#395, history: S1 turned them into levels, §5.8): the lowest tier
-    whose cap holds the placeholder's dice (damage spells), else one near the placeholder's mana, never above the tier the class reaches when
-    it grants the spell (so none costs overreach when granted). Costs and the data, old in
-    brackets: Blessing 0 (1; 2), Cure wounds 2 (6; 4, now 2d6 for 1d8 + level/2), Remove
-    disease 3 (11; 10), Call lightning 4 (29; 8, a line), Flame 3 (26; 10), Frost 2 (14; 10),
-    Arcane bolt 2 (11; 3, a line of force), Fire burst 3 (26; 9), Evil eye 1 (3; 2), Hex of
-    weakness 1 (3; 3), Curse of sloth 1 (3; 4), Blight 2 (14; 8). Armour: chain 10, scale 20,
-    banded 30, plate 40, great helm 10, large shield 10, tower shield 20. #397 retiered some
-    of them for the first list (below): Blessing 1, Cure wounds 1 (a touch), Evil eye 0, Call
-    lightning 3 (2d6 to 3d6), and Fire burst folded into Fireball.
 - **Spells aimed at a corpse** (#999; the spell types design §7 entries 2, 29, 30;
   `world/corpse_spell.rs`, tests `world/corpse_spell_tests.rs`): `[spell.effect] corpse =
   "consumed" | "kept"` (`CorpseUse`) on a burst of harm, a touch that heals, or a `self` summon with
@@ -429,8 +414,8 @@ cast path shares.
     `base_degrees` read `rise.minutes`. `count` and `roll()` are none: one corpse, one creature. No
     alignment deed, no caster level.
 - **The first list** (#397; design §7, §8; tests `world/spell_list_tests.rs`):
-  - **Spells are data**: `SpellId` (an index in path order) is the one spell type; the
-    twelve-variant `ClassSpell` of #395 is gone. `Action::Cast(String, _)` names the spell by its
+  - **Spells are data**: `SpellId` (an index in path order) is the one spell type.
+    `Action::Cast(String, _)` names the spell by its
     data id (`use:ID[:X,Y]`: any `use:ID` that is no birth sign or class active, parsed without
     content; an unknown one is refused by the rules, "You have no such ability."). The
     `Ability` methods that need a spell's shape or id take the content (`aim`, `action`,
@@ -441,7 +426,7 @@ cast path shares.
   - **The list** (33 spells, by spell level, the spell scaling design §5.8; Water walking 5, Brand
     7, and Fire cloak 12, #1002, are buffs of status fields, docs/dev/status-effects.md): 0 Evil eye, Light
     (self buff: Lit, whose `light` the light cache sheds about the caster; #589, the scroll of
-    light's); 1 Burning hands (cone 3, `mana = 3`, #979), Grave breath (the same, necrotic, #979), Mend
+    light's); 1 Burning hands (cone 3, #979), Grave breath (the same, necrotic, #979), Mend
     (touch heal), Ray of frost (ray, attack), Spark (bolt, auto); 3 Barkskin
     (buff), Blessing, Cure wounds (touch heal 2d6), Curse of sloth, Hex of weakness, Magic
     missile (bolt, auto, force, 1d4 to 2d4); 4 Cause wounds (touch,
@@ -452,15 +437,14 @@ cast path shares.
     "The druid's calls"): 5 Call of the wild, 20 Call of the forest, 35 Call the elements, each
     with a scroll at the README's convention carried past level 12 (item level about half the
     spell's: 3, 10, 18; frequency 35, 10, 5; value 100, 320, 500) and a `study_difficulty` (8,
-    10, 12). Six costs moved with the levels: Cause wounds 2 → 3,
-    Burning hands 5 → 6, Scorching ray 6 → 7, Web 11 → 13, Blight 14 → 17, Flame 26 → 29. New statuses: `drowsy` (cost 300), `webbed`
-    (blocks `step`), `hasted` (cost 75: `COST_PERCENT` is now 50 to 1000, and `spell_def`
+    10, 12). Their statuses: `drowsy` (cost 300), `webbed`
+    (blocks `step`), `hasted` (cost 75: `COST_PERCENT` is 50 to 1000, and `spell_def`
     refuses a status below 100 on anything but a buff, so only the caster is hastened and the
-    rest batching stays exact), `barkskin` (Dodge +2). New effects: `frost_ray`, `spark` (bolts; `frost_ray` a ray since #1249, Flay and Leech on
-    `pale_ray`, its old line).
+    rest batching stays exact), `barkskin` (Dodge +2). Their effects: `frost_ray` (a ray, #1249) and `spark` (a bolt);
+    Flay and Leech use `pale_ray`.
   - **The data-only fourteen** (#998; the spell types design §7 entries 5, 7 to 10, 12, 13, 17,
     19, 20, 22, 23, 27, 28; tests `world/spell_data_tests.rs` and the content tables in
-    `content/spell_def.rs`): 4 Nightsight (buff, `cat_eyed`, one degree so no ladder; its ranks add three, the status's `max` 4 since #1268); 5 Acid
+    `content/spell_def.rs`): 4 Nightsight (buff, `cat_eyed`, one degree so no ladder; its ranks add three, the status's `max` 4, #1268); 5 Acid
     arrow (bolt, attack, acid; its own bolt look `acid_arrow` in `data/effects.toml`), Mesmerise
     (ray hex, `transfixed`); 8 Flay (ray, auto, necrotic 1d4, Bleeding 2 to 4 by Presence),
     Glamour (buff, new `glamoured`: Dodge +3), Unbinding (cleanse of the eight hex statuses); 9
@@ -511,9 +495,8 @@ cast path shares.
     `burst_cells` but the caster, friend or foe; each seen is said ("The rat is drowsy."). It
     goes off whether or not anyone is there. No draws.
   - **Scrolls of spells**: one object per spell (`scroll_of_ID`, `read` kind `spell`;
-    docs/dev/scrolls.md), the three older ones too since S2 (fireball `rungs = 1`, lightning 2,
-    frost 0: their burst and bolt readings and `read.rs::read_spell` went); every scroll teaches
-    a spell (#592). Read: `World::read_cast`, the cast path with `Pay::Scroll(item, rungs)` (the
+    docs/dev/scrolls.md), the fireball, lightning, and frost scrolls too (`rungs` 1, 2, and 0,
+    S2); every scroll teaches a spell (#592). Read: `World::read_cast`, the cast path with `Pay::Scroll(item, rungs)` (the
     `Cast` struct's `pay`; `World::pay_cast` is the one place a cast pays, mana or scroll, once
     it is sure to go off) at the scroll's `rungs` plus the reader's `scroll_rungs`.
     Level, frequency, and value are each scroll's own; the objects' README states the
@@ -527,9 +510,9 @@ cast path shares.
     `FULL` list: druid, priest, witch, wizard) to a cantrip (level 0 or 1) at 1 and three to twelve spells (the priest's three:
     their rite is the Orison, `docs/dev/prayer.md`), and the others to at
     most two boons of level 5 or less. Every class has `mana`
-    at least 1 (the berserker and the warrior gained theirs); races keep their own.
+    at least 1 (the berserker and the warrior too); races keep their own.
   - **Choices** (design §14, the defaults): q1, q2, q3, q5, q7 as above (interrupted study
-    keeps the scroll, now the grimoire, which is never used up since #1260; Dexterity aims; no talent lifts a cap (since S1 there is none); `force` and `necrotic` stay; Scroll savant
+    keeps the grimoire, which is never used up, #1260; Dexterity aims; no talent lifts a cap (there is none); `force` and `necrotic` stay; Scroll savant
     never keeps a studied scroll); q4: the guaranteed lists as §8, the paladin's and ranger's boons Blessing and Barkskin at 6, the bard's Mend and
     Blessing; q6: the mishap table unchanged. Sleep has no level limit (the design's "creatures
     of low level"): it slows rather than stops, so any creature may be caught.
@@ -617,14 +600,14 @@ cast path shares.
   - **Data**: `data/study.toml` (`StudyRules`: `base` 12, `per_overreach` 1, `known_per_point`
     20, `per_rank` 2 (a deepening's, `rank_difficulty(rank)` = `per_rank × (rank − 1)`),
     `turns_base` 100, `turns_per_level` 20, `bad_from` 6, `terrible_from` 15,
-    all in spell levels since S1, and the words' thresholds `easy`,
+    all in spell levels, and the words' thresholds `easy`,
     `struggle` in ways of 144); `data/mishaps/` (`Mishap`, one `[[mishap]]` a file, its
     `README.toml` the format: `band` slight/bad/terrible/lucky, `weight`, `message`, `effect`
     by `kind`: nothing, status, backfire, mana, teleport, lose_mark, drain, summon, learn, mark;
     only its kind's fields; `learn` and `mark` lucky by custom); `ObjectDef::grimoire` (above);
     a class's `affinity` (`ClassDef::affinity`, school → −10 to 10 study points); the skills'
-    `study` benefit (`skills::Effect::Study`, Decipher script's since #1270, Spellcraft's from #1024, a
-    curve to 20 at 200) and `study` mark (`Use::Study`, Decipher script's 100 % since #1270, and
+    `study` benefit (`skills::Effect::Study`, Decipher script's, #1270, a
+    curve to 20 at 200) and `study` mark (`Use::Study`, Decipher script's 100 %, and
     also `StatUse::Study`: Intelligence 100 %; Spellcraft marks only on `cast`);
     `ActionKind::Study` (`study` in `data/actions.toml`, a turn); Raging blocks `study`.
   - **The action** (`Action::Read { item, target: None }` of a grimoire, `read:b`;
@@ -653,7 +636,7 @@ cast path shares.
     actions insert into `spells` directly or via `TalentMods` and pay nothing.
   - **Learning, the number** (`Actor::learning(content) -> Option<i32>`, #987,
     `docs/design/no-caster-level.md` §2): the `learn` benefit (`skills::Effect::Learn`, Decipher script's
-    since #1270, in `data/skills.toml`; ceiling `MAX_SPELL_LEVEL`) through `Actor::skill_effect`, so skill
+    (#1270), in `data/skills.toml`; ceiling `MAX_SPELL_LEVEL`) through `Actor::skill_effect`, so skill
     affixes and the talents' `skill` bonuses count, at least 1; `None` when
     `Skills::trains_effect(Effect::Learn)` is false, whatever bonuses are worn. `None` means no
     learning at all: `study_odds` gives none, `PerceptionView::studies` lists nothing (the read
@@ -712,8 +695,8 @@ cast path shares.
     `spells` and `scrolls`; Overreach is the same effect's `overreach_percent` (S1).
 - **Wands** (#398; design §9; `content/wand.rs`, `world/zap.rs`, tests `world/zap_tests.rs`):
   - **Data**: `[object.wand]` (`WandSpec` → `Wand { spell, charges, min_rung, max_rung }` on
-    `ObjectDef::wand`): an aimed spell (`SpellData::aimed`), `charges` (required since S1: the
-    wand's own, the seven shipped with the old tier defaults, 12, 12, 9, 9, 9, 7, 7),
+    `ObjectDef::wand`): an aimed spell (`SpellData::aimed`), `charges` (required: the
+    wand's own),
     `rungs = { min, max }` (S2: default `min` 0, `max` the spell's roll ladder's length; a rung
     past the ladder casts at its last, `world/spell_rung.rs::rung_of`). The
     five wands that roll ship with `rungs = { min = 0, max = 2 }`, Sleep and Web with none (no
@@ -823,7 +806,7 @@ cast path shares.
 - **Talents** (#400; design §10; the spell scaling design §7.2; tests
   `world/spell_talent_tests.rs`): the `spells` system in `data/talents.toml`, held to the bar.
   The Spellcraft tree: Quick study (#396), Overreach (level 6, `study { overreach_percent = -33
-  }` since S1), School focus (`choice = "school"`, `Choice::School`: the seven schools then the
+  }`), School focus (`choice = "school"`, `Choice::School`: the seven schools then the
   non-physical damage types; `spell_mod { cost = -10, cells = 1 }`, one pick per choice, foci on
   the same spell add up), Keen mind (the same choice, `spell_mod { sides = 1 }`), and S2's three
   (each hook ships with a user, but the rider: "Spell types" below took Numbing cold's): Sure
@@ -832,8 +815,7 @@ cast path shares.
   scroll_rungs = 1 }`: scrolls only, decision 12), Arcane training (at 1: Decipher script +10), Empower (at 32, `spell_mod { rungs = 1 }`, mana −10 %), Archmage
   (at 60, `spell_mod { rungs = 2 }`, mana −50 %); its bonus talents from Scholar and
   Spellcraft. Empower, Archmage, and Frugal caster name `spells` beside `mana` (Empower and
-  Archmage no longer touch scrolls, so no longer `scrolls`); Scroll savant (which took in
-  Careful reader in #775) stays `scrolls` only. Wand mastery is in #398's wands; Channeler
+  Archmage do not touch scrolls, so not `scrolls`); Scroll savant (#775) is `scrolls` only. Wand mastery is in #398's wands; Channeler
   (`rod_cost_percent`, level 5) is in #399's rods.
 - **Balance** (#401; design §12, run against the data on 2026-10-27; `warlock-cli dump
   --character human,male,CLASS --actions "xp:N levelup:auto" --format json`, N the human
@@ -867,15 +849,10 @@ cast path shares.
      their casting reaches: each day of a level, one pool on the pace spell (of the school the
      build casts, as a category), every cast through `World::practise` as `practise_cast` does.
      The pool check by level: the pool over a single-target spell of the caster's own level
-     (base mana = the level). The schools' ranks it measured until #1263 are gone. No
-     casts-to-kill column.
-  6. **Tests**: since S1 `the_shipped_cost_table_reads_as_the_design_has_it` and
-     `the_shipped_table_makes_areas_dearer_and_touches_cheaper` (the cap check at load and the
-     tier table's went with the table, and nothing replaces them: decision 16).
-  - **Data changed**: the scrolls of fireball and lightning are worth 200 gold (were 150) and
-    frost 130 (was 100), the tier-3 and tier-2 values: #397 gave the three older scrolls their
-    tier's item level and frequency but kept their M29 values, so a scroll of fireball sold for
-    less than a scroll of flame, which does the same.
+     (base mana = the level). No casts-to-kill column.
+  6. **Tests**: `the_shipped_cost_table_reads_as_the_design_has_it` and
+     `the_shipped_table_makes_areas_dearer_and_touches_cheaper`; there is no cap check at load
+     (decision 16).
 - **Wiki**: `xtask/src/wiki/spells.rs` (`spell-shapes.md`, `spell-resolutions.md` (resolution,
   roll, cost), `spell-list.md` (spell, level, school, shape and resolution,
   the base reach, what the base does, **Grows with**: each ladder in words, `grows_with`, the
@@ -963,9 +940,8 @@ What an area spell does to the items lying in it (#1100; spec §8 "Spells", "Rui
 An area that lies on the floor for a time (`world/zone.rs`; the design's §7 "Zones", #1000).
 Balefire, Reek, Mirk, Slick, and Fume (scroll only) lay one, and so do the flasks of Reek, Mirk, and Slick
 (stinking, darkness, oil: `docs/dev/potions.md`), with `[spell.effect] zone = { kind, turns }`
-    #571 a caster style (the schools' skills, which aimed too, went with #1263);
-    Spellcraft does not aim spells (it has no benefit since #1270, when learning went to
-    Decipher script).
+(`SpellZone`, `ZoneKind` in `content/spell_def.rs`, checked at load: a zone lies on a burst's
+or a line's cells).
 
 - **State**: `LevelState::zones: Vec<Zone>` (`kind`, `cells`, `until`, `by`, `harm`, `light`,
   `spell`), saved, hashed, left out while empty, and `LevelState::zone_memory`, what the player saw.
@@ -1090,7 +1066,7 @@ What every spell of a damage type does beyond its damage (the design:
   teleport into water does not (no step).
 - **Words**: `SpellType::words`, appended in `spell_words.rs::roll_words`, the one place the menu,
   the `spells` dump, and a wand's description read.
-- **Numbing cold** is gone (its rider is cold's). The `rider` hook on `spell_mod` stays, with no
+- There is no Numbing cold talent (its rider is cold's). The `rider` hook on `spell_mod` has no
   shipped user, for a talent that wants one (`when = ["fire"]` works beside the type's own).
 - **Determinism**: one `below(100)` per living creature harmed, only for a `chance` below 100,
   in `spell_lands`' order; before those, one per creature harmed with someone to arc to, past the
@@ -1200,8 +1176,8 @@ the shape too and refuses each field off its kind and shape).
 - **Shatter**: data only on force's rules, with the `shatter` burst effect (`data/effects.toml`:
   white and brief); Thunderclap's look too.
 - **The class test** (`spell_list_tests.rs`): a full caster's book is three to twelve spells (Q13),
-  and a hybrid has at most four (the bard's Mend, Thunderclap, Sense the quick); the "low boons"
-  clause is gone, as a class row is not what a spell is.
+  and a hybrid has at most four (the bard's Mend, Thunderclap, Sense the quick); it has no
+  "low boons" clause, as a class row is not what a spell is.
 - **Determinism**: Blink's one draw, Benison's one roll, Leech's none (its strike's); the rest draw
   nothing. **Saves**: `weather::Override` gains `since` (when it was given), read by `Override::at`
   in place of `until` less three hours.

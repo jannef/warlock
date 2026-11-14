@@ -32,7 +32,9 @@ one at hand, and Tame is refused with one. Nothing is kept on `WorldState`: the 
 derived from the actors, saved and hashed with its actor as every ally is. The code is
 `world/companion.rs`; the data `assets/data/companions.toml` → `content/companion.rs::CompanionRules`
 (`Content::companions()`, `None` without the file: then no companion can be made, and fixtures
-without it hash as before).
+without it hash as before). Its `[start]` (the lists by race and the rares) is
+`content/race_beasts.rs::RaceBeasts` (`CompanionRules::start`), shared with the familiar's
+file, which checks it and the names the same way (#1567).
 
 ## Gaining one: the starting beast
 

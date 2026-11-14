@@ -15,7 +15,7 @@ they practise with it.
 
 Every weapon belongs to one skill (see the weapon tables in [Combat](combat.md#damage) and
 [Ranged combat](ranged.md)). Every throw trains **[thrown weapons](weapon-skills.md#weapon-skill-thrown)**, whatever you throw: a dagger thrown is
-not a dagger held. **[Unarmed](weapon-skills.md#weapon-skill-unarmed)** covers fighting with your bare hands, and every [kick](doors.md#kicking) at a creature,
+not a dagger held. **[Unarmed](weapon-skills.md#weapon-skill-unarmed)** covers fighting with your bare hands, and every [kick](doors.md#kicking-a-door-open) at a creature,
 whatever you wield (see [Doors](doors.md)).
 
 No skill trains when your [shield](objects.md#class-shields) stops a blow. The Shield part of your [Defence](combat.md#defence) grows only with
@@ -46,7 +46,7 @@ columns. In a small one it scrolls (↑↓). It is page 5 of the [info pages](th
 The game never tells you in numbers what a rank gives you. You see your ranks, and you feel the
 difference in a fight. The tables below are the exact rules.
 
-## Marks and ranks
+## Raising a weapon skill
 
 You earn marks for every attack, and more for a hit. How much you learn depends on whom you
 fight. An opponent whose [level](experience.md#levels) is below your rank teaches you less, and eventually nothing at
@@ -70,7 +70,7 @@ or throw at it. A dummy never moves, is never hurt, and never dies, so it gives 
 you beating it. It is never [caught unawares](surprise.md#caught-unawares), and no attack on it is a [sneak attack](surprise.md#sneak-attacks).
 
 A dummy teaches only the weapon skill and [fighting style](fighting-styles.md) of the attack,
-never a [stat](stats.md#training), and slowly: half the marks a level-1 opponent would give, rounded
+never a [stat](stats.md#raising-your-stats), and slowly: half the marks a level-1 opponent would give, rounded
 (2 for a hit and 1 for a miss at rank 0). It teaches blows, shield bashes, kicks, and throws up to
 **rank 2**, and shots with a bow, crossbow, or sling (and their style) up to **rank 4**. When a
 skill reaches that rank there, you are told "You have learned all the dummy can teach you.", and

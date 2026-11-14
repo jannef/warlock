@@ -1,5 +1,7 @@
 # Warlock — The witch's familiar: her evil eye on four legs
 
+**Built; this file is history.** Current behaviour is in spec §8 "The casters' class tables, and their spells" and `docs/dev/familiar.md`.
+
 Design document for the owner's review (2026-11-03, #907). Written against `origin/main` at
 39aad1ac (Cackle, W1 #908, merged). Nothing here is implemented; §13 cuts it into issues. It
 builds on what is there: the **merged ally core** (`docs/design/druid-and-summons.md` §4 and

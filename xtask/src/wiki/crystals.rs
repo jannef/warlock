@@ -48,7 +48,7 @@ pub(super) fn crystal_rules(content: &Content) -> String {
     let _ = writeln!(
         out,
         "- **Consuming** a crystal takes a turn and gives {} mana (never past your maximum), {} \
-         Willpower [training marks](stats.md#training) (an average score of 10 needs {} for its \
+         Willpower [training marks](stats.md#raising-your-stats) (an average score of 10 needs {} for its \
          next point), and a step of {} toward evil, which shrinks the more evil you already are.",
         crystals.consume_mana,
         crystals.consume_marks,

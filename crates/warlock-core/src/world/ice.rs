@@ -444,9 +444,8 @@ impl World {
         if !me.skills.trains_effect(&content, Effect::Swim) {
             return false;
         }
-        let modifier = me.effective_stats(&content).modifier(Stat::Toughness)
-            + me.skill_effect(&content, Effect::Swim)
-            + me.talent_mods(&content).check(Stat::Toughness);
+        let modifier =
+            me.check_modifier(&content, Stat::Toughness) + me.skill_effect(&content, Effect::Swim);
         let made = crate::check::check(&mut self.state.rng, modifier, PLUNGE_DIFFICULTY);
         if self.trains(Use::Swim) {
             self.train(Use::Swim);

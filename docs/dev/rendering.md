@@ -203,6 +203,10 @@ cells (walls are lit flat by their wall-face light); then exposure (readability 
 overbright knee plus a faint glow in the light's hue), desaturation, gain. Unlit cells (remembered
 terrain, the UI console's 1×1 textures) are drawn as they are. Free glyphs are lit on the CPU by
 `VisualLight::sample` + `lighting::shade`, which mirror the shader — change both together.
+Constants copied between Rust and a `.wesl` file (the grid animation kinds and table size, the
+water's glint and flow, the light flags and floors, the circles' sizes and glints, `CRISP`) are
+checked by a `shader_constants_match` test in each Rust module, which reads the shader with
+`include_str!` and `render::wesl_const` (#1561): a one-sided edit fails `cargo test`.
 
 Effects (spec §4.8), each off with its own switch (`particles`, `glow`, `distortion`,
 `screen_fades`, `screen_shake`, `weather`) and all off with reduced effects (but `blood` and

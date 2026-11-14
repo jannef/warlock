@@ -1504,7 +1504,7 @@ fn aim_word(aim: Aim) -> &'static str {
         Aim::Cell => "a cell",
         Aim::Corpse => "a corpse you see",
         Aim::Ailment => "what to treat",
-        Aim::Item => "an item you carry",
+        Aim::Item(_) => "an item you carry",
         Aim::Throw => "something to throw, then a target",
         Aim::Shape => "a weapon's shape",
         Aim::Rig => "a rig and a direction",

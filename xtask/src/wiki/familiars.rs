@@ -2,7 +2,7 @@
 //! the rares with their odds, the growth table of the small beasts only a familiar is, and the
 //! rules in words.
 
-use super::companions::{beast, growth_table};
+use super::companions::{growth_table, starts_table};
 use super::util::{Term, at_normal_pace, link};
 use std::fmt::Write as _;
 use warlock_core::content::{ActionKind, BASE_TURN, Content, CreatureId, price};
@@ -12,27 +12,7 @@ pub(super) fn starts(content: &Content) -> String {
     let Some(rules) = content.familiars() else {
         return String::new();
     };
-    let mut out = String::from("| Race | Starting beasts |\n|---|---|\n");
-    for (race, list) in &rules.by_race {
-        let name = content.race(race).map_or(race.clone(), |r| r.name.clone());
-        let beasts: Vec<String> = list.iter().map(|&b| beast(content, b)).collect();
-        let _ = writeln!(
-            out,
-            "| {} | {} |",
-            link(Term::Race, race, &name),
-            beasts.join(", ")
-        );
-    }
-    let rares: Vec<String> = rules.rare.iter().map(|&b| beast(content, b)).collect();
-    let _ = write!(
-        out,
-        "\nAt {} in a thousand ({:.1} %), any race's witch begins with one of the rares instead, \
-         each as likely: {}. The beast's level is in brackets.\n",
-        rules.rare_per_mille,
-        f64::from(rules.rare_per_mille) / 10.0,
-        rares.join(", ")
-    );
-    out
+    starts_table(content, &rules.start, "witch", "")
 }
 
 /// The growth table of the beasts a familiar may be that no one tames: the rest are in
@@ -77,7 +57,7 @@ pub(super) fn rules(content: &Content) -> String {
             format!(
                 "a witch begins with a beast of her race's list, or at {} in a thousand one of \
                  the rares",
-                r.rare_per_mille
+                r.start.rare_per_mille
             ),
         ),
         (

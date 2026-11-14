@@ -1,5 +1,7 @@
 # Warlock — One rank per talent
 
+**Built; this file is history.** Current behaviour is in spec §8 "Talents" and `docs/dev/progression.md`.
+
 Design document for the owner's review (#952). Second pass, 2026-11-05, after the owner's review of the first (2026-11-04). Written against `origin/main` at 4c7e06f2. Nothing here is implemented; §6 cuts it into issues. Every number below was read from the files named; anything not checked is marked *(unchecked)*. The balance probe was not run: the power notes reason from `docs/balance.md`.
 
 **The owner's request** (#952, verbatim): *"get rid of multi rank talents. picking same thing twice is lame. additional ranks should be converted into talents that take the previous talent as prereq, and build on top without just doing the same same. If you can't figure out an interesting replacement, just drop the extra rank."* And on the first pass: *"I want the mechanic of having multiple ranks per talent gone from the game. Effects either need to be folded into 1 rank, or additional ranks need to be made independently named talents with prereqs if their existence is justified."*

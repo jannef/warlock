@@ -359,6 +359,21 @@ mod tests {
     use super::*;
 
     #[test]
+    fn shader_constants_match() {
+        let src = include_str!("console.wesl");
+        for (name, value) in [
+            ("KIND_WAVE", KIND_WAVE as f32),
+            ("KIND_SHIMMER", KIND_SHIMMER as f32),
+            ("KIND_CYCLE", KIND_CYCLE as f32),
+            ("KIND_FLOW", KIND_FLOW as f32),
+            ("WAVE_SWAY", WAVE_SWAY),
+        ] {
+            assert_eq!(crate::render::wesl_const(src, name), value, "{name}");
+        }
+        assert!(src.contains(&format!("array<GridAnim, {MAX_GRID_ANIMS}>")));
+    }
+
+    #[test]
     fn hash_is_stable_and_neighbors_differ() {
         assert_eq!(cell_hash(Pos::new(3, 7)), cell_hash(Pos::new(3, 7)));
         let h = cell_hash(Pos::new(10, 10));

@@ -1,5 +1,7 @@
 # Warlock — Monsters that differ, and the ones to dread
 
+**Built; this file is history.** Current behaviour is in spec §8 "Creature behavior" and the bullets after it, and `docs/dev/creatures.md`.
+
 Design document for the owner's review (#1098; first draft 2026-11-06, revised the same day
 after the owner's first review: the decisions are §17 and are applied throughout). Written
 against `origin/main` at 187bcac3. Nothing of this document is implemented; §12 cuts it into

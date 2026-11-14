@@ -18,7 +18,7 @@ would stop a [rest](resting.md#how-resting-works), such as a creature coming int
 noise, breaks it. A broken prayer gives nothing, and the minute is still gone.
 
 At the end of a prayer one outcome is drawn. Most prayers do little: a few
-[coins](shops.md#money), a little [healing](healing.md#how-fast), a pang of
+[coins](shops.md#money), a little [healing](healing.md#how-fast-you-heal), a pang of
 [hunger](hunger.md#how-hungry-you-are), a brief hex, a wandering creature, or nothing at all but a
 line of flavour. A few do more, for good or ill. Now and then the altar bursts apart in
 [fire](damage-types.md#damage-fire) and leaves rubble. The blast hurts everyone near it, you

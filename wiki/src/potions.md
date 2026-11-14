@@ -13,7 +13,7 @@ can drink whether or not you are [hungry](hunger.md#how-hungry-you-are), and eve
 
 {{#include generated/potions.md}}
 
-[Hit points](hit-points.md#hit-points) and [mana](mana.md#how-much) never go past your maximum.
+[Hit points](hit-points.md#hit-points) and [mana](mana.md#how-much-mana-you-have) never go past your maximum.
 
 ### Potions that last
 
@@ -45,7 +45,7 @@ on (see [Status effects](status-effects.md)). If you drink a second boost of the
 one lasts, you keep the stronger of the two, and the time does not start over. A second vision
 or resistance potion of the same kind starts its half hour over.
 
-A potion's **marks** are [stat training marks](stats.md#training) that you always get when you
+A potion's **marks** are [stat training marks](stats.md#raising-your-stats) that you always get when you
 drink it (see [Stats](stats.md)): the body remembers the draught.
 
 ### Utility potions
@@ -98,10 +98,10 @@ has a hue, and a potion with several effects mixes their hues.
 
 | Family | Hue |
 |---|---|
-| [Healing](healing.md#how-fast) | red |
+| [Healing](healing.md#how-fast-you-heal) | red |
 | Cures ([poison](damage-types.md#damage-poison), [disease](diseases.md#how-a-disease-goes), [a clouded mind](#utility-potions)) | green |
 | Healing and cures together | russet, red mixed with green |
-| [Mana](mana.md#how-much) | blue |
+| [Mana](mana.md#how-much-mana-you-have) | blue |
 | Stat boosts | orange (greater ones deep orange) |
 | [Vision](vision.md#the-four-types) | violet |
 | [Speed](turns.md#speed) | yellow |
@@ -134,18 +134,18 @@ charges its true price for an unknown potion.
 ## Elixirs
 
 An **elixir** is the rarest of potions. It raises one [stat](stats.md) by 1 for good, just as
-[training](stats.md#training) a stat up does. It also raises that stat's
+[training](stats.md#raising-your-stats) a stat up does. It also raises that stat's
 **[potential](stats.md#potentials)**, the ceiling training works toward (see [Stats](stats.md)),
 by 1 or 2 more, with an even chance of each. If your score was already at its potential, the
 potential first rises with the score. So after an elixir there is always room for at least one
 more point of training, and half the time two.
 
 The change takes effect at once. Your [hit points](hit-points.md#hit-points) follow a
-[Toughness](stats.md#stat-toughness) elixir, your [mana](mana.md#how-much) an
+[Toughness](stats.md#stat-toughness) elixir, your [mana](mana.md#how-much-mana-you-have) an
 [Intelligence](stats.md#stat-intelligence) or [Willpower](stats.md#stat-willpower) one, and your
 [carrying limits](burden.md#how-much-you-can-carry) a [Strength](stats.md#stat-strength) one.
 "You feel stronger." means the score rose. "You feel stronger, and that you could be stronger
-yet." means the potential rose by 2. Each elixir also gives 60 [training marks](stats.md#training)
+yet." means the potential rose by 2. Each elixir also gives 60 [training marks](stats.md#raising-your-stats)
 of its stat.
 
 There are six elixirs, one for each stat, and all are gold:

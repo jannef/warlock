@@ -13,9 +13,13 @@
 //! - **Unseen in the way**: someone the player does not see on the line stops the charge short
 //!   in the cell before them ("You run into something!"); the cells moved are paid, and no blow
 //!   is struck. A trap unknown to them goes off as on any step, and the charge stops there too.
-//! - **No free blows**: the steps are no ordinary steps. They never call
-//!   [`World::step_away`] or [`World::step_up`], so nobody passed or left gets an opportunist's
-//!   blow, a gatekeeper's, a brace, or a point-blank shot.
+//! - **Each step enters its cell** as a step does ([`World::enter_cell`], `enter.rs`; #1615):
+//!   the noise, a shop entered or left, a zone's work, a marsh's wade and its disease, the marks
+//!   of a rough step or a deep wade, stairs, a feature, and what lies there told, a trap unknown
+//!   to them going off, a collapsed floor giving way.
+//! - **No free blows**: the steps never call [`World::step_away`] or [`World::step_up`], so
+//!   nobody passed or left gets an opportunist's blow, a gatekeeper's, a brace, or a
+//!   point-blank shot.
 //! - **Cost**: its talent's `resource` (1 stamina) and `per_cell` more for every cell moved,
 //!   all spent as the charge begins; refused while the player holds less than the whole
 //!   distance costs. **Time**: the steps' (each priced as the step onto its terrain is); the
@@ -29,7 +33,9 @@
 //!
 //! Nothing is drawn deciding; the trap and the blows draw as theirs always do.
 
+use super::enter::Entry;
 use super::free_blow::{Free, FreeBlow};
+use super::ice::Footing;
 use super::{ActorId, Spent, World};
 use crate::action::Event;
 use crate::content::{ActionKind, ClassActive, LevelKind, Stance};
@@ -69,21 +75,19 @@ impl World {
                 return Spent::Turn(time.max(self.price_of(player, ActionKind::Step)));
             }
             let terrain = self.state.current().terrain[to];
-            time += self.step_price(player, content.terrain(terrain), false);
-            if let Some(actor) = self.state.actors.get_mut(&player) {
-                actor.pos = to;
-            }
-            self.let_go(player, None);
-            events.push(Event::ActorMoved {
-                actor: player,
+            let price = self.step_price(player, content.terrain(terrain), false);
+            // The way holds no ice and no deep water: plain footing (`charge_path`).
+            let entry = Entry {
                 from,
                 to,
-            });
-            self.make_step_noise(player, to, false);
-            self.shop_step(from, to);
-            let climb = self.step_onto_trap(to, player, events);
-            self.collapse_step(to, events);
-            time += climb;
+                footing: Footing::Plain,
+                fleeing: false,
+                price,
+                willing: true,
+                swap: None,
+            };
+            let climb = self.enter_cell(entry, events);
+            time += price + climb;
             let sprung = (self.state.current().traps.get(&to)).is_some_and(|t| t.known);
             if self.state.death.is_some() || self.player_pos() != to || climb > 0 || sprung {
                 return Spent::Turn(time);

@@ -5,8 +5,8 @@ did before you set out. Your class:
 
 - changes your starting [stats](stats.md);
 - adds to your [hit points](hit-points.md#hit-points);
-- trains you in a handful of [skills](skills.md#who-trains-what), and sets how many skill rolls
-  each level gives and which skills it is known for (see [Getting better](skills.md#getting-better));
+- trains you in a handful of [skills](skills.md#which-skills-you-start-with), and sets how many skill rolls
+  each level gives and which skills it is known for (see [Improving a skill](skills.md#improving-a-skill));
 - gives you your first ranks in a few [weapon skills](weapon-skills.md) (a berserker has learned
   one of two) and [fighting styles](fighting-styles.md) (a thief or an ascetic one of two);
 - decides most of your [starting kit](starting-kit.md), its garb among it (a wizard's robe, a
@@ -132,7 +132,7 @@ as far as your prayers reach. At first that is only [wounds](prayer.md#prayer-wo
 levels come, it reaches [hunger](prayer.md#prayer-hunger), [disease](prayer.md#prayer-disease) and
 [poison](prayer.md#prayer-poison), [hexes and holds](prayer.md#prayer-release),
 [stat damage](prayer.md#prayer-restoration), and [mana](prayer.md#prayer-mana). At 40 a prayer
-brings two answers, and at 60 everything.
+brings two answers, and at 60 everything. All of it is on [Prayer](prayer.md).
 
 A hidden [strain](prayer.md#strain) makes prayers too close together fizzle. A priest fallen to
 Callous or worse ([alignment](alignment.md)) is answered by the dark powers instead, with a twist:
@@ -219,7 +219,7 @@ Smite at level 1, holding 5.
 
 You build a point of zeal with every blow, shot, or throw of yours that hits, and with every blow
 that hits you. It also comes back a point a minute, resting too (see
-[Resources](resources.md#resource-zeal)). Your [mana](mana.md#how-much) is for your spells; none of
+[Resources](resources.md#resource-zeal)). Your [mana](mana.md#how-much-mana-you-have) is for your spells; none of
 this spends it.
 
 **A deed that moves you toward evil** empties the pool at once ("Your zeal deserts you."). It fills
@@ -309,7 +309,7 @@ level 1, spends every one they hold on a single sneak attack, deeper for each, a
 at 32, and [Master thief](classes.md#talent-master-thief) at 60 add to it (see
 [Exploit](resources.md#exploit)). From level 18 [Thrown exploit](resources.md#thrown-exploit)
 makes the same blow with a thrown weapon, at a foe up to 6 cells away. The thief has no
-[stamina](resources.md) until a [weapon rank](weapon-skills.md#marks-and-ranks) teaches an active
+[stamina](resources.md) until a [weapon rank](weapon-skills.md#raising-a-weapon-skill) teaches an active
 ability.
 
 {{#include generated/class-levels.md:wizard}}
@@ -329,7 +329,7 @@ the next.
 her heel. Its [touch](familiars.md#the-touch) lays her [evil eye](magic.md#spell-evil-eye), and it
 [goes for what she has hexed](familiars.md#what-it-goes-for). If it is lost, another comes to an
 hour's [calling](familiars.md#call-familiar). From level 30 that may be an
-[imp](creatures.md#creature-imp).
+[imp](creatures.md#creature-imp). All of it is on [Familiars](familiars.md).
 
 **The witch's cackle** ([Cackle](abilities.md#ability-cackle), from level 6) keeps her hexes on. It
 costs no [mana](mana.md#spending-it) and takes the time of a spell. Every hex she laid herself on a
@@ -382,13 +382,16 @@ four times as likely as usual: about 47 % of level-ups then bring a find.
 
 {{#include generated/class-levels.md:craftsperson}}
 
+What a craftsperson makes, and how, is on [Crafting](crafting.md); the burgher who buys their
+best work is on [The patron](patron.md).
+
 <a id="trades"></a>**The craftsperson's trades.** A craftsperson learns no craft from the class
 itself. Instead they pick two [trades](talents.md#crafts-a-craftspersons-trades) as a new
 character, before their other [talents](talents.md): the Talents step asks "Choose a trade"
 first. Each trade trains its craft skill at `3d6`, and
 [Time served](classes.md#talent-time-served) adds 6 to that, so a trade starts at 9 to 24.
 Each also comes with the tools of the trade. A craftsperson may spend an ordinary pick on a
-third trade too. Their skills grow fast: three [skill rolls](skills.md#getting-better) a level,
+third trade too. Their skills grow fast: three [skill rolls](skills.md#improving-a-skill) a level,
 and a roll on a trade throws the die one step up.
 
 <a id="eye-for-the-make"></a>**Eye for the make** works whenever you look at an item's
@@ -397,7 +400,7 @@ check went well, a line on how many more improvements
 [the anvil](altars-forges-springs.md#forges) (for metal) or a knife (for wood) could still give
 arms or armour, or that the thing is damaged (and, once you have
 [Make do and mend](classes.md#make-do-and-mend), that your own hands could mend it), and a line when its main material is hard or soft
-to [work](crafting.md#who-works-what). Like [Appraise](skills.md#skill-appraise), it also tells
+to [work](crafting.md#which-skill-makes-what). Like [Appraise](skills.md#skill-appraise), it also tells
 you how many [enchantments the item can bear](magic-items.md#capacity). It never tells you the
 odds, or how often a smith has worked the piece before. With
 [Waste not](crafting.md#waste-not) it counts the three quarters salvage then gives back.
@@ -412,9 +415,9 @@ it in the [abilities menu](abilities.md#the-abilities-menu), then the item. It t
 minutes. If something comes into view, you stop, the item is untouched, and the time is lost.
 
 When the time is up you make one check: 2d12, plus the [modifier](stats.md#modifiers) of the
-stat of the [craft that works](crafting.md#who-works-what) the item's main material (Strength for
+stat of the [craft that works](crafting.md#which-skill-makes-what) the item's main material (Strength for
 metal, Dexterity for wood and leather), plus what that craft skill gives you, against 10 plus
-the material's [work](crafting.md#who-works-what). Untrained in the craft, only the stat counts.
+the material's [work](crafting.md#which-skill-makes-what). Untrained in the craft, only the stat counts.
 A steel sword is 10 to beat, mithril 14, wood 9.
 
 - **Made:** the damage is gone. The improvements it lost stay lost, and the next attempt at an
@@ -424,7 +427,7 @@ A steel sword is 10 to beat, mithril 14, wood 9.
 It never destroys anything. You cannot mend something you wear or wield (take it off first), a
 [protected](materials.md#protected-items) item, goods you have not paid for, or something of a
 material no craft works, like cloth or glass. If you are trained in the craft, the check may earn
-it a [training mark](skills.md#getting-better).
+it a [training mark](skills.md#improving-a-skill).
 
 <a id="field-forge"></a>**Field forge** (from level 32) makes an anvil wherever you are: a
 [makeshift anvil](altars-forges-springs.md#the-makeshift-anvil) from one ingot and an hour's work.

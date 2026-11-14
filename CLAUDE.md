@@ -3,7 +3,8 @@
 Warlock is a GPU-rendered ASCII roguelike in Rust + Bevy. **`specification.md` is the source of
 truth** for what to build (an index over `spec/`, one file per section); this file is about *how*
 to work on it, and `docs/dev/` holds the notes per subsystem (the index is under "Architecture").
-Update them together whenever behavior, commands, or architecture change.
+Each kind of fact has one home and the others link to it (`docs/dev/merging.md` "One home per
+fact"): a change edits the homes of the facts it changes.
 
 ## Toolchain
 
@@ -198,7 +199,9 @@ list) into `wiki/src/generated/` (ignored by git: a build product) and pulled in
 links) on the Linux job, and the release workflow does the same before publishing (mdBook pinned in both). To
 preview: `cargo xtask wiki --build`, then open `wiki/book/index.html`. Tables sort by explicit
 keys (class, level, name), never by content file order. New pages go into
-`wiki/src/SUMMARY.md` by topic, never at the end; a new table is its own function in its
+`wiki/src/SUMMARY.md` by topic, never at the end, in the part where a player would look (the parts
+run in the order a player meets things: Getting started first, How the world works, the reference,
+last; #1522); a new table is its own function in its
 topic's module plus one line in `generate()` next to its topic. A page that grows past about
 250 lines is split into sub-pages by topic (flat files in `wiki/src/`, nested under the parent in
 `SUMMARY.md`; the parent keeps a short overview linking them), its moved anchors fixed everywhere

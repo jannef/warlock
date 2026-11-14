@@ -28,7 +28,7 @@ is three to six pieces of cutlery at once.
 **wields** itself as anyone would wield it. It strikes with the weapon's
 [damage](combat.md#damage), [threat](combat.md#criticals), and any [magic](magic-items.md) on it (a
 flaming blade burns), with the blade's [Strength](stats.md#stat-strength) and a
-[rank](weapon-skills.md#marks-and-ranks) in the weapon's skill that grows with its level. The
+[rank](weapon-skills.md#raising-a-weapon-skill) in the weapon's skill that grows with its level. The
 deeper it is met, the likelier its weapon is magic, and from level 15 it is now and then
 [rare](magic-items.md#rarity).
 
@@ -58,7 +58,7 @@ coat".
 Animated armour has no weapon: it slams with its gauntlets. Both are [slow](turns.md#speed) and
 [loud](hearing.md#how-loud), and both [open doors](doors.md#creatures-and-doors). Animated armour
 shrugs off some of a thrust, which passes through the hollow. A panoply holds a
-[rank](weapon-skills.md#marks-and-ranks) in its weapon's skill as a blade does, and with a shield
+[rank](weapon-skills.md#raising-a-weapon-skill) in its weapon's skill as a blade does, and with a shield
 it has ranks in [Sword and Board](fighting-styles.md#style-sword-and-board).
 
 **One kind each.** All blades count as one kind of creature in every way that matters. You learn
@@ -128,12 +128,12 @@ so you see it coming. There are only a few gaps:
 | [Protection](combat.md#protection) | Yes |
 | [Resistances](damage-types.md#armour-and-resistance) | Yes |
 | More [hit points](hit-points.md#hit-points) | Yes |
-| [Regeneration](healing.md#how-fast) | Yes |
+| [Regeneration](healing.md#how-fast-you-heal) | Yes |
 | [Stealth](skills.md#skill-stealth) (quieter steps) | Yes |
 | [Light](light.md#what-light-is) | Yes: it glows |
 | [Skills](skills.md) | Yes, where a rule reads a creature's skill |
 | Weight | Its things weigh less, which changes nothing: it carries itself |
-| More [mana](mana.md#how-much), [mana regeneration](mana.md#how-fast-it-comes-back) | Yes, as for any creature (see [Mana](mana.md)), though it casts no spells (yet) |
+| More [mana](mana.md#how-much-mana-you-have), [mana regeneration](mana.md#how-fast-it-comes-back) | Yes, as for any creature (see [Mana](mana.md)), though it casts no spells (yet) |
 | [Carrying](burden.md#how-much-you-can-carry) | No, and it needs none |
 | Range, draw, durability ([missile weapons](ranged.md#getting-ready)) | No: it wields melee weapons only |
 
@@ -203,7 +203,7 @@ is. Then:
 - otherwise it is plain, of a [material](materials.md#materials) drawn as a monster's gear is.
 
 A magic or rare weapon is made at an [item level](affixes.md#base-items) equal to the blade's.
-The blade's [rank](weapon-skills.md#marks-and-ranks) in the weapon's skill is 1 + level / 10, at
+The blade's [rank](weapon-skills.md#raising-a-weapon-skill) in the weapon's skill is 1 + level / 10, at
 most 8.
 
 Animated armour and a panoply draw each of their pieces the same way, slot by slot in the order

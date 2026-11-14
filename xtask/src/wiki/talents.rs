@@ -1042,7 +1042,7 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
             format!(
                 "at creation, [{name}](skills.md#skill-{}) trained at {dice}, \
                  and the [tools of the trade](talents.md#crafts-a-craftspersons-trades); a \
-                 [skill roll](skills.md#getting-better) on it throws the die one step up, as on a \
+                 [skill roll](skills.md#improving-a-skill) on it throws the die one step up, as on a \
                  skill your class is known for (never two steps)",
                 skill.replace('_', "-")
             )
@@ -1056,7 +1056,7 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
              never the odds), how many more improvements \
              [the anvil](altars-forges-springs.md#forges) or a knife could give it, or that it is \
              damaged, and how hard its main material is to work (\"very hard\" for a \
-             [work](crafting.md#who-works-what) of +4 or more, \"hard\" for +1 to +3, \"soft \
+             [work](crafting.md#which-skill-makes-what) of +4 or more, \"hard\" for +1 to +3, \"soft \
              and easy\" for -2 or less)",
             content.salvage().map_or(0, |s| s.percent)
         ),
@@ -2284,7 +2284,7 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
              or tool; {} of work, cut short by anything that would stop a rest): one check, 2d12 \
              plus the [modifier](stats.md#modifiers) of the stat of the craft that works its \
              main material and that craft's points (a stat alone, untrained), against \
-             {difficulty} plus the material's [work](crafting.md#who-works-what). Made, the \
+             {difficulty} plus the material's [work](crafting.md#which-skill-makes-what). Made, the \
              damage is gone (the improvements it lost stay lost, and the next attempt at the \
              anvil is as hard as before); failed, nothing happens to it, and you may try again. \
              It never destroys anything. Refused, with no time spent, for something worn or \
