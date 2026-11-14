@@ -94,7 +94,7 @@ fn knowledge_raises_the_check_against_a_creatures_drain_only() {
             w.player_mut().skills.add(knowledge(), above);
             // What the rules add besides (talents, a sign's).
             let talents = w.state.player().talent_mods(&BUILTIN);
-            let base = talents.check(Stat::Willpower) + talents.drain_checks;
+            let base = talents.vigour.check(Stat::Willpower) + talents.vigour.drain_checks;
             let bonus = if by_creature { 6 } else { 0 };
             let mut expected = w.state.rng.clone();
             let resisted = check(&mut expected, base + bonus, drain.difficulty);

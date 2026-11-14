@@ -41,7 +41,7 @@ impl World {
     fn volley(&mut self, at: Pos, events: &mut Vec<Event>) -> Spent {
         let content = self.content.clone();
         let player = self.state.player;
-        let Some(volley) = self.state.player().talent_mods(&content).volley else {
+        let Some(volley) = self.state.player().talent_mods(&content).martial.volley else {
             return Spent::Nothing;
         };
         if !self.can_loose_here() {

@@ -313,9 +313,9 @@ fn wary_adds_to_the_check() {
     let mut wary = w.clone();
     wary.player_mut().talents.take("wary", None);
     let mods = wary.state.player().talent_mods(&wary.content);
-    assert_eq!(mods.initiative_bonus, 4);
+    assert_eq!(mods.stealth.initiative_bonus, 4);
     let plain = w.state.player().talent_mods(&w.content);
-    assert_eq!(plain.initiative_bonus, 0);
+    assert_eq!(plain.stealth.initiative_bonus, 0);
 }
 
 #[test]

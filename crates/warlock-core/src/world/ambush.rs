@@ -56,7 +56,7 @@ impl World {
         ) else {
             return true;
         };
-        let reach = rules.missile_reach + a.talent_mods(&self.content).sneak_reach;
+        let reach = rules.missile_reach + a.talent_mods(&self.content).stealth.sneak_reach;
         !missile || a.pos.chebyshev(t.pos) <= reach
     }
 
@@ -69,7 +69,7 @@ impl World {
             .ok()
             .filter(|&n| n > 0)
             .map(|n| Dice::of(n, 6));
-        let talents = a.talent_mods(&self.content).ambush;
+        let talents = a.talent_mods(&self.content).stealth.ambush;
         match (skill, talents) {
             (Some(skill), Some(talents)) => Some(skill.and(talents)),
             (skill, talents) => skill.or(talents),
@@ -114,7 +114,7 @@ impl World {
             return profile;
         }
         if let Some(a) = self.state.actors.get(&attacker) {
-            let lower = a.talent_mods(&self.content).ambush_threat;
+            let lower = a.talent_mods(&self.content).stealth.ambush_threat;
             // Never below 3, nor above what it was (an exploit's ladder may have brought it
             // to 2 already, `openings.rs::exploit_profile`).
             let lowered = profile.threat.saturating_sub(lower).max(3);
@@ -197,13 +197,13 @@ impl World {
         }
         let mods = me.talent_mods(&self.content);
         let creature = self.state.actors.get(&target).map(|a| a.creature);
-        for (tag, to_hit, damage) in &mods.sworn_foe {
+        for (tag, to_hit, damage) in &mods.offence.sworn_foe {
             if creature.is_some_and(|c| self.content.has_tag(c, tag)) {
                 profile.to_hit += to_hit;
                 profile.bonus += damage;
             }
         }
-        let (to_hit, damage) = mods.favoured_prey;
+        let (to_hit, damage) = mods.offence.favoured_prey;
         if (to_hit, damage) == (0, 0) {
             return profile;
         }

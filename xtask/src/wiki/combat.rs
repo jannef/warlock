@@ -8,6 +8,7 @@ use std::fmt::Write as _;
 use warlock_core::combat;
 use warlock_core::content::{ActionKind, BASE_TURN, Content, price};
 use warlock_core::geom::Pos;
+use warlock_core::talent::OffenceEffect;
 use warlock_core::text::and_list;
 
 /// The natural rolls of a threat range: `22–24`, or `24` alone.
@@ -438,10 +439,10 @@ fn gatekeeper_chance(content: &Content, percent: u32) -> String {
         .into_iter()
         .flatten()
         .find_map(|e| match e {
-            TalentEffect::FreeBlow {
+            TalentEffect::Offence(OffenceEffect::FreeBlow {
                 trigger: FreeBlowTrigger::Gatekeeper,
                 one_in,
-            } => *one_in,
+            }) => *one_in,
             _ => None,
         });
     let Some(one_in) = one_in else {

@@ -6,6 +6,7 @@
 use super::util::{Term, anchored, capital, link, ordinal};
 use std::fmt::Write as _;
 use warlock_core::content::{Content, PrayerRules, PrayerUse, TalentDef, TalentEffect};
+use warlock_core::talent::FaithEffect;
 use warlock_core::time::Duration;
 
 /// The gaps between prayers the fizzle table measures, in seconds (with the gap that lets one
@@ -176,7 +177,9 @@ fn gained_at(content: &Content, id: PrayerUse) -> String {
     for class in content.classes() {
         for (level, def) in class_talents(content, &class.abilities) {
             let gives = def.effects.iter().any(|e| match e {
-                TalentEffect::Prayer { uses, all, .. } => *all || uses.contains(&id),
+                TalentEffect::Faith(FaithEffect::Prayer { uses, all, .. }) => {
+                    *all || uses.contains(&id)
+                }
                 _ => false,
             });
             if gives {
@@ -211,7 +214,10 @@ pub(super) fn prayer_levels(content: &Content) -> String {
     let mut out = String::new();
     for class in content.classes() {
         let rows: Vec<(u8, &TalentDef)> = class_talents(content, &class.abilities)
-            .filter(|(_, d)| (d.effects.iter()).any(|e| matches!(e, TalentEffect::Prayer { .. })))
+            .filter(|(_, d)| {
+                (d.effects.iter())
+                    .any(|e| matches!(e, TalentEffect::Faith(FaithEffect::Prayer { .. })))
+            })
             .collect();
         if rows.is_empty() {
             continue;
@@ -229,13 +235,13 @@ pub(super) fn prayer_levels(content: &Content) -> String {
         for (level, def) in rows {
             let mut adds: Vec<String> = Vec::new();
             for e in &def.effects {
-                let TalentEffect::Prayer {
+                let TalentEffect::Faith(FaithEffect::Prayer {
                     title,
                     uses,
                     answers: more,
                     all: every,
                     ..
-                } = e
+                }) = e
                 else {
                     continue;
                 };
@@ -279,32 +285,33 @@ pub(super) fn prayer_levels(content: &Content) -> String {
 pub(super) fn prayer_rites(content: &Content) -> String {
     let mut out = String::new();
     for class in content.classes() {
-        let prays = class_talents(content, &class.abilities)
-            .any(|(_, d)| (d.effects.iter()).any(|e| matches!(e, TalentEffect::Prayer { .. })));
+        let prays = class_talents(content, &class.abilities).any(|(_, d)| {
+            (d.effects.iter()).any(|e| matches!(e, TalentEffect::Faith(FaithEffect::Prayer { .. })))
+        });
         if !prays {
             continue;
         }
         for (level, def) in class_talents(content, &class.abilities) {
             for e in &def.effects {
                 let (name, what) = match e {
-                    TalentEffect::Consecrate { mana, time } => (
+                    TalentEffect::Faith(FaithEffect::Consecrate { mana, time }) => (
                         link(Term::Ability, &def.id, &def.name),
                         format!(
                             "{mana} [mana](mana.md#spending-it) and {} of prayer in an unholy place: its curse lifted for good (see [Special rooms](cursed-and-hallowed.md#cursed-rooms))",
                             spoken(time)
                         ),
                     ),
-                    TalentEffect::Communion => (
+                    TalentEffect::Faith(FaithEffect::Communion) => (
                         super::talents::talent_link(content, &def.id, &def.name),
                         "a passive: standing in a [cursed](special-rooms.md#room-cursed), [draining](special-rooms.md#room-draining), or [haunted](special-rooms.md#room-haunted) room, or on a level such a curse lies over, your prayers add no strain and the place's [Ebbing](status-effects.md#status-ebbing) never touches you; only while the dark powers answer you".into(),
                     ),
-                    TalentEffect::Sanctuary {
+                    TalentEffect::Faith(FaithEffect::Sanctuary {
                         mana,
                         time,
                         radius,
                         lasts,
                         regen,
-                    } => {
+                    }) => {
                         let side = u32::from(*radius) * 2 + 1;
                         let pace = if regen % 100 == 0 {
                             format!("{} times as fast", regen / 100)

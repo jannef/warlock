@@ -1765,7 +1765,13 @@ impl World {
         }
         self.player_mut().stance = stance;
         self.say(format!("You take {} stance.", stance.phrase()));
-        if self.state.player().talent_mods(&self.content).stance_costs {
+        if self
+            .state
+            .player()
+            .talent_mods(&self.content)
+            .defence
+            .stance_costs
+        {
             return Spent::Turn(self.price_of(self.state.player, ActionKind::Wait));
         }
         Spent::NoTime

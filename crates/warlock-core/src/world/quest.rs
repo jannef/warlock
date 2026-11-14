@@ -873,7 +873,8 @@ impl World {
         if let Some(gold) = (content.object_id(crate::content::GOLD))
             .and_then(|g| stacks.iter_mut().find(|s| s.object == g))
         {
-            let more = TalentMods::scaled(u64::from(gold.count), talents.quest_gold_percent);
+            let more =
+                TalentMods::scaled(u64::from(gold.count), talents.fortune.quest_gold_percent);
             gold.count = u32::try_from(more).unwrap_or(u32::MAX).max(1);
         }
         let xp = def.reward.xp;

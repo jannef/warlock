@@ -3,7 +3,7 @@
 //! ([`crate::ability::Ability::Sign`]) as [`Action::Gift`] (`use:blaze`), dispatched with the
 //! other actives by `World::use_gift` in `gifts.rs`. The passive gifts
 //! (Kindled's lantern, Forge-born's marks, Tidal's mana) are one read each where their rule
-//! lives: `WorldState::lantern_light`, `TalentMods::marks`, `World::mana_rate`.
+//! lives: `WorldState::lantern_light`, `OffenceMods::marks`, `World::mana_rate`.
 //!
 //! Blaze is a burst of flame around the player, cast with the scrolls' shared burst code
 //! ([`super::spell::burst_cells`], [`World::spell_hurts`], [`World::shock`]): one gameplay roll
@@ -30,11 +30,11 @@ impl World {
         let content = self.content.clone();
         let player = self.state.player;
         let mods = self.state.player().talent_mods(&content).into_owned();
-        let Some(mut blaze) = mods.blaze else {
+        let Some(mut blaze) = mods.sign.blaze else {
             return Spent::Nothing;
         };
         // Wildfire (a Fire-born's pick): hotter, and farther.
-        if let Some((radius, damage)) = mods.wildfire {
+        if let Some((radius, damage)) = mods.sign.wildfire {
             (blaze.radius, blaze.damage) = (radius, damage);
         }
         if !self.can_loose_here() {

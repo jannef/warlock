@@ -74,7 +74,7 @@ pub(super) fn fletch_count(rng: &mut Rng, content: &Content, share: i32) -> i32 
 /// recipe).
 pub(super) fn count_times(content: &Content, actor: &Actor, recipe: &RecipeDef) -> i32 {
     match is_fletch(recipe) {
-        true => (actor.talent_mods(content).fletcher).map_or(1, |f| f.count_times),
+        true => (actor.talent_mods(content).craft.fletcher).map_or(1, |f| f.count_times),
         false => 1,
     }
 }
@@ -83,7 +83,7 @@ pub(super) fn count_times(content: &Content, actor: &Actor, recipe: &RecipeDef) 
 /// recipe).
 pub(super) fn fletcher_check(content: &Content, actor: &Actor, recipe: &RecipeDef) -> i32 {
     match is_fletch(recipe) {
-        true => (actor.talent_mods(content).fletcher).map_or(0, |f| f.check),
+        true => (actor.talent_mods(content).craft.fletcher).map_or(0, |f| f.check),
         false => 0,
     }
 }
@@ -93,7 +93,7 @@ pub(super) fn fletcher_check(content: &Content, actor: &Actor, recipe: &RecipeDe
 /// [`super::mastery::craft_seconds`]).
 pub(super) fn fletcher_seconds(content: &Content, actor: &Actor, recipe: &RecipeDef) -> u32 {
     let percent = match is_fletch(recipe) {
-        true => (actor.talent_mods(content).fletcher).map_or(100, |f| f.time_percent),
+        true => (actor.talent_mods(content).craft.fletcher).map_or(100, |f| f.time_percent),
         false => 100,
     };
     let seconds = (recipe.seconds * percent / 100).max(1);

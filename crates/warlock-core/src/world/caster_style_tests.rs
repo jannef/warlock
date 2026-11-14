@@ -156,7 +156,9 @@ fn marks(w: &World, name: &str) -> u32 {
 fn style_earned(w: &World, success: bool, level: u32, rank: u8) -> u32 {
     let rules = w.content().weapon_skills().marks().expect("marks");
     let talents = w.state.player().talent_mods(w.content());
-    talents.marks(Role::Style, rules.earned(success, level, rank))
+    talents
+        .offence
+        .marks(Role::Style, rules.earned(success, level, rank))
 }
 
 fn level_of(w: &World, id: ActorId) -> u32 {

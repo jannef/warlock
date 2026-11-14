@@ -29,10 +29,10 @@ issue how it interacts with mana**, and hooks in at the one place below.
 - **Hooks** (`world/mana.rs`, each the one place):
   - `World::mana_rate(id)`: the pace in percent, the twin of `World::healing_rate`: min of
     `Effects::mana_regen` and `Diseases::mana_regen`, × `mana_resting` while the player rests, ×
-    the room's `mana_regen`, × (100 + `ManaRegeneration` + `TalentMods::mana_regen_percent` +
+    the room's `mana_regen`, × (100 + `ManaRegeneration` + `MagicMods::mana_regen_percent` +
     Concentration's `skills::Effect::ManaRegen`) / 100 (the talent effect `mana_regen_percent`:
     Tidal, the Water-born's gift, and Clear mind, +25 each; the skill's through `Actor::mind`,
-    below); resting's pace is raised by `TalentMods::mana_resting_percent` first
+    below); resting's pace is raised by `MagicMods::mana_resting_percent` first
     (Meditation, +50); 0 for a Starving player.
     Burden, temperature, and stances never enter it.
   - `World::live` (`world/status.rs`) calls `mana::regain` beside `heal` (in the fast path too)
@@ -40,7 +40,7 @@ issue how it interacts with mana**, and hooks in at the one place below.
     the ticks' `mana_damage` sums into `Moment::drained` and `mana::drain` takes it (never below
     0, never a death).
   - `World::spend_mana(id, base) -> bool`: the one way to spend; refused when short. The cost
-    is `Actor::mana_cost(content, base)` (`TalentMods::mana_cost(base, worn_off)`:
+    is `Actor::mana_cost(content, base)` (`MagicMods::mana_cost(base, worn_off)`:
     `mana_cost_percent`, Frugal caster's −20, and the worn `mana_cost` (of Thrift, #629)
     summed before the one rounding and held to `talent::MAX_MANA_CUT`, 50 off; rounded to the
     nearest, at least 1 for a cost above 0; a creature's gear counts for its summons); an ability that
@@ -65,11 +65,11 @@ issue how it interacts with mana**, and hooks in at the one place below.
     `Actor::grow_mana_base`, which fills what the maximum grew by (Concentration's share of the
     larger pool too); a level-up roll on the skill raises the maximum alone, like an item. Tests:
     `world/concentration_tests.rs`, `mana.rs` (`deeper`).
-  - Deep well's mana by level (`max_mana_per_levels`, `TalentMods::mana_at`) is handed out like
+  - Deep well's mana by level (`max_mana_per_levels`, `MagicMods::mana_at`) is handed out like
     Hardy's hit points: `class::hand_out` at the pick, `World::level_up` as each level comes
     (no `mana_level` cap), into `mana_base` and `mana`.
   - `World::blood_magic` (`Action::UseTalent(TalentActive::BloodMagic)`, `use:blood_magic`; `Ability::BloodMagic`, the
-    talent's active): `TalentMods::blood_magic` (`hp`, `mana`) hit points straight off `hp`
+    talent's active): `MagicMods::blood_magic` (`hp`, `mana`) hit points straight off `hp`
     (not `hurt`: no Protection, pain, training, or death, since it refuses at `hp <= cost`) for
     mana up to the maximum, a wait's price; refused, no time, without it, low on blood, or full.
     The menu lists it as usable whenever held (the rules refuse).

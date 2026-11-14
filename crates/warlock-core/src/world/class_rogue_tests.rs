@@ -335,14 +335,20 @@ fn tracker_hears_fainter_and_places_sounds_exactly() {
     let before = w.state.player().hearing(&content).expect("hears");
     reach(&mut w, 6);
     let mods = w.state.player().talent_mods(&content);
-    assert!(mods.exact_sounds);
+    assert!(mods.senses.exact_sounds);
     assert_eq!(w.state.player().hearing(&content), Some(before - 3));
 }
 
 #[test]
 fn a_ranger_gains_stalkers_eye_at_level_two() {
     let mut w = world("ranger");
-    let sees = |w: &World| w.state.player().talent_mods(w.content()).sees_unaware;
+    let sees = |w: &World| {
+        w.state
+            .player()
+            .talent_mods(w.content())
+            .stealth
+            .sees_unaware
+    };
     assert!(!sees(&w));
     reach(&mut w, 2);
     assert!(sees(&w));
@@ -395,8 +401,8 @@ fn sneak_attacks_add_up_and_master_thief_threatens_sooner() {
     let player = w.state.player;
     // At level 1 the dice are the Sneak attack skill's alone (the class passive has none).
     let mods = w.state.player().talent_mods(&content);
-    assert_eq!(mods.ambush, None);
-    assert_eq!(mods.surprise_difficulty, 2);
+    assert_eq!(mods.stealth.ambush, None);
+    assert_eq!(mods.stealth.surprise_difficulty, 2);
     let skill = |w: &World| (w.state.player()).skill_effect(w.content(), Effect::SneakDice);
     assert!(skill(&w) >= 1, "the thief is trained");
     let dice = w.sneak_dice(player).map(|d| d.to_string());
@@ -404,7 +410,10 @@ fn sneak_attacks_add_up_and_master_thief_threatens_sooner() {
     // Improved sneak attack's 2d6 add to the skill's.
     reach(&mut w, 32);
     let mods = w.state.player().talent_mods(&content);
-    assert_eq!(mods.ambush.map(|d| d.to_string()), Some("2d6".into()));
+    assert_eq!(
+        mods.stealth.ambush.map(|d| d.to_string()),
+        Some("2d6".into())
+    );
     let dice = w.sneak_dice(player).map(|d| d.to_string());
     assert_eq!(dice, Some(format!("{}d6", skill(&w) + 2)));
     let profile = w.state.player().melee(&content);
@@ -580,7 +589,10 @@ fn vanishing_act_a_sneak_attack_that_kills_leaves_the_thief_light_footed() {
     // The picks may have taken Patient blade (the mark's kill gives two).
     w.player_mut().talents.forget("patient_blade");
     let mods = w.state.player().talent_mods(&content);
-    assert_eq!(mods.sneak_kill_status, content.status_id("light_footed"));
+    assert_eq!(
+        mods.stealth.sneak_kill_status,
+        content.status_id("light_footed")
+    );
     let kobold = beside(&mut w, "kobold", 1, Dir::E);
     for _ in 0..30 {
         assert!(!suffers(&w, "light_footed"));
@@ -609,17 +621,24 @@ fn the_burden_line_fast_healer_and_jack_of_all_trades() {
     reach(&mut t, 25);
     let me = t.state.player();
     assert!(me.talents.holds("pack_mule", None) && me.talents.holds("porter", None));
-    assert_eq!(me.talent_mods(&content).burden_dex, 2);
+    assert_eq!(me.talent_mods(&content).movement.burden_dex, 2);
     let mut b = world("bard");
     // Fast healer, the Vigour talent the table gives (Song of rest before #790): resting's pace
     // half again (`healing_rate` reads it).
     reach(&mut b, 6);
-    let after = b.state.player().talent_mods(&content).resting_percent;
+    let after = b
+        .state
+        .player()
+        .talent_mods(&content)
+        .vigour
+        .resting_percent;
     // Measured against a twin without it (the level's own pick may move the pace too).
     let mut twin = b.state().clone();
     let player = twin.player;
     (twin.actors.get_mut(&player).expect("player").talents).forget("fast_healer");
-    let before = (twin.actors[&player].talent_mods(&content)).resting_percent;
+    let before = (twin.actors[&player].talent_mods(&content))
+        .vigour
+        .resting_percent;
     assert_eq!(after, before + 50, "Fast healer");
     // Jack of all trades: every trained skill's benefits read 5 higher.
     let id = content.skill_id("tumble").expect("tumble");
@@ -638,10 +657,16 @@ fn the_burden_line_fast_healer_and_jack_of_all_trades() {
     reach(&mut b, 12);
     let plain = b.state.player().skills.effect(&content, effect);
     assert_eq!(b.state.player().skill_effect(&content, effect), plain);
-    assert_eq!(b.state.player().talent_mods(&content).trained_skills, 0);
+    assert_eq!(
+        b.state.player().talent_mods(&content).growth.trained_skills,
+        0
+    );
     reach(&mut b, 25);
     assert_eq!(b.state.player().skill_effect(&content, effect), raised(&b));
-    assert_eq!(b.state.player().talent_mods(&content).trained_skills, 5);
+    assert_eq!(
+        b.state.player().talent_mods(&content).growth.trained_skills,
+        5
+    );
 }
 
 /// The skills the player is trained in, by id, with their values.
@@ -714,7 +739,7 @@ fn a_restored_bard_past_25_is_given_both_and_a_skill_added_later_is_taken_up() {
     let me = restored.state.player();
     assert!(me.talents.holds("jack_of_all_trades", None));
     assert!(me.talents.holds("master_of_none", None));
-    assert_eq!(me.talent_mods(&content).trained_skills, 5);
+    assert_eq!(me.talent_mods(&content).growth.trained_skills, 5);
     let juggling = content.skill_id("juggling").expect("juggling");
     assert!((2..=5).contains(&me.skills.value(juggling).expect("taken up")));
     assert!(me.skills.iter().count() > skills.iter().count());

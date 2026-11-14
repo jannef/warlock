@@ -233,10 +233,10 @@ pub fn load(actor: &Actor, race: Option<&RaceDef>, content: &Content, room: u32)
     // Talents (the burden line, Pack mule to Beast of burden) scale the limit; magic items add
     // to it.
     let talents = actor.talent_mods(content);
-    let base = TalentMods::scaled(base, talents.carry_percent);
+    let base = TalentMods::scaled(base, talents.movement.carry_percent);
     // Deep pockets (spec §8 "Class abilities"): coins weigh nothing.
     let coins = content.item_class_id("coins");
-    let carried = match talents.weightless_coins {
+    let carried = match talents.movement.weightless_coins {
         false => weight_of(&actor.inventory, content),
         true => (actor.inventory.iter())
             .filter(|s| coins.is_none_or(|c| content.object(s.object).class != c))
@@ -248,9 +248,9 @@ pub fn load(actor: &Actor, race: Option<&RaceDef>, content: &Content, room: u32)
         carried,
         limit: in_room(limit, room),
         // Porter (spec §8) shrugs Burdened off as a dwarf does.
-        ignores_burdened: ignores_burdened || talents.ignore_burdened,
+        ignores_burdened: ignores_burdened || talents.movement.ignore_burdened,
         // Beast of burden: Strained costs what Burdened costs others.
-        stout: talents.stout,
+        stout: talents.movement.stout,
     }
 }
 

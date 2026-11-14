@@ -158,7 +158,7 @@ impl World {
             return false;
         }
         let level = level.id.clone();
-        let bias = me.talent_mods(&content).summon_bias.clone();
+        let bias = me.talent_mods(&content).ally.summon_bias.clone();
         let faction = content.miscast_rules().and_then(|r| r.backfire_faction);
         let cells = self.summon_cells(caster, call.spread);
         let rolled = if full {

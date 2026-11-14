@@ -429,8 +429,8 @@ fn conductor_loads_and_is_what_the_owner_set() {
     let mods = w.state.player().talent_mods(&w.content);
     let electricity = w.content.damage_type_id("electricity").expect("a type");
     let fire = w.content.damage_type_id("fire").expect("a type");
-    assert_eq!(mods.arc_chance(electricity), 100);
-    assert_eq!(mods.arc_chance(fire), 0);
+    assert_eq!(mods.magic.arc_chance(electricity), 100);
+    assert_eq!(mods.magic.arc_chance(fire), 0);
 }
 
 #[test]

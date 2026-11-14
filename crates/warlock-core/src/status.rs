@@ -215,7 +215,7 @@ impl Effects {
                     (1..=def.max).contains(&e.severity)
                         && def.tick.map_or(e.tick == 0, |every| e.tick < every)
                         && def.eases.map_or(e.wear == 0, |every| {
-                            e.wear < every.max(talents.eases_every(e.status, every))
+                            e.wear < every.max(talents.vigour.eases_every(e.status, every))
                         })
                 }
             })
@@ -242,7 +242,7 @@ impl Effects {
     }
 
     /// [`Effects::penalty`] for a sufferer with `talents`: a status that never lowers its scores
-    /// takes nothing, and the lowerings shrink by what its talents say ([`TalentMods::penalty`]:
+    /// takes nothing, and the lowerings shrink by what its talents say ([`VigourMods::penalty`]:
     /// poison resistance, Unbowed).
     pub fn penalty_for(&self, content: &Content, talents: &TalentMods) -> Option<PerStat<i32>> {
         let mut total: Option<PerStat<i32>> = None;
@@ -253,7 +253,10 @@ impl Effects {
                 // A potion's boost counts once a degree.
                 let times = def.penalty_times(e.severity);
                 for stat in Stat::ALL {
-                    sum[stat] += talents.penalty(e.status, stat, i32::from(by[stat]) * times);
+                    sum[stat] +=
+                        talents
+                            .vigour
+                            .penalty(e.status, stat, i32::from(by[stat]) * times);
                 }
             }
         }

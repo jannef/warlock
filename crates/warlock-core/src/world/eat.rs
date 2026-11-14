@@ -244,6 +244,7 @@ impl World {
             .state
             .player()
             .talent_mods(&self.content)
+            .hunger
             .corpse_harmless;
         if !harmless && on_eat.vomit > 0 && self.state.rng.chance(u32::from(on_eat.vomit)) {
             self.vomit();
@@ -276,6 +277,7 @@ impl World {
             .state
             .player()
             .talent_mods(&self.content)
+            .hunger
             .corpse_stats_percent;
         for stat in Stat::ALL {
             let marks = on_eat.train.get(&stat).copied().unwrap_or(0);
@@ -340,7 +342,7 @@ impl World {
         };
         let race = self.state.race_of(&content, self.state.player());
         // Deep roots (a Wood-born's pick) eats it as such a race does.
-        let rooted = self.state.player().talent_mods(&content).eats_rotten;
+        let rooted = self.state.player().talent_mods(&content).hunger.eats_rotten;
         if rooted || race.is_some_and(|r| r.eats_rotten) {
             let name = &content.object(what).name;
             self.say(format!(
@@ -355,14 +357,19 @@ impl World {
         ));
         // Iron stomach (spec §8 "Talents"): never vomits, and half the sickness (no draw for
         // the vomiting it is spared).
-        let iron = self.state.player().talent_mods(&content).iron_stomach;
+        let iron = self
+            .state
+            .player()
+            .talent_mods(&content)
+            .hunger
+            .iron_stomach;
         if !iron && rotten.vomit > 0 && self.state.rng.chance(u32::from(rotten.vomit)) {
             self.vomit();
             return;
         }
         // Purify (spec §8 "Class abilities"): rotten food neither sickens them nor exposes them
         // to a disease, and draws nothing for it.
-        if self.state.player().talent_mods(&content).purify {
+        if self.state.player().talent_mods(&content).hunger.purify {
             self.feed(nutrition, what);
             return;
         }
@@ -370,7 +377,12 @@ impl World {
         // Iron stomach halves it, and a talent that eats rot better (a birth sign's Evergreen)
         // lessens it, rounded down.
         let degrees = if iron { degrees / 2 } else { degrees };
-        let percent = self.state.player().talent_mods(&content).rot_harm_percent;
+        let percent = self
+            .state
+            .player()
+            .talent_mods(&content)
+            .hunger
+            .rot_harm_percent;
         let degrees = if percent == 0 {
             degrees
         } else {
@@ -392,7 +404,7 @@ impl World {
     fn meal_heals(&mut self, food: &Stack, rotten: bool) {
         let mods = self.state.player().talent_mods(&self.content);
         let corpse = self.content.object(food.object).corpse.is_some();
-        let matched: Vec<_> = (mods.meal_heals.iter())
+        let matched: Vec<_> = (mods.hunger.meal_heals.iter())
             .filter(|(object, _)| match object {
                 Some(o) => *o == food.object,
                 None => corpse && !rotten,
@@ -477,7 +489,7 @@ impl World {
         let Some(nutrition) = self.state.player().satiation.map(|s| s.nutrition) else {
             return;
         };
-        if self.state.player().talent_mods(&content).no_bloating {
+        if self.state.player().talent_mods(&content).hunger.no_bloating {
             let most = (def.states.bloated - 1).max(nutrition);
             if nutrition.saturating_add(points) > most {
                 self.say("You eat your fill; the rest does you no good.");
@@ -493,7 +505,12 @@ impl World {
                 self.die_of(Cause::Choked(what), self.state.time);
                 return;
             }
-            let iron = self.state.player().talent_mods(&content).iron_stomach;
+            let iron = self
+                .state
+                .player()
+                .talent_mods(&content)
+                .hunger
+                .iron_stomach;
             if !iron && o.vomit > 0 && self.state.rng.chance(u32::from(o.vomit)) {
                 self.vomit();
                 return;

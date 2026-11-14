@@ -101,7 +101,7 @@ impl Actor {
     pub fn knows_spell(&self, content: &Content, spell: SpellId) -> bool {
         match self.spells.get(&spell) {
             Some(&rank) => rank > 0,
-            None => self.talent_mods(content).has_spell(spell),
+            None => self.talent_mods(content).magic.has_spell(spell),
         }
     }
 
@@ -181,9 +181,9 @@ pub fn study_odds(
     let bonus = (actor.effective_stats(content).modifier(Stat::Intelligence))
         + actor.skill_effect(content, Effect::Study)
         + affinity(content, character, spell)
-        + mods.study_bonus;
+        + mods.magic.study_bonus;
     // Overreach's third off, rounded down (the spell scaling design §7.2).
-    let counted = overreach.max(0) * (100 + mods.study_overreach_percent).max(0) / 100;
+    let counted = overreach.max(0) * (100 + mods.magic.study_overreach_percent).max(0) / 100;
     let difficulty = study.difficulty(counted, actor.known_levels(content))
         + def.study_difficulty
         + rank.map_or(0, |r| study.rank_difficulty(r));
@@ -240,7 +240,7 @@ impl World {
             self.say("You cannot make sense of it.");
             return Spent::Nothing;
         };
-        let percent = me.talent_mods(&content).study_percent;
+        let percent = me.talent_mods(&content).magic.study_percent;
         // A deepening reads the whole book over, rank times.
         let turns = study_turns(rules, def.level, percent) * u32::from(rank.unwrap_or(1));
         let title = self.lore().title(&stack.single());

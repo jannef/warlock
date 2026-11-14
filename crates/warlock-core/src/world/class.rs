@@ -14,6 +14,7 @@
 use super::{Actor, World, focus};
 use crate::character::Character;
 use crate::content::{Content, TalentDef, TalentEffect, TalentId};
+use crate::talent::GrowthEffect;
 use crate::talent::TalentMods;
 
 /// Hands out what holding `def` gives once, as it is taken or given at character
@@ -23,16 +24,16 @@ use crate::talent::TalentMods;
 pub(super) fn hand_out(content: &Content, actor: &mut Actor, def: &TalentDef, level: u8) {
     let mods = TalentMods::of(content, def.effects.iter().cloned());
     let before = actor.max_hp(content);
-    for (stat, by) in mods.stats.iter().filter(|&(_, by)| by != 0) {
+    for (stat, by) in mods.vigour.stats.iter().filter(|&(_, by)| by != 0) {
         actor.stats.gift(stat, by);
     }
-    let hp = mods.hp_at(level) + actor.max_hp(content) - before;
-    actor.hp_base += mods.hp_at(level);
+    let hp = mods.vigour.hp_at(level) + actor.max_hp(content) - before;
+    actor.hp_base += mods.vigour.hp_at(level);
     actor.hp += hp;
-    actor.grow_mana_base(content, mods.mana_at(level));
-    focus::hold(content, actor, &mods.grants, level);
+    actor.grow_mana_base(content, mods.magic.mana_at(level));
+    focus::hold(content, actor, &mods.resource.grants, level);
     for effect in &def.effects {
-        if let TalentEffect::WeaponRanks { to, skills, .. } = effect {
+        if let TalentEffect::Growth(GrowthEffect::WeaponRanks { to, skills, .. }) = effect {
             raise_ranks(content, actor, *to, skills);
         }
     }
@@ -60,9 +61,8 @@ fn raise_ranks(content: &Content, actor: &mut Actor, to: u8, skills: &[String]) 
 fn handed_news(def: &TalentDef) -> Vec<String> {
     (def.effects.iter())
         .filter_map(|e| match e {
-            TalentEffect::WeaponRanks { news, .. } | TalentEffect::TakeUpSkills { news, .. } => {
-                news.clone()
-            }
+            TalentEffect::Growth(GrowthEffect::WeaponRanks { news, .. })
+            | TalentEffect::Growth(GrowthEffect::TakeUpSkills { news, .. }) => news.clone(),
             _ => None,
         })
         .collect()
@@ -135,6 +135,7 @@ impl World {
             .player()
             .talent_mods(&content)
             .into_owned()
+            .resource
             .grants;
         focus::hold(&content, self.player_mut(), &grants, level);
         for &id in &given {
@@ -174,6 +175,7 @@ impl World {
             .state
             .player()
             .talent_mods(&self.content)
+            .fortune
             .identify_carried
         else {
             return;

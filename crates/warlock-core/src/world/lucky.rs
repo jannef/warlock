@@ -1,7 +1,7 @@
 //! The lucky days' gifts that are more than one read at a hook (spec §8 "Birth sign"; the
 //! `stars` tree's talents a `[[lucky]]` grants): the Firebird's Reborn whole, read as the Phoenix
 //! rises (`stars.rs`), and the Deep One's Drowning grip, the hold a melee hit puts on a creature
-//! ([`crate::talent::TalentMods::grip`]). The Iron Scourge's and the Gate Warden's gifts are
+//! ([`crate::talent::OffenceMods::grip`]). The Iron Scourge's and the Gate Warden's gifts are
 //! free blows and sums read where those rules live. Nothing here draws at random.
 
 use super::{ActorId, World};
@@ -18,7 +18,13 @@ impl World {
     pub(super) fn reborn_whole(&mut self, events: &mut Vec<Event>) -> bool {
         let content = self.content.clone();
         let player = self.state.player;
-        if !self.state.player().talent_mods(&content).reborn_whole {
+        if !self
+            .state
+            .player()
+            .talent_mods(&content)
+            .vigour
+            .reborn_whole
+        {
             return false;
         }
         let diseases: Vec<_> = (self.state.player().diseases.iter())
@@ -97,7 +103,7 @@ impl World {
     fn grip_of(&self, id: ActorId) -> Option<crate::content::StatusId> {
         (self.state.actors.get(&id))
             .filter(|a| !a.talents.is_empty())
-            .and_then(|a| a.talent_mods(&self.content).grip)
+            .and_then(|a| a.talent_mods(&self.content).offence.grip)
     }
 
     /// What creature `id`, held fast (a status of its `blocks` its steps), does instead of

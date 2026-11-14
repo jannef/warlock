@@ -56,7 +56,7 @@ pub(super) struct Mending {
 impl World {
     /// The player begins to mend the stack at `item`; refused, taking no time (module docs).
     pub(super) fn start_make_do(&mut self, item: usize) -> Spent {
-        let Some(rules) = self.state.player().talent_mods(&self.content).make_do else {
+        let Some(rules) = self.state.player().talent_mods(&self.content).craft.make_do else {
             return Spent::Nothing;
         };
         let Some(stack) = self.state.player().inventory.get(item) else {
@@ -135,7 +135,7 @@ impl World {
     fn mended(&mut self, item: usize) {
         let content = self.content.clone();
         let me = self.state.player();
-        let Some(rules) = me.talent_mods(&content).make_do else {
+        let Some(rules) = me.talent_mods(&content).craft.make_do else {
             return;
         };
         let still = (me.inventory.get(item))

@@ -39,7 +39,7 @@ impl World {
     pub(super) fn sing(&mut self, active: ClassActive, events: &mut Vec<Event>) -> Spent {
         let content = self.content.clone();
         let player = self.state.player;
-        let Some(song) = self.state.player().talent_mods(&content).song(active) else {
+        let Some(song) = self.state.player().talent_mods(&content).song.song(active) else {
             return Spent::Nothing;
         };
         if !self.can_loose_here() {

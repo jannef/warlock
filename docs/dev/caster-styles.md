@@ -69,7 +69,7 @@ nothing.
   struck. A reflected spell reports nothing (`spell_lands`' `cast` is `None` for it).
 - Battle caster earns full marks (an attempt and a success as the cast landed) like the
   others. `spell_practised` keeps only `resolve_triggers`.
-- **Talents**: `TalentMods::marks(Role::Style, n)`: Weapon drill for its role, Forge-born's
+- **Talents**: `OffenceMods::marks(Role::Style, n)`: Weapon drill for its role, Forge-born's
   role-less `weapon_marks` for every row.
 - No daily band, no limit, no draw: marks are counts.
 - **The pace** (#1251): the caster styles train along `[curves] caster` (it was `school`),

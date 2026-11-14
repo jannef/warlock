@@ -1,6 +1,6 @@
 //! The merchant's investment (spec §8 "Class abilities": Invest; #1407).
 //!
-//! A character with the Invest class ability (`TalentMods::invest`, the merchant's from level 1)
+//! A character with the Invest class ability (`FortuneMods::invest`, the merchant's from level 1)
 //! has a business partner in town: a town's class helper for `invest` (`content/town.rs`),
 //! placed with the aristocrat's servant's code (`stipend.rs::place_servant`), of the player's
 //! race and speaking its register, whose dialogue has `[dialogue.partner]` words.
@@ -39,6 +39,7 @@ use crate::content::{
 };
 use crate::object::Stack;
 use crate::rng::Rng;
+use crate::talent::FortuneEffect;
 use crate::time::DAY;
 use serde::{Deserialize, Serialize};
 
@@ -121,7 +122,13 @@ impl World {
 
     /// Whether the player deals with business partners: the Invest ability, and the rules.
     fn invests(&self) -> bool {
-        self.content.invest().is_some() && self.state.player().talent_mods(&self.content).invest
+        self.content.invest().is_some()
+            && self
+                .state
+                .player()
+                .talent_mods(&self.content)
+                .fortune
+                .invest
     }
 
     /// The town that keeps the business partner, and its entry: the first class helper for a
@@ -130,7 +137,8 @@ impl World {
         let book = self.content.talents();
         let invests = |talent: &str| {
             (book.id(talent)).is_some_and(|t| {
-                (book.get(t).effects.iter()).any(|e| matches!(e, TalentEffect::Invest))
+                (book.get(t).effects.iter())
+                    .any(|e| matches!(e, TalentEffect::Fortune(FortuneEffect::Invest)))
             })
         };
         (self.content.towns().iter())

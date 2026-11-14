@@ -38,7 +38,7 @@ impl World {
     /// wait.
     pub(super) fn lurk(&mut self, events: &mut Vec<Event>) -> Spent {
         let player = self.state.player;
-        let Some(status) = self.state.player().talent_mods(&self.content).lurk else {
+        let Some(status) = self.state.player().talent_mods(&self.content).stealth.lurk else {
             return Spent::Nothing;
         };
         self.afflict(player, status, 1, Some(player), events);
@@ -48,7 +48,7 @@ impl World {
     /// Whether `actor` lies in wait: it suffers the status of its Lurk.
     pub(super) fn lurking(&self, actor: &Actor) -> bool {
         !actor.talents.is_empty()
-            && (actor.talent_mods(&self.content).lurk).is_some_and(|s| actor.effects.has(s))
+            && (actor.talent_mods(&self.content).stealth.lurk).is_some_and(|s| actor.effects.has(s))
     }
 
     /// Actor `keeper`'s free blow at `mover`, which stepped up beside it, is about to be struck:
@@ -86,7 +86,7 @@ impl World {
     pub(super) fn vanishing_act(&mut self, attacker: ActorId, events: &mut Vec<Event>) {
         let status = (self.state.actors.get(&attacker))
             .filter(|a| !a.talents.is_empty())
-            .and_then(|a| a.talent_mods(&self.content).sneak_kill_status);
+            .and_then(|a| a.talent_mods(&self.content).stealth.sneak_kill_status);
         if let Some(status) = status {
             self.afflict(attacker, status, 1, Some(attacker), events);
         }

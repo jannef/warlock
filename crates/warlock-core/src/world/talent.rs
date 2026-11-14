@@ -89,6 +89,7 @@ impl World {
                 .state
                 .player()
                 .talent_mods(&content)
+                .growth
                 .extra_picks_at(level);
             // A level lost and gained again brings no choices: they were made the first time.
             let again = level <= self.state.progress.peak;
@@ -118,15 +119,15 @@ impl World {
             }
             // What the talents held grow by, then what this level's class abilities give.
             let mods = self.state.player().talent_mods(&content);
-            let hp = mods.hp_at(level) - mods.hp_at(level - 1);
-            let mana = mods.mana_at(level) - mods.mana_at(level - 1);
+            let hp = mods.vigour.hp_at(level) - mods.vigour.hp_at(level - 1);
+            let mana = mods.magic.mana_at(level) - mods.magic.mana_at(level - 1);
             let player = self.player_mut();
             player.hp_base += hp;
             player.hp += hp;
             player.grow_mana_base(&content, mana);
             self.grant_class(level, !again);
             // Hardened: every level past the hit point levels adds a level's hit points again.
-            let hardened = self.state.player().talent_mods(&content).hardened;
+            let hardened = self.state.player().talent_mods(&content).vigour.hardened;
             if let Some(bonus) = hardened.filter(|_| level > content.experience().hp_level()) {
                 let hp = self.level_hp(&content, level) + bonus;
                 let player = self.player_mut();

@@ -497,7 +497,7 @@ impl World {
     pub fn refusal(&self, id: ActorId) -> Option<Refusal> {
         let actor = self.state.actors.get(&id)?;
         let mods = self.state.player().talent_mods(&self.content);
-        let budges = !mods.distrusted
+        let budges = !mods.fortune.distrusted
             && match self.content.creature(actor.creature).budge {
                 Budge::Always => true,
                 Budge::OffPost => !actor.mind.is_calm(),

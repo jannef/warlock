@@ -30,7 +30,12 @@ impl World {
     /// The player has lifted `stacks` stacks at `at`: inside a tempting hoard not yet sealed, they
     /// count toward its sealing, and it seals once they pass the player's grace (module docs).
     pub(super) fn lift_in_hoard(&mut self, at: Pos, stacks: usize) {
-        let grace = self.state.player().talent_mods(&self.content).hoard_grace;
+        let grace = self
+            .state
+            .player()
+            .talent_mods(&self.content)
+            .delving
+            .hoard_grace;
         let content = self.content.clone();
         let level = self.state.current_mut();
         let Some(room) = level.rooms.iter_mut().find(|r| r.contains(at)) else {

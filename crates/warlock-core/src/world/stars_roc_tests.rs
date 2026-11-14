@@ -10,6 +10,7 @@ use crate::object::Stack;
 use crate::perception::Freshness;
 use crate::rng::Rng;
 use crate::stats::{PerStat, Stats};
+use crate::talent::{OffenceEffect, VigourEffect};
 use crate::time::Duration;
 use std::sync::LazyLock;
 
@@ -126,7 +127,7 @@ fn eyes_of_the_heights_see_farther_on_the_overworld_by_day_and_by_night() {
     assert!(daylight_phase(&high) == crate::daylight::DayPhase::Night);
     assert!(seen(&high) > seen(&low), "farther by night");
     let m = mods(&high);
-    assert_eq!((m.day_sight, m.night_sight), (2, 1));
+    assert_eq!((m.senses.day_sight, m.senses.night_sight), (2, 1));
 }
 
 fn daylight_phase(w: &World) -> crate::daylight::DayPhase {
@@ -177,7 +178,7 @@ fn hoard_sense_finds_magic_and_gems_more_often_from_the_same_draws() {
 fn watchful_hears_fainter_and_places_footsteps_exactly() {
     let w = born_under("griffin", "fire");
     let m = mods(&w);
-    assert!(m.exact_footsteps);
+    assert!(m.senses.exact_footsteps);
     let threshold = |w: &World| w.state.player().hearing(w.content()).expect("hears");
     assert_eq!(threshold(&w), threshold(&unborn()) - 3);
 }
@@ -209,8 +210,8 @@ fn those_set_in_their_ways_take_a_moment_to_change_stance() {
 #[test]
 fn old_lore_identifies_what_is_carried_a_day_and_reads_quickly() {
     let m = mods(&born_under("sphinx", "fire"));
-    assert_eq!(m.identify_carried, Some(24));
-    assert_eq!(m.read_percent, -50);
+    assert_eq!(m.fortune.identify_carried, Some(24));
+    assert_eq!(m.magic.read_percent, -50);
 }
 
 /// A creature of type `creature` with `hp` hit points beside the player, to the east.
@@ -354,8 +355,11 @@ fn the_kraken_fights_with_many_arms_and_is_of_the_deep() {
     let w = born_under("kraken", "fire");
     let content = w.content();
     let m = mods(&w);
-    assert!(m.light_on_ice && m.plunge_proof);
-    assert_eq!((m.climb_percent, m.travel_percent), (-50, 10));
+    assert!(m.movement.light_on_ice && m.movement.plunge_proof);
+    assert_eq!(
+        (m.movement.climb_percent, m.movement.travel_percent),
+        (-50, 10)
+    );
     let twin = content
         .weapon_skills()
         .id("twin_blades")
@@ -371,8 +375,8 @@ fn hounds_nose_smells_blood_and_rot() {
     let mut w = born_under("barghest", "fire");
     let content = w.content().clone();
     let bleeding = content.status_id("bleeding").expect("bleeding");
-    assert_eq!(mods(&w).scent, [(bleeding, 6)]);
-    assert_eq!(mods(&w).gatekeeper_one_in, Some(4));
+    assert_eq!(mods(&w).senses.scent, [(bleeding, 6)]);
+    assert_eq!(mods(&w).offence.gatekeeper_one_in, Some(4));
     let bread = content.object_id("bread").expect("bread");
     let now = w.state.time;
     let made = |days: u64| {
@@ -453,17 +457,17 @@ fn the_rules_of_the_new_gifts_are_in_their_talents() {
     };
     assert!(matches!(
         effects("rise_from_ashes").as_slice(),
-        [TalentEffect::RiseFromAshes {
+        [TalentEffect::Vigour(VigourEffect::RiseFromAshes {
             hp_percent: 33,
             radius: 1,
             ..
-        }]
+        })]
     ));
     assert!(matches!(
         effects("gatekeeper").as_slice(),
-        [TalentEffect::FreeBlow {
+        [TalentEffect::Offence(OffenceEffect::FreeBlow {
             trigger: crate::content::FreeBlowTrigger::Gatekeeper,
             one_in: Some(4),
-        }]
+        })]
     ));
 }

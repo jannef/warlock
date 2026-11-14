@@ -32,7 +32,9 @@ impl WorldState {
                 let hooded = content.light(preset).hooded.as_deref();
                 Some(hooded.and_then(|id| content.light_id(id)).unwrap_or(preset))
             }
-            LightMode::Lit => Some((player.talent_mods(content).lantern_light).unwrap_or(preset)),
+            LightMode::Lit => {
+                Some((player.talent_mods(content).senses.lantern_light).unwrap_or(preset))
+            }
         }
     }
 }

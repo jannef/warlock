@@ -132,7 +132,7 @@ file). Topics:
 - `docs/dev/magic-items.md` — affixes, rarities, base items, loot, identification, the item description
 - `docs/dev/enchanting.md` — affix capacity (`magic/capacity.rs`, materials' `binding`), the trim as the last step of making any item (`loot::finished`, gear's after its condition), `quality` on hand-made items, the capacity line for the Appraise-trained, the recipes (Kindle, Quicken, Recast, Imbue, Ennoble, Unbind: `world/enchant.rs`, `roll_affix_within`, the reach)
 - `docs/dev/potions.md` — potions: the drink kinds, drinking through Consume, words and colours, sources, their talents
-- `docs/dev/prayer.md` — the priest's prayer: `data/prayer.toml`, the prayer talents and `TalentMods::prayer`, the face, the problems in priority order, the strain and its lock, the fixes, the dumps
+- `docs/dev/prayer.md` — the priest's prayer: `data/prayer.toml`, the prayer talents and `FaithMods::prayer`, the face, the problems in priority order, the strain and its lock, the fixes, the dumps
 - `docs/dev/scrolls.md` — reading, spell scrolls on the traps' shared spell code, the scroll of identify, the read and identify lists
 - `docs/dev/overworld.md` — the overworld level, locations, sight at map scale, generated local areas
 - `docs/dev/encounters.md` — overworld encounters: the rules file and the campaigns' tables, the roll, the lookouts, the pending choice, evading, where everyone stands by outcome, known parties

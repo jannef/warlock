@@ -6,6 +6,7 @@ use std::fmt::Write as _;
 use warlock_core::check;
 use warlock_core::content::{Band, Content, MishapEffect};
 use warlock_core::skills::Effect;
+use warlock_core::talent::MagicEffect;
 use warlock_core::time::Duration;
 
 /// The bonuses the chance table shows a column for.
@@ -82,7 +83,9 @@ pub(super) fn times(content: &Content) -> String {
         .find(|(_, t)| t.id == "quick_study")
         .and_then(|(_, t)| {
             t.effects.iter().find_map(|e| match e {
-                warlock_core::content::TalentEffect::Study { percent, .. } => Some(*percent),
+                warlock_core::content::TalentEffect::Magic(MagicEffect::Study {
+                    percent, ..
+                }) => Some(*percent),
                 _ => None,
             })
         });

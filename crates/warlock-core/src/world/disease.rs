@@ -52,7 +52,7 @@ impl World {
             return false;
         }
         // Purity of body (spec §8 "Class abilities"): never caught, nothing rolled.
-        if actor.talent_mods(&self.content).disease_immune {
+        if actor.talent_mods(&self.content).vigour.disease_immune {
             return false;
         }
         // Immune by its type (spec §8 "Status effects"): nothing lives in it to sicken.
@@ -79,7 +79,7 @@ impl World {
         let race = self.state.race_of(&self.content, actor);
         let talents = actor.talent_mods(&self.content);
         (actor.check_modifier(&self.content, stat))
-            .saturating_add(talents.disease_checks)
+            .saturating_add(talents.vigour.disease_checks)
             .saturating_add(actor.mods(&self.content).get(Effect::DiseaseCheck))
             .saturating_add(race.map_or(0, |r| r.disease_check))
     }
@@ -123,7 +123,7 @@ impl World {
         // A strong swimmer (spec §8 "Birth sign") never catches anything wading, nor does a
         // druid with Nature's ward.
         let mods = self.state.player().talent_mods(&content);
-        if mods.swimmer || mods.wading_proof {
+        if mods.movement.swimmer || mods.movement.wading_proof {
             return;
         }
         for (disease, def) in content.disease_ids() {
@@ -164,7 +164,7 @@ impl World {
         let talents = actor.talent_mods(&content);
         let recovery = recovery_of(def, &talents);
         // Ageless (an elf's): the progressions come further apart.
-        let interval = match talents.disease_interval_percent {
+        let interval = match talents.vigour.disease_interval_percent {
             0 => interval,
             percent => {
                 let scaled = TalentMods::scaled(u64::from(interval), percent).max(1);
@@ -299,7 +299,7 @@ impl World {
 /// How many checks won in a row shake `def` off a sufferer with `talents`: its `recovery`, less
 /// what Fever-proof takes off (spec §8 "Talents"), never under 1.
 pub(super) fn recovery_of(def: &crate::content::DiseaseDef, talents: &TalentMods) -> u8 {
-    let recovery = i32::from(def.recovery) - talents.disease_recovery;
+    let recovery = i32::from(def.recovery) - talents.vigour.disease_recovery;
     u8::try_from(recovery.max(1)).unwrap_or(def.recovery)
 }
 

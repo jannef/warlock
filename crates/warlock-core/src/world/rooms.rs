@@ -40,7 +40,7 @@ impl World {
         if room <= 100 || actor.talents.is_empty() {
             return room;
         }
-        let more = actor.talent_mods(&self.content).room_pace_percent;
+        let more = actor.talent_mods(&self.content).delving.room_pace_percent;
         let more = u32::try_from((100 + more).max(0)).unwrap_or(0);
         100 + (room - 100) * more / 100
     }
@@ -97,7 +97,7 @@ impl World {
         for status in statuses {
             let actor = &self.state.actors[&id];
             if !actor.talents.is_empty()
-                && (actor.talent_mods(&self.content).room_status_immune).contains(&status)
+                && (actor.talent_mods(&self.content).delving.room_status_immune).contains(&status)
             {
                 continue;
             }

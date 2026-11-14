@@ -764,7 +764,11 @@ fn the_rung_talents_and_archmage_mana() {
         });
         crate::talent::TalentMods::of(&content, effects)
     };
-    let every = |ids: &[&str]| mods(ids).spell_mods(&["evocation", "damage", "burst", "fire"]);
+    let every = |ids: &[&str]| {
+        mods(ids)
+            .magic
+            .spell_mods(&["evocation", "damage", "burst", "fire"])
+    };
     assert_eq!(every(&[]), crate::content::SpellMods::default());
     assert_eq!(
         (
@@ -777,8 +781,8 @@ fn the_rung_talents_and_archmage_mana() {
     assert_eq!(every(&["scroll_adept", "empower", "archmage"]).rungs, 3);
     let all = mods(&["scroll_adept", "empower", "archmage"]);
     // Archmage's half and Empower's tenth off.
-    assert_eq!((all.spell_mana(10), all.spell_mana(1)), (4, 1));
-    assert_eq!(mods(&[]).spell_mana(9), 9);
+    assert_eq!((all.magic.spell_mana(10), all.magic.spell_mana(1)), (4, 1));
+    assert_eq!(mods(&[]).magic.spell_mana(9), 9);
 }
 
 #[test]

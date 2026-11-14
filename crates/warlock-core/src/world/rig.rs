@@ -210,7 +210,7 @@ impl PerceptionView<'_> {
         let Some(rules) = self.content.rigs() else {
             return Vec::new();
         };
-        if !self.player.talent_mods(self.content).rigs {
+        if !self.player.talent_mods(self.content).craft.rigs {
             return Vec::new();
         }
         (rules.iter())

@@ -12,7 +12,7 @@ use crate::content::{CombatStance, Content};
 /// Whether `actor` rages with its own Rage: the status its Rage ability brings is on it. A
 /// creature, or anyone without the ability, never is, whatever statuses they suffer.
 pub(super) fn raging(actor: &Actor, content: &Content) -> bool {
-    (actor.talent_mods(content).rage_status(content)).is_some_and(|s| actor.effects.has(s))
+    (actor.talent_mods(content).martial.rage_status(content)).is_some_and(|s| actor.effects.has(s))
 }
 
 /// Puts `actor`'s stance right by the rule (the module's doc): returns the stance it was in, if

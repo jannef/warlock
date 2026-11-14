@@ -318,7 +318,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   rage brings the frenzy.", `Spent::Nothing`), and refuses every stance while the player rages
   ("Your rage holds you in the frenzy."), so `stance:frenzy` and `+`/`-` (which
   stay put on it) never change it. The one rule, `frenzy::settle`: an actor suffering the
-  status its own Rage ability brings (`TalentMods::rage_status`: Raging, so a berserker, and
+  status its own Rage ability brings (`MartialMods::rage_status`: Raging, so a berserker, and
   never a creature or another class granted the resource) is in the frenzy stance, and one in
   it that is not raging so is put in the aggressive stance (not the stance before the rage). The
   world settles it wherever a status begins (`World::afflict`) or ends (`World::ended`: the rage

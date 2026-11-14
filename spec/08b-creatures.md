@@ -813,7 +813,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     every disease lists it) and `mend` clears every point of stat damage (`World::mend`), the
     speaker says the `reply`, and it takes the time of `chat`. The price is the data's, never
     moved by favour; the Pious talent halves it (rounded up) and has a cure also mend a point
-    of each damaged stat (`TalentMods::services`). No alignment shift, no stream drawn, no new
+    of each damaged stat (`FaithMods::services`). No alignment shift, no stream drawn, no new
     state.
   - **Identification** (`does = "identify"`, #432; Factor Wulfrun in Cēaptūn, nobody in the
     showcase): identifies, in one go, every inventory stack the player does not fully know

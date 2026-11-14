@@ -191,7 +191,10 @@ fn find_rate(content: &Content, mods: &TalentMods, seeds: u64) -> f64 {
 fn a_third_to_a_half_of_level_ups_bring_a_find() {
     let content = &**CONTENT;
     let mods = TalentMods {
-        stipend: true,
+        fortune: crate::talent::FortuneMods {
+            stipend: true,
+            ..Default::default()
+        },
         ..TalentMods::default()
     };
     let rate = find_rate(content, &mods, 40);
@@ -203,12 +206,15 @@ fn a_third_to_a_half_of_level_ups_bring_a_find() {
 fn a_landed_noble_has_twice_the_gold_and_more_finds() {
     let content = &**CONTENT;
     let plain = TalentMods {
-        stipend: true,
+        fortune: crate::talent::FortuneMods {
+            stipend: true,
+            ..Default::default()
+        },
         ..TalentMods::default()
     };
     let w = run("human,male,aristocrat", &["landed_noble"]);
     let landed = w.state.player().talent_mods(content).into_owned();
-    assert!(landed.stipend && landed.stipend_gold_percent == 100);
+    assert!(landed.fortune.stipend && landed.fortune.stipend_gold_percent == 100);
     let (a, _) = stipend::of_level(content, 7, 10, &plain).expect("rules");
     let (b, _) = stipend::of_level(content, 7, 10, &landed).expect("rules");
     assert_eq!(b, a * 2);

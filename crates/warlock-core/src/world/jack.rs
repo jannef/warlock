@@ -8,6 +8,7 @@
 use super::World;
 use crate::content::TalentEffect;
 use crate::rng::Rng;
+use crate::talent::GrowthEffect;
 
 impl World {
     /// Every `take_up_skills` of `effects` (a talent just taken or given) trains each skill the
@@ -16,7 +17,8 @@ impl World {
         let content = self.content.clone();
         let mut taken = 0;
         for effect in effects {
-            let TalentEffect::TakeUpSkills { dice, except, .. } = effect else {
+            let TalentEffect::Growth(GrowthEffect::TakeUpSkills { dice, except, .. }) = effect
+            else {
                 continue;
             };
             for (id, skill) in content.skill_ids() {

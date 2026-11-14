@@ -6,6 +6,7 @@ use super::util::{Term, anchored, link, signed};
 use std::fmt::Write as _;
 use warlock_core::content::{Build, Content, OverTime, ResourceDef, TalentEffect};
 use warlock_core::dice::Dice;
+use warlock_core::talent::StealthEffect;
 
 /// Every resource, by name.
 pub(super) fn resources(content: &Content) -> String {
@@ -124,22 +125,22 @@ impl Ladder {
     /// Adds `effect`, if it is one of the ladder's; what it adds in words.
     fn add(&mut self, content: &Content, effect: &TalentEffect) -> Option<String> {
         Some(match effect {
-            TalentEffect::ExploitDice { dice } => {
+            TalentEffect::Stealth(StealthEffect::ExploitDice { dice }) => {
                 self.dice = Some(self.dice.map_or(*dice, |had| had.and(*dice)));
                 format!("+{dice} damage")
             }
-            TalentEffect::ExploitToHit { value } => {
+            TalentEffect::Stealth(StealthEffect::ExploitToHit { value }) => {
                 self.to_hit += value;
                 format!("{} to hit", signed(*value))
             }
-            TalentEffect::ExploitStatus { status } => {
+            TalentEffect::Stealth(StealthEffect::ExploitStatus { status }) => {
                 let name = (content.status_id(status))
                     .map_or(status.clone(), |s| content.status(s).name.to_lowercase());
                 let named = link(Term::Status, status, &name);
                 self.status = Some(named.clone());
                 format!("a hit leaves the foe {named} (1 degree)")
             }
-            TalentEffect::ExploitThreat { value, sure_at } => {
+            TalentEffect::Stealth(StealthEffect::ExploitThreat { value, sure_at }) => {
                 self.threat += u32::from(*value);
                 self.sure_at = Some(self.sure_at.map_or(*sure_at, |had| had.min(*sure_at)));
                 format!(

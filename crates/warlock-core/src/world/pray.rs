@@ -107,7 +107,7 @@ impl World {
         self.player_did(Deed::Prayed(side));
         self.train_stat(crate::content::StatUse::Prayed);
         let me = self.state.player();
-        let devout = me.talent_mods(&content).devout;
+        let devout = me.talent_mods(&content).faith.devout;
         let band = me.band(&content).side();
         let kinds = leaned_kinds(table, side, band, devout);
         if let Some(outcome) = self.draw_outcome(table, kinds) {

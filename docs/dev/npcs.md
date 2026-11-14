@@ -51,7 +51,7 @@ never stop a rest by coming into view (`World::disturbs_rest`).
 `World::ask` hands a topic id it is not a quest's to `World::ask_service` before the dialogue's
 topics; it checks there is something to do (`prayer_cures`: a status or disease, showing or not,
 whose `cured_by` lists `service::PRAYER`; or stat damage or drained points, with no disease showing for a mend),
-then the gold (`service_price`: the data's price, halved rounded up with `TalentMods::services`,
+then the gold (`service_price`: the data's price, halved rounded up with `FaithMods::services`,
 Pious), pays through `shop.rs`'s `hand_over` (the purse code `pay` uses; the coins go to the
 speaker), and does it: `World::cure(player, "prayer")` (every disease in `data/diseases.toml`
 lists `prayer`; with Pious a point of each damaged stat mends after, unless a disease still
@@ -150,13 +150,13 @@ dialogue's `[dialogue.partner]` (`PartnerWords`: `worth` and `idle`, said after 
 partner". `World::partner_chat` (one line in `chat`, after the servant's) says a one-liner and the
 stake's worth; `World::invest_topics` (one line in `topics`, last) lists `invest_<step>` /
 `invest_all` and `withdraw_<step>` / `withdraw_all` by what the player carries and holds, only for
-a holder of `TalentMods::invest`; `World::ask_invest` (one line in `ask`, after the offer) parses
+a holder of `FortuneMods::invest`; `World::ask_invest` (one line in `ask`, after the offer) parses
 any `invest_<n>` or `withdraw_<n>` and deals, a chat's time, or refuses with no time.
 `World::tick_fund` (one line in `World::apply`, after the action's time and before the
 encounter tick) gives every week begun since `Fund::week` its return (`invest::week_return`: the
 stream `invest/<week>`; `invest::grown` on the hundredths), so the result is the same however
 the time passed. `World::invest_bonus` is derived from the quest records (distinct quests
-completed whose giver's town keeps a helper for a talent with `TalentEffect::Invest`, plus
+completed whose giver's town keeps a helper for a talent with `FortuneEffect::Invest`, plus
 the partner entry's `bonus`). `World::partner_dies` (one line in `fight.rs::dies`) zeroes the stake. The
 `progress` dump's row: `invest 98.24 gold, week 74260, bonus 0 bp`. Tests:
 `world/invest_tests.rs` (the class and the partner by race, the fees and topics, refusals, a long

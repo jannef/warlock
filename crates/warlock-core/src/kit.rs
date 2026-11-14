@@ -258,6 +258,7 @@ mod tests {
     use crate::content::{ClassDef, ContentFiles, KitItem, Rarity, TalentEffect};
     use crate::replay::Replay;
     use crate::stats::{AVERAGE, SCORES, Stat};
+    use crate::talent::FortuneEffect;
     use crate::world::World;
     use std::sync::{Arc, LazyLock};
 
@@ -626,23 +627,23 @@ mod tests {
         for (_, def) in CONTENT.talents().iter() {
             for effect in &def.effects {
                 most += match effect {
-                    TalentEffect::StartingGold {
+                    TalentEffect::Fortune(FortuneEffect::StartingGold {
                         percent,
                         at_least,
                         at_most,
-                    } => {
+                    }) => {
                         let more = (gold * u64::from(*percent) / 100)
                             .clamp(u64::from(*at_least), u64::from(*at_most));
                         let coin = CONTENT.object_id(crate::content::GOLD).expect("gold");
                         more * Stack::one(coin).weight(&CONTENT)
                     }
-                    TalentEffect::StartingGems { max, .. } => {
+                    TalentEffect::Fortune(FortuneEffect::StartingGems { max, .. }) => {
                         let gem = CONTENT.gems().expect("gems").object;
                         u64::from(*max) * Stack::one(gem).weight(&CONTENT)
                     }
-                    TalentEffect::Heirloom {
+                    TalentEffect::Fortune(FortuneEffect::Heirloom {
                         weapons, fallback, ..
-                    } => {
+                    }) => {
                         let weapon = weapons.get(race).unwrap_or(fallback);
                         Stack::one(id(weapon)).weight(&CONTENT)
                     }

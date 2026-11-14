@@ -240,7 +240,7 @@ impl World {
         // Staggering blow (spec §8 "Talents"): a critical confirmed in melee staggers.
         let critical = matches!(blow.strike, Strike::Hit { critical: true });
         let staggers = (self.actor_or_fallen(attacker))
-            .and_then(|a| a.talent_mods(&self.content).critical_status);
+            .and_then(|a| a.talent_mods(&self.content).offence.critical_status);
         if let Some(status) = staggers.filter(|_| critical && kind == AttackKind::Melee) {
             self.afflict(target, status, 1, Some(attacker), events);
         }
@@ -308,7 +308,10 @@ impl World {
         // Clotting (spec §8 "Talents"): a big hit wounds no more, a critical a degree less;
         // Thin-skinned (spec §8 "Birth sign"): a big hit that wounds, degrees more.
         let mods = victim.talent_mods(&content);
-        let (clots, thin) = (mods.clotting, if big { mods.wound_more } else { 0 });
+        let (clots, thin) = (
+            mods.vigour.clotting,
+            if big { mods.vigour.wound_more } else { 0 },
+        );
         for (status, def) in content.status_ids() {
             let degrees = (def.wound.as_ref())
                 .filter(|w| w.caused_by(blow.kind))
@@ -362,7 +365,8 @@ impl World {
         };
         // Starving, no hit point comes back; Another head (a Hydra's pick) heals on.
         if actor.hunger(&self.content) == Some(Hunger::Starving)
-            && !(!actor.talents.is_empty() && actor.talent_mods(&self.content).starving_heals)
+            && !(!actor.talents.is_empty()
+                && actor.talent_mods(&self.content).vigour.starving_heals)
         {
             return 0;
         }
@@ -378,7 +382,7 @@ impl World {
         });
         if self.resting && id == self.state.player {
             // Resting's pace, and half again with Fast healer (spec §8 "Talents").
-            let faster = actor.talent_mods(&self.content).resting_percent;
+            let faster = actor.talent_mods(&self.content).vigour.resting_percent;
             let resting = u32::from(self.content.healing().resting);
             let resting = resting * u32::try_from((100 + faster).max(0)).unwrap_or(0) / 100;
             rate = rate * resting / 100;
@@ -391,8 +395,8 @@ impl World {
         let rate = rate * self.room_pace(actor, room) / 100;
         // Then the regeneration of what it wears and wields, and its talents' (Healthy).
         let talents = actor.talent_mods(&self.content);
-        let faster =
-            actor.mods(&self.content).get(ItemEffect::Regeneration) + talents.healing_percent;
+        let faster = actor.mods(&self.content).get(ItemEffect::Regeneration)
+            + talents.vigour.healing_percent;
         let percent = u32::try_from((100 + faster).max(0)).unwrap_or(0);
         rate * percent / 100 * self.birthday_healing(id, now) / 100
     }
@@ -532,7 +536,8 @@ impl World {
             let talents = actor.talent_mods(&content);
             let eases = |e: &crate::status::Effect| {
                 let def = content.status(e.status);
-                def.eases.map(|every| talents.eases_every(e.status, every))
+                def.eases
+                    .map(|every| talents.vigour.eases_every(e.status, every))
             };
             for e in actor.effects.iter() {
                 let def = content.status(e.status);
@@ -569,7 +574,10 @@ impl World {
                 bled: false,
             };
             // Unstoppable (spec §8 "Class abilities"): while raging, some statuses tick nothing.
-            let numb: &[StatusId] = match (&talents.unstoppable, talents.rage_status(&content)) {
+            let numb: &[StatusId] = match (
+                &talents.martial.unstoppable,
+                talents.martial.rage_status(&content),
+            ) {
                 (Some(unstoppable), Some(rage)) if actor.effects.has(rage) => &unstoppable.numb,
                 _ => &[],
             };

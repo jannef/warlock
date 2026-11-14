@@ -321,7 +321,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     (`combat = { to_hit = -1 }`).
   - **Spending**: `World::spend_mana(actor, base)` is the one way to spend it, refused (nothing
     spent) when the actor has less than the cost: `base` as its talents make it
-    (`Actor::mana_cost`, `TalentMods::mana_cost`: Frugal caster's −20 % and the `mana_cost`
+    (`Actor::mana_cost`, `MagicMods::mana_cost`: Frugal caster's −20 % and the `mana_cost`
     of the magic items worn (of Thrift, unidentified too), summed before the one rounding and
     never more than 50 % off together, rounded to the nearest, never below 1 for a cost above 0). The player's spending of any is the `cast` use of the
     stats (§8 "Stats": a Willpower mark, 20 %, from the training stream). The casters' spells call it (spec §8

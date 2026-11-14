@@ -428,7 +428,7 @@ impl Actor {
     /// from the player.
     pub fn speed(&self, content: &Content) -> u32 {
         let base = content.creature(self.creature).speed;
-        let talents = self.talent_mods(content).speed_percent;
+        let talents = self.talent_mods(content).movement.speed_percent;
         let percent = match self.skill_effect(content, Effect::Speed) {
             0 => talents,
             skills => (talents + skills).min(MAX_SPEED.max(talents)),
@@ -461,7 +461,7 @@ impl Actor {
     /// terms (a skill, a resistance) to this.
     pub fn check_modifier(&self, content: &Content, stat: Stat) -> i32 {
         (self.effective_stats(content).modifier(stat))
-            .saturating_add(self.talent_mods(content).check(stat))
+            .saturating_add(self.talent_mods(content).vigour.check(stat))
     }
 
     /// Its own scores raised by what it wears and wields, before what its status effects,
@@ -490,7 +490,7 @@ impl Actor {
         let mut by = (self.effects).penalty_for(content, &mods);
         if let (Some(def), Some(hunger)) = (content.hunger(), self.hunger(content))
             && hunger.is_weak()
-            && !mods.no_hunger_weakness
+            && !mods.hunger.no_hunger_weakness
         {
             let by = by.get_or_insert_with(|| PerStat::splat(0));
             for stat in Stat::ALL {
@@ -550,10 +550,13 @@ impl Actor {
             true => Vec::new(),
             false => {
                 let mods = self.talent_mods(content).into_owned();
-                let mut skills = mods.skills;
+                let mut skills = mods.growth.skills;
                 // Jack of all trades: every trained skill counts higher.
-                if mods.trained_skills != 0 {
-                    let trained = self.skills.iter().map(|(id, _)| (id, mods.trained_skills));
+                if mods.growth.trained_skills != 0 {
+                    let trained = self
+                        .skills
+                        .iter()
+                        .map(|(id, _)| (id, mods.growth.trained_skills));
                     skills.extend(trained);
                 }
                 skills
@@ -591,7 +594,7 @@ impl Actor {
         if self.talents.is_empty() {
             return max;
         }
-        let percent = self.talent_mods(content).max_hp_percent;
+        let percent = self.talent_mods(content).vigour.max_hp_percent;
         if percent == 0 {
             return max;
         }
@@ -691,10 +694,10 @@ impl Actor {
         // Talents (spec §8 "Talents"): Armour training raises worn armour's cap, Pack mule the burden's.
         let talents = self.talent_mods(content);
         let worn = (equipped.iter()).filter_map(|(_, o, m, _)| {
-            Some(o.max_dex? + m.get(ItemEffect::MaxDex) + talents.max_dex)
+            Some(o.max_dex? + m.get(ItemEffect::MaxDex) + talents.defence.max_dex)
         });
         let cap = worn
-            .chain(burden.max_dex().map(|c| c + talents.burden_dex))
+            .chain(burden.max_dex().map(|c| c + talents.movement.burden_dex))
             .min();
         let dexterity = cap.map_or(dexterity, |cap| dexterity.min(cap));
         // A weapon readied to throw does not parry: only what is held in a hand.
@@ -730,7 +733,7 @@ impl Actor {
             (own, grown) => Some(own.unwrap_or(0) + grown),
         };
         let magic_natural = Some(mods.get(ItemEffect::Natural)).filter(|&n| n != 0);
-        let added = talents.natural;
+        let added = talents.defence.natural;
         let natural: Vec<(Category, i32)> = match (own, magic_natural) {
             (None, None) if added == 0 => Vec::new(),
             (None, None) => vec![(Category::Natural, added)],
@@ -739,25 +742,25 @@ impl Actor {
                 .collect(),
         };
         // Mage armour (spec §8 "Class abilities"): Deflection with no body armour on.
-        let mage_armour = match talents.deflection_unarmoured {
+        let mage_armour = match talents.defence.deflection_unarmoured {
             0 => 0,
             _ if self.wears_body_armour(content) => 0,
             more => more,
         };
-        let dodge = Some(self.skill_effect(content, Effect::Dodge) + talents.dodge)
+        let dodge = Some(self.skill_effect(content, Effect::Dodge) + talents.defence.dodge)
             .filter(|&d| d != 0)
             .map(|d| (Category::Dodge, d));
         let magic = [
             (Category::Dodge, mods.get(ItemEffect::Dodge)),
             (
                 Category::Deflection,
-                mods.get(ItemEffect::Deflection) + talents.deflection + mage_armour,
+                mods.get(ItemEffect::Deflection) + talents.defence.deflection + mage_armour,
             ),
         ];
         // Wild guard (spec §8 "Stances") softens a stance's Dodge penalty.
         let stance =
             (content.stance_def(self.stance).defence()).map(|(category, bonus)| match category {
-                Category::Dodge => (category, talents.stance_dodge(self.stance, bonus)),
+                Category::Dodge => (category, talents.defence.stance_dodge(self.stance, bonus)),
                 _ => (category, bonus),
             });
         let defence = Defence::from_bonuses(
@@ -849,6 +852,7 @@ impl Actor {
             shield |= content.slot(slot).hand && object.shield > 0;
         }
         self.talent_mods(content)
+            .defence
             .protection_with(body, shield, pieces)
     }
 
@@ -867,8 +871,13 @@ impl Actor {
             .flat_map(|s| s.resists(content).iter().copied());
         let magic = self.mods(content);
         // Talents (spec §8 "Talents": Elemental ward) count as gear does.
-        let talents = (self.talent_mods(content).into_owned().resist.into_iter())
-            .filter_map(|(element, r)| Some((content.damage_type_id(&element)?, r)));
+        let talents = (self
+            .talent_mods(content)
+            .into_owned()
+            .defence
+            .resist
+            .into_iter())
+        .filter_map(|(element, r)| Some((content.damage_type_id(&element)?, r)));
         // And so do its status effects' (a potion's Warmed, spec §8 "Potions").
         let lent = (self.effects.iter()).flat_map(|e| content.status(e.status).resist.iter());
         let sources: Vec<(DamageTypeId, i32)> = (innate.chain(worn))
@@ -923,7 +932,7 @@ impl Actor {
         let threshold = content.creature(self.creature).hearing?;
         // Its skills (listen), then its talents (Keen ears).
         let keener =
-            self.skill_effect(content, Effect::Hearing) + self.talent_mods(content).hearing;
+            self.skill_effect(content, Effect::Hearing) + self.talent_mods(content).senses.hearing;
         Some((i32::from(threshold) - keener).max(1) as u16)
     }
 
@@ -974,13 +983,13 @@ impl Actor {
         // free bash grows more likely only where there is one.
         let def = table.skill(id);
         let talents = self.talent_mods(content);
-        let (extra, ranks) = talents.weapon_benefit(&def.id, def.role, rank);
+        let (extra, ranks) = talents.offence.weapon_benefit(&def.id, def.role, rank);
         let base = table.benefit(id, TalentMods::raised(rank, ranks));
         let bash = if base.bash > 0 { extra.bash } else { 0 };
         let mut benefit = base.plus(Benefit { bash, ..extra });
         // Tempered (a Metal-born's pick): the weapon skill it knows best threatens lower.
-        if talents.best_skill_threat > 0 && self.knows_best(content, id) {
-            let more = u8::try_from(talents.best_skill_threat).unwrap_or(u8::MAX);
+        if talents.offence.best_skill_threat > 0 && self.knows_best(content, id) {
+            let more = u8::try_from(talents.offence.best_skill_threat).unwrap_or(u8::MAX);
             benefit.threat = benefit.threat.saturating_add(more);
         }
         benefit
@@ -1206,7 +1215,7 @@ impl Actor {
         let range = object.range?;
         // Its talents' (Far shot), and those for a launcher of its skill (Slinger's slings).
         let skill = (object.skill).map(|s| content.weapon_skills().skill(s).id.as_str());
-        let talents = self.talent_mods(content).launcher_range_for(skill);
+        let talents = self.talent_mods(content).offence.launcher_range_for(skill);
         Some(range + Mods::local(stack, content).get(ItemEffect::Range) + talents)
     }
 
@@ -1215,7 +1224,7 @@ impl Actor {
     pub fn throw_range(&self, item: usize, content: &Content) -> Option<i32> {
         let stack = self.inventory.get(item)?;
         let range = content.object(stack.object).throw_range()?;
-        let talents = self.talent_mods(content).throw_range;
+        let talents = self.talent_mods(content).offence.throw_range;
         Some(range + Mods::local(stack, content).get(ItemEffect::Range) + talents)
     }
 
@@ -1230,7 +1239,7 @@ impl Actor {
         }
         let range = self.throw_range(item, content)?;
         let sneak = (content.surprise())
-            .map(|rules| rules.missile_reach + self.talent_mods(content).sneak_reach);
+            .map(|rules| rules.missile_reach + self.talent_mods(content).stealth.sneak_reach);
         Some(sneak.map_or(range, |sneak| range.min(sneak)))
     }
 
@@ -1345,7 +1354,7 @@ impl Actor {
         // Martial arts (spec §8 "Class abilities"): bare hands roll a bigger die.
         let unarmed = || {
             let mut fists = Attack::unarmed(content.unarmed_damage());
-            if let Some(sides) = talents.unarmed_die {
+            if let Some(sides) = talents.offence.unarmed_die {
                 fists.damage = crate::dice::Dice::of(1, u32::from(sides)).into();
             }
             fists
@@ -1391,17 +1400,17 @@ impl Actor {
         mods.sharpen(&mut profile);
         // A status's fire on the blade (Brand), a rider beside the affixes'.
         profile.riders.extend(self.effects.blows(content));
-        profile.bonus += talents.melee_damage;
-        profile.penetration += talents.penetration_for(&profile.kinds);
+        profile.bonus += talents.offence.melee_damage;
+        profile.penetration += talents.offence.penetration_for(&profile.kinds);
         // A spirit weapon's gifts (the Hunter's Spirit weapon, `spirit_weapon.rs`).
         if let Some(stack) = weapon {
             super::spirit_weapon::gifts(&talents, stack, &mut profile);
         }
         // Brutal critical (spec §8 "Class abilities"): a two-handed weapon's criticals hit harder.
-        if talents.two_handed_crit > 0
+        if talents.offence.two_handed_crit > 0
             && weapon.is_some_and(|s| content.object(s.object).two_handed)
         {
-            profile.crit = (profile.crit.saturating_add(talents.two_handed_crit))
+            profile.crit = (profile.crit.saturating_add(talents.offence.two_handed_crit))
                 .min(*crate::combat::CRITS.end());
         }
         self.stanced(content, profile)
@@ -1410,7 +1419,7 @@ impl Actor {
     /// Whether it wades as if on dry land: Undertow's talent, or a status's (Water walking).
     pub fn wades_free(&self, content: &Content) -> bool {
         self.effects.any(content, |s| s.wades_free)
-            || (!self.talents.is_empty() && self.talent_mods(content).wades_free)
+            || (!self.talents.is_empty() && self.talent_mods(content).movement.wades_free)
     }
 
     /// Whether ice never gives way under it: a status's (Water walking; `World::tread` and
@@ -1428,20 +1437,20 @@ impl Actor {
         // Peerless (a class ability) confirms criticals more surely.
         if !self.talents.is_empty() {
             let talents = self.talent_mods(content);
-            let softened = talents.stance_to_hit(self.stance, stance.to_hit);
+            let softened = talents.defence.stance_to_hit(self.stance, stance.to_hit);
             profile.to_hit += softened - stance.to_hit;
-            profile.confirm += talents.critical_confirm;
+            profile.confirm += talents.offence.critical_confirm;
             // Armour-breaker: a confirmed critical ignores more Protection.
-            profile.critical_penetration += talents.critical_penetration;
+            profile.critical_penetration += talents.offence.critical_penetration;
             // Ferocity (a half-orc's): every attack hits harder below a third of its hit points.
-            if talents.ferocity != 0 && self.hp.saturating_mul(3) < self.max_hp(content) {
-                profile.bonus += talents.ferocity;
+            if talents.offence.ferocity != 0 && self.hp.saturating_mul(3) < self.max_hp(content) {
+                profile.bonus += talents.offence.ferocity;
             }
         }
         // Its talents' threat (Keen edge): criticals threaten that much lower, never below the
         // lowest roll that can hit.
         if !self.talents.is_empty() {
-            let threat = self.talent_mods(content).threat;
+            let threat = self.talent_mods(content).offence.threat;
             if threat != 0 {
                 let lowered = i32::from(profile.threat) - threat;
                 let lowest = crate::combat::FUMBLE + 1;
@@ -1471,8 +1480,8 @@ impl Actor {
         profile.riders.extend(self.effects.blows(content));
         let talents = self.talent_mods(content);
         // Tentacles (a Kraken's pick): the off hand's blows harder.
-        profile.bonus += talents.melee_damage + talents.off_hand_damage;
-        profile.penetration += talents.penetration_for(&profile.kinds);
+        profile.bonus += talents.offence.melee_damage + talents.offence.off_hand_damage;
+        profile.penetration += talents.offence.penetration_for(&profile.kinds);
         super::spirit_weapon::gifts(&talents, stack, &mut profile);
         Some((stack.object, self.stanced(content, profile)))
     }
@@ -1565,7 +1574,10 @@ impl Actor {
             profile.to_hit += banes.to_hit;
         }
         mods.sharpen(&mut profile);
-        profile.penetration += self.talent_mods(content).penetration_for(&profile.kinds);
+        profile.penetration += self
+            .talent_mods(content)
+            .offence
+            .penetration_for(&profile.kinds);
         Some((shield, self.stanced(content, profile)))
     }
 
@@ -1580,13 +1592,13 @@ impl Actor {
         let talents = self.talent_mods(content);
         let mut fists = Attack::unarmed(content.unarmed_damage());
         // Mighty kick's die, or Martial arts' (spec §8 "Class abilities"), the bigger.
-        if let Some(sides) = talents.kick_die.max(talents.unarmed_die) {
+        if let Some(sides) = talents.offence.kick_die.max(talents.offence.unarmed_die) {
             fists.damage = crate::dice::Dice::of(1, u32::from(sides)).into();
         }
         let mut profile = Profile::melee(&fists, &self.stats_with(content, &mods))
             .with(&self.benefit(content, skill));
         mods.sharpen(&mut profile);
-        profile.penetration += talents.penetration_for(&profile.kinds);
+        profile.penetration += talents.offence.penetration_for(&profile.kinds);
         self.stanced(content, profile)
     }
 }

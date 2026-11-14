@@ -13,6 +13,7 @@ use warlock_core::content::{
 };
 use warlock_core::dice::Dice;
 use warlock_core::skills::Effect;
+use warlock_core::talent::CraftEffect;
 use warlock_core::time::Duration;
 use warlock_core::world::{CutBand, Grade, SetBand, cut_band, cut_outcome, grade, set_band};
 
@@ -32,7 +33,9 @@ fn grade_ease(content: &Content) -> i32 {
         .map(|id| content.talents().get(id))
         .and_then(|t| {
             t.effects.iter().find_map(|e| match e {
-                warlock_core::content::TalentEffect::GradeEase { value } => Some(*value),
+                warlock_core::content::TalentEffect::Craft(CraftEffect::GradeEase { value }) => {
+                    Some(*value)
+                }
                 _ => None,
             })
         })

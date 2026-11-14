@@ -6,7 +6,7 @@
 //!   the companion's at it are `TalentMods::pack_tactics` likelier to hit. Shots, throws, and
 //!   spells are not (flanking is about footing).
 //! - **The shared prey** (`TalentMods::shares_favoured_prey`): the companion's attacks at a
-//!   creature of the player's favoured prey carry the player's `TalentMods::favoured_prey`
+//!   creature of the player's favoured prey carry the player's `OffenceMods::favoured_prey`
 //!   (Favoured prey's, and Master hunter's added), to hit and damage.
 //!
 //! Only the player's talents are read: a companion is the player's. Nothing is said: the
@@ -46,7 +46,7 @@ impl World {
             profile.to_hit += mods.beast.pack_tactics;
         }
         if attacker == companion && mods.beast.shares_favoured_prey && self.is_prey(target) {
-            let (to_hit, damage) = mods.favoured_prey;
+            let (to_hit, damage) = mods.offence.favoured_prey;
             profile.to_hit += to_hit;
             profile.bonus += damage;
         }

@@ -105,7 +105,7 @@ impl World {
     /// take it (module docs).
     pub(super) fn start_field_forge(&mut self, dir: Dir) -> Spent {
         let content = self.content.clone();
-        let Some(seconds) = self.state.player().talent_mods(&content).field_forge else {
+        let Some(seconds) = self.state.player().talent_mods(&content).craft.field_forge else {
             return Spent::Nothing;
         };
         if self.state.current().kind() == LevelKind::Overworld {

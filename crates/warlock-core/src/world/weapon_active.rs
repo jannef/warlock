@@ -110,11 +110,11 @@ impl Actor {
             return u16::try_from(own).unwrap_or(0);
         }
         let talents = self.talent_mods(content);
-        let named: i32 = (talents.ability_stamina.iter())
+        let named: i32 = (talents.offence.ability_stamina.iter())
             .filter(|(a, _)| *a == id)
             .map(|(_, v)| v)
             .sum();
-        u16::try_from((own - talents.weapon_stamina - named - worn).max(1)).unwrap_or(1)
+        u16::try_from((own - talents.offence.weapon_stamina - named - worn).max(1)).unwrap_or(1)
     }
 }
 
@@ -203,7 +203,7 @@ impl World {
         let cut = if me.talents.is_empty() {
             0
         } else {
-            me.talent_mods(&self.content).weapon_energy_percent
+            me.talent_mods(&self.content).offence.weapon_energy_percent
         };
         let percent = (i64::from(percent) * i64::from((100 + cut).max(0)) / 100).max(LEAST_PERCENT);
         percent_of(base, u32::try_from(percent).unwrap_or(u32::MAX))

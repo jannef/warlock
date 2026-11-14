@@ -17,7 +17,7 @@ impl World {
         let content = self.content.clone();
         let player = self.state.player;
         let me = self.state.player();
-        let Some(wind) = me.talent_mods(&content).second_wind else {
+        let Some(wind) = me.talent_mods(&content).vigour.second_wind else {
             self.say("You have no second wind to catch.");
             return Spent::Nothing;
         };

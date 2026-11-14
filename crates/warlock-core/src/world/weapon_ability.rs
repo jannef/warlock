@@ -70,8 +70,8 @@ impl Actor {
         }
         let def = content.weapon_skills().skill(skill);
         let talents = self.talent_mods(content);
-        let (_, ranks) = talents.weapon_benefit(&def.id, def.role, rank);
-        let raised = i32::from(TalentMods::raised(rank, ranks)) + talents.ability_ranks;
+        let (_, ranks) = talents.offence.weapon_benefit(&def.id, def.role, rank);
+        let raised = i32::from(TalentMods::raised(rank, ranks)) + talents.offence.ability_ranks;
         u8::try_from(raised.max(0)).unwrap_or(u8::MAX)
     }
 
@@ -146,7 +146,7 @@ impl World {
     /// it hits; `None` unless its gatekeeper's blow is a weapon ability's.
     pub(super) fn brace_of(&self, id: ActorId) -> Option<(i32, StatusId)> {
         let actor = self.state.actors.get(&id)?;
-        let brace = actor.talent_mods(&self.content).brace?;
+        let brace = actor.talent_mods(&self.content).offence.brace?;
         self.ability_switches(actor)
             .free_blows
             .gatekeeper

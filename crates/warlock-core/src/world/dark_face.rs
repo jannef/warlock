@@ -24,6 +24,7 @@ use super::{ActorId, World};
 use crate::action::Event;
 use crate::content::{DiseaseId, Face, TalentEffect};
 use crate::status::Effect;
+use crate::talent::FaithEffect;
 
 impl World {
     /// The creature nearest the player that they see on the current level: the least squared
@@ -107,7 +108,7 @@ impl World {
         let Some(actor) = self.state.actors.get(&id) else {
             return false;
         };
-        if actor.talents.is_empty() || !actor.talent_mods(content).communion {
+        if actor.talents.is_empty() || !actor.talent_mods(content).faith.communion {
             return false;
         }
         let bands = (content.talents().iter())
@@ -115,7 +116,7 @@ impl World {
             .find(|def| {
                 def.effects
                     .iter()
-                    .any(|e| matches!(e, TalentEffect::Communion))
+                    .any(|e| matches!(e, TalentEffect::Faith(FaithEffect::Communion)))
             })
             .and_then(|def| def.alignment);
         let allowed = match (bands, content.alignment()) {

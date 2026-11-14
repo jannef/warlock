@@ -86,7 +86,13 @@ impl World {
     /// `use:sanctuary`: the player kneels, its mana spent, or is refused with no time where the
     /// ground cannot be hallowed.
     pub(super) fn begin_sanctuary(&mut self) -> Spent {
-        let Some(sanctuary) = self.state.player().talent_mods(&self.content).sanctuary else {
+        let Some(sanctuary) = self
+            .state
+            .player()
+            .talent_mods(&self.content)
+            .faith
+            .sanctuary
+        else {
             return Spent::Nothing;
         };
         let (level, here, now) = (self.state.current(), self.player_pos(), self.state.time);
@@ -137,7 +143,7 @@ impl World {
     /// The rite is done: the ground about the player is hallowed.
     fn hallow(&mut self) {
         let player = self.state.player();
-        let Some(sanctuary) = player.talent_mods(&self.content).sanctuary else {
+        let Some(sanctuary) = player.talent_mods(&self.content).faith.sanctuary else {
             return;
         };
         let dark = player.prayer_face(&self.content) == Face::Dark;

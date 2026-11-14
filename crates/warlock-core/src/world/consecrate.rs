@@ -41,7 +41,13 @@ impl World {
     /// `use:consecrate`: the player begins to pray, its mana spent, or is refused with no time
     /// where there is nothing unholy.
     pub(super) fn begin_consecrate(&mut self) -> Spent {
-        let Some(consecrate) = self.state.player().talent_mods(&self.content).consecrate else {
+        let Some(consecrate) = self
+            .state
+            .player()
+            .talent_mods(&self.content)
+            .faith
+            .consecrate
+        else {
             return Spent::Nothing;
         };
         if self.hallowable().is_none() {

@@ -317,7 +317,7 @@ impl World {
         }
         let weight = actor.weight(&content);
         // Winter-born (spec §8 "Talents"): the ice holds it as if it carried nothing.
-        let load = if actor.talent_mods(&content).light_on_ice {
+        let load = if actor.talent_mods(&content).movement.light_on_ice {
             weight.base
         } else {
             weight.total()
@@ -392,6 +392,7 @@ impl World {
                 let price = self.price_of(id, ActionKind::Climb);
                 match self.state.actors[&id]
                     .talent_mods(&self.content)
+                    .movement
                     .climb_percent
                 {
                     0 => price,
@@ -420,8 +421,8 @@ impl World {
     /// the player's where it happens.
     pub(super) fn fall_in(&mut self, id: ActorId, at: Pos, events: &mut Vec<Event>) {
         let water = self.state.current().water_at(&self.content, at);
-        let proof =
-            (self.state.actors.get(&id)).is_some_and(|a| a.talent_mods(&self.content).plunge_proof);
+        let proof = (self.state.actors.get(&id))
+            .is_some_and(|a| a.talent_mods(&self.content).movement.plunge_proof);
         let freeze = water
             .and_then(|w| self.content.terrain(w).freeze)
             .filter(|_| !proof);

@@ -297,7 +297,7 @@ impl World {
         // Scroll savant (spec §8 "Talents"): a caster's own burst may spare it.
         let spared = |a: &Actor| {
             matches!(caster, Caster::Actor(id) if id == a.id)
-                && a.talent_mods(&self.content).spares_self
+                && a.talent_mods(&self.content).magic.spares_self
         };
         let caught: Vec<(ActorId, Pos)> = (self.state.actors.values())
             .filter(|a| a.level == level && reached.contains(&a.pos) && !spared(a))
@@ -433,8 +433,9 @@ impl World {
     /// What of a burst's or a bolt's `damage` reaches actor `id`: with Evasion (spec §8
     /// "Talents") its share, rounded down (a spell that does nothing more is resisted).
     pub(super) fn evaded(&self, id: ActorId, damage: Damage) -> Damage {
-        let percent = (self.state.actors.get(&id))
-            .map_or(0, |a| a.talent_mods(&self.content).spell_damage_percent);
+        let percent = (self.state.actors.get(&id)).map_or(0, |a| {
+            a.talent_mods(&self.content).defence.spell_damage_percent
+        });
         if percent == 0 {
             return damage;
         }

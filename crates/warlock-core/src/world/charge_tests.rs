@@ -357,7 +357,13 @@ fn a_warrior_takes_battle_rhythm_at_40_and_whirling_charge_at_50() {
     assert!(!holds(&w, "whirling_charge"));
     reach(&mut w, 50);
     assert!(holds(&w, "whirling_charge"));
-    assert!(w.state.player().talent_mods(w.content()).whirling_charge);
+    assert!(
+        w.state
+            .player()
+            .talent_mods(w.content())
+            .martial
+            .whirling_charge
+    );
 }
 
 #[test]

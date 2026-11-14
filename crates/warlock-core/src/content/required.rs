@@ -11,6 +11,7 @@
 use super::{
     Content, ContentError, CreatureId, ObjectId, SlotId, StatusId, TalentEffect, TerrainId,
 };
+use crate::talent::CraftEffect;
 
 /// The creature type the player is (`data/creatures/player.toml`).
 pub const PLAYER: &str = "player";
@@ -74,8 +75,9 @@ pub(super) fn resolve(content: &Content) -> Result<RequiredIds, ContentError> {
     let prayer = content.prayer.is_some();
     let dens = (content.room_effects.defs().iter()).any(|r| r.swarm.is_some());
     let portal = content.dungeons().any(|d| d.portal.is_some());
-    let forge = (content.talents.iter())
-        .any(|(_, t)| (t.effects.iter()).any(|e| matches!(e, TalentEffect::FieldForge { .. })));
+    let forge = (content.talents.iter()).any(|(_, t)| {
+        (t.effects.iter()).any(|e| matches!(e, TalentEffect::Craft(CraftEffect::FieldForge { .. })))
+    });
     let beasts = content.companions.is_some() || content.familiars.is_some();
     let status = |id, wanted| {
         need(

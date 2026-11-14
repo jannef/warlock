@@ -808,7 +808,7 @@ impl World {
         let lit = here.phase != DayPhase::Day && self.state.carried_light(&content).is_some();
         let mine = player.check_modifier(&content, Stat::Willpower)
             + player.skill_effect(&content, Effect::Lookout)
-            + talents.notice.unwrap_or(0);
+            + talents.delving.notice.unwrap_or(0);
         let mine_against =
             c.difficulty + lead.skills.effect(&content, Effect::Stalk) + cover + mine_dark + rain;
         let theirs =
@@ -849,7 +849,7 @@ impl World {
         let player = self.state.player();
         let talents = player.talent_mods(&content);
         let ears = match player.hearing(&content) {
-            Some(_) => (player.skill_effect(&content, Effect::Hearing) + talents.hearing)
+            Some(_) => (player.skill_effect(&content, Effect::Hearing) + talents.senses.hearing)
                 .clamp(0, crate::skills::MAX_ENCOUNTER_BONUS),
             None => 0,
         };
@@ -858,8 +858,9 @@ impl World {
             Weather::HeavyRain => c.heavy_rain,
             _ => 0,
         };
-        let mine =
-            player.check_modifier(&content, Stat::Willpower) + ears + talents.notice.unwrap_or(0);
+        let mine = player.check_modifier(&content, Stat::Willpower)
+            + ears
+            + talents.delving.notice.unwrap_or(0);
         let against = c.difficulty + lead.skills.effect(&content, Effect::Stalk) + rain;
         let woke = check::check(&mut self.state.rng, mine, against);
         if self.trains(Use::Hear) {

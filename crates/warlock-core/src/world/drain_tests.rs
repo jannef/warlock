@@ -344,7 +344,7 @@ fn talents_raise_the_check_against_a_drain() {
                 me.talents.take(id, None);
             }
             let bonus = me.talent_mods(&BUILTIN);
-            let modifier = bonus.drain_checks + bonus.check(Stat::Willpower);
+            let modifier = bonus.vigour.drain_checks + bonus.vigour.check(Stat::Willpower);
             let mut expected = w.state.rng.clone();
             let resisted = check(&mut expected, modifier, drain.difficulty);
             let mut events = Vec::new();
@@ -368,7 +368,7 @@ fn talents_raise_the_check_against_a_drain() {
     let unbroken_soul = book.id("unbroken_soul").expect("unbroken soul");
     let mods =
         crate::talent::TalentMods::of(&BUILTIN, book.get(unbroken_soul).effects.iter().cloned());
-    assert_eq!(mods.drain_checks, 4);
+    assert_eq!(mods.vigour.drain_checks, 4);
 }
 
 #[test]

@@ -147,8 +147,8 @@ impl Luck {
     /// The luck of a finder with `talents`.
     pub fn of(talents: &crate::talent::TalentMods) -> Self {
         Self {
-            magic: talents.loot_magic_percent,
-            gems: talents.gem_find_percent,
+            magic: talents.fortune.loot_magic_percent,
+            gems: talents.fortune.gem_find_percent,
         }
     }
 }
