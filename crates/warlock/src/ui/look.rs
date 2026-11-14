@@ -4,7 +4,9 @@
 use crate::render::console::{Cell, Console};
 use warlock_core::Pos;
 use warlock_core::color::Rgb;
-use warlock_core::content::{ActionKind, Content, ServiceKind, Stance, ZoneKind, is_proper};
+use warlock_core::content::{
+    ActionKind, Content, ServiceKind, Stance, TerrainId, ZoneKind, is_proper,
+};
 use warlock_core::damage::ResistanceWord;
 use warlock_core::magic::Numbers;
 use warlock_core::object::{Stack, phrase, phrase_with};
@@ -101,91 +103,23 @@ fn zone_words(kind: ZoneKind) -> &'static str {
     }
 }
 
-/// [`describe`] without a place's note.
+/// [`describe`] without a place's note: who is there ([`creature`]), what lies there
+/// ([`pile`]), on what ground ([`fixture`], [`room`], a known trap), and what was heard there.
 fn describe_cell(view: &PerceptionView<'_>, p: Pos, blood: bool) -> String {
     let content = view.content();
-    // Stairs and locations name where they lead: "a staircase down, leading to The Depths 1";
-    // a named place its name: "a volcano, Fyrbeorg";
-    // a wall in sight that was dug into says so: "a stone wall, partly dug";
-    // a wall found to sound hollow says so: "a hollow stone wall".
-    // A chest goes by its band: "a coffer", "an open coffer", "a locked coffer" (Chest-wise);
-    // its known trap after it: "a coffer, trapped: an arrow trap".
-    let chest = view.chest_at(p);
-    let chest_trap = (view.trap(p).filter(|_| chest.is_some())).map(|t| &content.trap(t).name);
-    let named = |t| {
-        let def = content.terrain(t);
-        let def_name = match (chest, chest_trap) {
-            (Some(chest), Some(trap)) => format!(
-                "{}, trapped: {}",
-                chest.name(content.chests(), &def.name),
-                with_article(trap)
-            ),
-            (Some(chest), None) => chest.name(content.chests(), &def.name),
-            // A statue of the stoned goes by what it was: "a statue of a dwarf, mouth open", or
-            // by the past character the graveyard names it for: "a statue of Brakka the dwarf".
-            (None, _) if view.statue_at(p).is_some() => {
-                let of = view.statue_at(p).map(|c| &content.creature(c).name);
-                let of = of.map_or_else(String::new, |name| {
-                    if is_proper(name) {
-                        name.clone()
-                    } else {
-                        with_article(name)
-                    }
-                });
-                let of = view.statue_name(p).unwrap_or(of);
-                format!("{} of {of}, mouth open", def.name)
-            }
-            // A wall the player found sounds hollow (a sealed room's breach): "a hollow stone
-            // wall".
-            (None, _) if view.hollow(p) => format!("hollow {}", def.name),
-            (None, _) => def.name.clone(),
-        };
-        let name = match view.blood(p).filter(|_| blood) {
-            Some(stain) => format!("{} {def_name}", stain.word(!def.transparent)),
-            None => def_name,
-        };
-        // Char reads before the blood: "charred blood-stained stone floor".
-        let name = match view.scorch(p).filter(|_| blood) {
-            Some(char) => format!("{} {name}", warlock_core::scorch::word(char)),
-            None => name,
-        };
-        match view.leads_to(p) {
-            Some(to) => format!("{name}, leading to {to}"),
-            None if view.is_dug(p) => format!("{name}, partly dug"),
-            None => match view.place(p) {
-                Some(place) => format!("{name}, {}", place.name),
-                None => name,
-            },
+    let room = room(view, p);
+    let ground = |t| {
+        let named = fixture(view, p, t, blood);
+        match (&room, view.leads_to(p)) {
+            (Some(room), Some(_)) => format!("{named}, {room}"),
+            (Some(room), None) => format!("{named} {room}"),
+            (None, _) => named,
         }
-    };
-    // A special room the player has been in names the ground in it: "in an echoing hall".
-    let walkable = match view.cell(p) {
-        CellView::Visible(t) | CellView::Remembered(t) => content.terrain(t).walkable,
-        CellView::Unknown => false,
-    };
-    let room = (view.room(p))
-        .filter(|_| walkable)
-        .map(|r| format!("in {}", r.with_article()));
-    // Ground hallowed by Sanctuary: "on hallowed ground" (the dark powers': "on dreaded ground").
-    let hallow = (view.hallow(p).filter(|_| walkable))
-        .map(|dark| format!("on {} ground", if dark { "dreaded" } else { "hallowed" }));
-    let room = match (room, hallow) {
-        (Some(room), Some(hallow)) => Some(format!("{room}, {hallow}")),
-        (room, hallow) => room.or(hallow),
-    };
-    // A zone lying on it: "stone floor under a foul reek".
-    let room = match (room, view.zone_at(p).map(zone_words)) {
-        (Some(room), Some(zone)) => Some(format!("{room}, {zone}")),
-        (room, zone) => room.or(zone.map(str::to_string)),
-    };
-    let ground = |t| match (&room, view.leads_to(p)) {
-        (Some(room), Some(_)) => format!("{}, {room}", named(t)),
-        (Some(room), None) => format!("{} {room}", named(t)),
-        (None, _) => named(t),
     };
     let room_here = room.as_ref().map_or(String::new(), |r| format!(", {r}"));
     // A known trap is part of the ground: "a fireball trap on stone floor".
-    let trap = (view.trap(p).filter(|_| chest.is_none())).map(|t| content.trap(t).name.as_str());
+    let trap = (view.trap(p).filter(|_| view.chest_at(p).is_none()))
+        .map(|t| content.trap(t).name.as_str());
     let terrain = |t| match trap {
         Some(trap) => format!("{} on {}", with_article(trap), ground(t)),
         None => ground(t),
@@ -195,39 +129,11 @@ fn describe_cell(view: &PerceptionView<'_>, p: Pos, blood: bool) -> String {
         && view.actor_at(p).is_none()
         && view.objects(p).is_empty()
     {
-        let a_trap = with_article(trap);
-        return match (view.cell(p), view.sound_at(p)) {
-            (CellView::Visible(t), _) => format!("{}, on {}.", capitalized(&a_trap), ground(t)),
-            (CellView::Remembered(t), Some(heard)) => format!(
-                "{} here, where you remember {a_trap} on {}.",
-                heard.you_hear(),
-                ground(t)
-            ),
-            (CellView::Remembered(t), None) => {
-                format!("You remember {a_trap} here, on {}.", ground(t))
-            }
-            (CellView::Unknown, _) => "You don't know what is there.".to_string(),
-        };
+        return trap_alone(view, p, trap, ground);
     }
     // A sound heard there (never on a cell the player sees): "You hear footsteps here."
     let heard = view.sound_at(p).map(|s| s.you_hear());
-    // "a dagger", "a dagger and 12 arrows", "17 objects".
-    let objects = view.objects(p);
-    // Each says what it gives in numbers (spec §6 "Item lists", `magic::numbers`), and goods for
-    // sale in a shop their price (spec §7 "Shops"): "a dagger (+0 hit, 1d4, range 5; for sale,
-    // 45 gold)".
-    let tag = |i: usize| {
-        let numbers = Numbers::of(&objects[i], view.content()).text(view.content());
-        let price = (view.price_tag(p, &objects[i])).map(|g| format!("for sale, {g} gold"));
-        // A trained eye (Appraise, Survival; #1031) tells food's freshness of what it sees.
-        let fresh = matches!(view.cell(p), CellView::Visible(_))
-            .then(|| view.judge(&objects[i]))
-            .flatten()
-            .map(|w| format!("looks {w}"));
-        let tags: Vec<String> = numbers.into_iter().chain(fresh).chain(price).collect();
-        (!tags.is_empty()).then(|| tags.join("; "))
-    };
-    let things = (!objects.is_empty()).then(|| phrase_with(objects, view.lore(), tag));
+    let things = pile(view, p);
     let here = things
         .as_ref()
         .map_or(String::new(), |o| format!("; here: {o}"));
@@ -243,87 +149,7 @@ fn describe_cell(view: &PerceptionView<'_>, p: Pos, blood: bool) -> String {
             (Some(actor), _) if actor.kind == ActorKind::Player => {
                 format!("Your reflection, on {}{here}.", terrain(t))
             }
-            (Some(actor), _) => {
-                let name = &content.creature(actor.creature).name;
-                // Its type tells the player how it stands toward them (its faction), and they
-                // see how hurt it is: in words, never in hit points.
-                // An ally of the player's is theirs (spec §8 "Allies"): "Your wolf (unhurt)", or
-                // a named one "(your ally, unhurt)".
-                let stance = match view.stance(actor) {
-                    _ if actor.ally => "",
-                    Stance::Hostile => "hostile, ",
-                    Stance::Neutral => "",
-                };
-                let health = actor.health.word();
-                // The status effects that show on it: ", bleeding".
-                let effects: String = (view.effects_of(actor.id))
-                    .filter_map(|s| content.status(s).seen.as_deref())
-                    .map(|word| format!(", {word}"))
-                    .collect();
-                // Stalker's eye: it has not noticed the player (never said without it).
-                let effects = if actor.unaware {
-                    format!("{effects}, unaware of you")
-                } else {
-                    effects
-                };
-                // The creature the player's openings are in (`world/mark.rs`).
-                let effects = if actor.marked {
-                    format!("{effects}, your mark")
-                } else {
-                    effects
-                };
-                // What lives in it shows (docs/design/monster-dread.md §5.5): "writhing".
-                let writhing = match content.creature(actor.creature).dies_into {
-                    Some(_) => ", writhing",
-                    None => "",
-                };
-                let gear = format!(
-                    "{writhing}{}{}",
-                    made_of(content, actor).1,
-                    gear(view, actor.id)
-                );
-                // A unique character the player knows by name: "Sister Hild (unhurt), who
-                // cures and mends for gold, on plank floor."; or a named monster by its type's
-                // proper name: "Black Wystan (hostile, unhurt), ...".
-                let proper = proper_name(content, actor);
-                let ally = if actor.ally { "your ally, " } else { "" };
-                match proper {
-                    Some(proper) => format!(
-                        "{proper} ({ally}{stance}{health}{effects}){}{gear}, on {}{here}.",
-                        services(content, actor),
-                        terrain(t)
-                    ),
-                    // The player's kept beast by its name: "Snel, your hound (unhurt), ...".
-                    None if actor.companion => format!(
-                        "{}, your {name}{} ({health}{effects}){gear}, on {}{here}.",
-                        (view.kept())
-                            .find(|(a, _)| a.id == actor.id)
-                            .map_or("Your companion", |(_, c)| c.name.as_str()),
-                        made_of(content, actor).0,
-                        terrain(t)
-                    ),
-                    // Its grade, which anyone sees (spec §8 "Grades"): "A big
-                    // kobold"; messages name its type alone.
-                    None => {
-                        let def = content.creature(actor.creature);
-                        let name = match warlock_core::grade::word(def, actor.grade) {
-                            Some(word) => format!("{word} {name}"),
-                            None => name.clone(),
-                        };
-                        format!(
-                            "{} {name}{} ({stance}{health}{effects}){}{gear}, on {}{here}.",
-                            if actor.ally {
-                                "Your".to_string()
-                            } else {
-                                capitalized(article(&name))
-                            },
-                            made_of(content, actor).0,
-                            waits(content, actor),
-                            terrain(t)
-                        )
-                    }
-                }
-            }
+            (Some(actor), _) => format!("{}, on {}{here}.", creature(view, actor), terrain(t)),
             (None, Some(things)) => format!("{}, on {}.", capitalized(things), terrain(t)),
             (None, None) => format!("{}.", capitalized(&with_article(&terrain(t)))),
         },
@@ -332,10 +158,222 @@ fn describe_cell(view: &PerceptionView<'_>, p: Pos, blood: bool) -> String {
         }
         (CellView::Remembered(t), None) => match &things {
             Some(things) => format!("You remember {things} here, on {}.", terrain(t)),
-            None => format!("You remember {} here{room_here}.", with_article(&named(t))),
+            None => format!(
+                "You remember {} here{room_here}.",
+                with_article(&fixture(view, p, t, blood))
+            ),
         },
         (CellView::Unknown, Some(heard)) => format!("{heard} here."),
         (CellView::Unknown, None) => "You don't know what is there.".to_string(),
+    }
+}
+
+/// What the ground of `p`, of terrain `t`, is called with what stands on it, as look mode names
+/// it: the terrain, or a chest or a statue there, a wall found hollow; blood and char before it
+/// if `blood` is shown; where it leads, that it is partly dug, or the named place after it.
+fn fixture(view: &PerceptionView<'_>, p: Pos, t: TerrainId, blood: bool) -> String {
+    let content = view.content();
+    // Stairs and locations name where they lead: "a staircase down, leading to The Depths 1";
+    // a named place its name: "a volcano, Fyrbeorg";
+    // a wall in sight that was dug into says so: "a stone wall, partly dug";
+    // a wall found to sound hollow says so: "a hollow stone wall".
+    // A chest goes by its band: "a coffer", "an open coffer", "a locked coffer" (Chest-wise);
+    // its known trap after it: "a coffer, trapped: an arrow trap".
+    let chest = view.chest_at(p);
+    let chest_trap = (view.trap(p).filter(|_| chest.is_some())).map(|t| &content.trap(t).name);
+    let def = content.terrain(t);
+    let def_name = match (chest, chest_trap) {
+        (Some(chest), Some(trap)) => format!(
+            "{}, trapped: {}",
+            chest.name(content.chests(), &def.name),
+            with_article(trap)
+        ),
+        (Some(chest), None) => chest.name(content.chests(), &def.name),
+        // A statue of the stoned goes by what it was: "a statue of a dwarf, mouth open", or
+        // by the past character the graveyard names it for: "a statue of Brakka the dwarf".
+        (None, _) if view.statue_at(p).is_some() => {
+            let of = view.statue_at(p).map(|c| &content.creature(c).name);
+            let of = of.map_or_else(String::new, |name| {
+                if is_proper(name) {
+                    name.clone()
+                } else {
+                    with_article(name)
+                }
+            });
+            let of = view.statue_name(p).unwrap_or(of);
+            format!("{} of {of}, mouth open", def.name)
+        }
+        // A wall the player found sounds hollow (a sealed room's breach): "a hollow stone
+        // wall".
+        (None, _) if view.hollow(p) => format!("hollow {}", def.name),
+        (None, _) => def.name.clone(),
+    };
+    let name = match view.blood(p).filter(|_| blood) {
+        Some(stain) => format!("{} {def_name}", stain.word(!def.transparent)),
+        None => def_name,
+    };
+    // Char reads before the blood: "charred blood-stained stone floor".
+    let name = match view.scorch(p).filter(|_| blood) {
+        Some(char) => format!("{} {name}", warlock_core::scorch::word(char)),
+        None => name,
+    };
+    match view.leads_to(p) {
+        Some(to) => format!("{name}, leading to {to}"),
+        None if view.is_dug(p) => format!("{name}, partly dug"),
+        None => match view.place(p) {
+            Some(place) => format!("{name}, {}", place.name),
+            None => name,
+        },
+    }
+}
+
+/// Where the walkable ground of `p` lies, as it reads after the ground's name: the special room
+/// the player has been in ("in an echoing hall"), ground hallowed by Sanctuary ("on hallowed
+/// ground", the dark powers' "on dreaded ground"), and a zone lying on it ("under a foul
+/// reek"), joined by commas; none for none of them.
+fn room(view: &PerceptionView<'_>, p: Pos) -> Option<String> {
+    let walkable = match view.cell(p) {
+        CellView::Visible(t) | CellView::Remembered(t) => view.content().terrain(t).walkable,
+        CellView::Unknown => false,
+    };
+    let room = (view.room(p))
+        .filter(|_| walkable)
+        .map(|r| format!("in {}", r.with_article()));
+    let hallow = (view.hallow(p).filter(|_| walkable))
+        .map(|dark| format!("on {} ground", if dark { "dreaded" } else { "hallowed" }));
+    let room = match (room, hallow) {
+        (Some(room), Some(hallow)) => Some(format!("{room}, {hallow}")),
+        (room, hallow) => room.or(hallow),
+    };
+    match (room, view.zone_at(p).map(zone_words)) {
+        (Some(room), Some(zone)) => Some(format!("{room}, {zone}")),
+        (room, zone) => room.or(zone.map(str::to_string)),
+    }
+}
+
+/// A cell that holds nothing but a known trap `trap`: the trap first ("A pit, on stone floor."),
+/// on its `ground`.
+fn trap_alone(
+    view: &PerceptionView<'_>,
+    p: Pos,
+    trap: &str,
+    ground: impl Fn(TerrainId) -> String,
+) -> String {
+    let a_trap = with_article(trap);
+    match (view.cell(p), view.sound_at(p)) {
+        (CellView::Visible(t), _) => format!("{}, on {}.", capitalized(&a_trap), ground(t)),
+        (CellView::Remembered(t), Some(heard)) => format!(
+            "{} here, where you remember {a_trap} on {}.",
+            heard.you_hear(),
+            ground(t)
+        ),
+        (CellView::Remembered(t), None) => {
+            format!("You remember {a_trap} here, on {}.", ground(t))
+        }
+        (CellView::Unknown, _) => "You don't know what is there.".to_string(),
+    }
+}
+
+/// What lies on `p` as look mode names it: "a dagger", "a dagger and 12 arrows", "17 objects";
+/// none for nothing. Each says what it gives in numbers (spec §6 "Item lists",
+/// `magic::numbers`), and goods for sale in a shop their price (spec §7 "Shops"): "a dagger (+0
+/// hit, 1d4, range 5; for sale, 45 gold)".
+fn pile(view: &PerceptionView<'_>, p: Pos) -> Option<String> {
+    let objects = view.objects(p);
+    let tag = |i: usize| {
+        let numbers = Numbers::of(&objects[i], view.content()).text(view.content());
+        let price = (view.price_tag(p, &objects[i])).map(|g| format!("for sale, {g} gold"));
+        // A trained eye (Appraise, Survival; #1031) tells food's freshness of what it sees.
+        let fresh = matches!(view.cell(p), CellView::Visible(_))
+            .then(|| view.judge(&objects[i]))
+            .flatten()
+            .map(|w| format!("looks {w}"));
+        let tags: Vec<String> = numbers.into_iter().chain(fresh).chain(price).collect();
+        (!tags.is_empty()).then(|| tags.join("; "))
+    };
+    (!objects.is_empty()).then(|| phrase_with(objects, view.lore(), tag))
+}
+
+/// A creature the player sees (not themselves), as it reads before ", on" its ground: its name,
+/// how it stands toward them, how hurt it looks and the effects that show on it, and what it
+/// wears and wields.
+fn creature(view: &PerceptionView<'_>, actor: &SeenActor) -> String {
+    let content = view.content();
+    let name = &content.creature(actor.creature).name;
+    // Its type tells the player how it stands toward them (its faction), and they
+    // see how hurt it is: in words, never in hit points.
+    // An ally of the player's is theirs (spec §8 "Allies"): "Your wolf (unhurt)", or
+    // a named one "(your ally, unhurt)".
+    let stance = match view.stance(actor) {
+        _ if actor.ally => "",
+        Stance::Hostile => "hostile, ",
+        Stance::Neutral => "",
+    };
+    let health = actor.health.word();
+    // The status effects that show on it: ", bleeding".
+    let effects: String = (view.effects_of(actor.id))
+        .filter_map(|s| content.status(s).seen.as_deref())
+        .map(|word| format!(", {word}"))
+        .collect();
+    // Stalker's eye: it has not noticed the player (never said without it).
+    let effects = if actor.unaware {
+        format!("{effects}, unaware of you")
+    } else {
+        effects
+    };
+    // The creature the player's openings are in (`world/mark.rs`).
+    let effects = if actor.marked {
+        format!("{effects}, your mark")
+    } else {
+        effects
+    };
+    // What lives in it shows (docs/design/monster-dread.md §5.5): "writhing".
+    let writhing = match content.creature(actor.creature).dies_into {
+        Some(_) => ", writhing",
+        None => "",
+    };
+    let gear = format!(
+        "{writhing}{}{}",
+        made_of(content, actor).1,
+        gear(view, actor.id)
+    );
+    // A unique character the player knows by name: "Sister Hild (unhurt), who
+    // cures and mends for gold, on plank floor."; or a named monster by its type's
+    // proper name: "Black Wystan (hostile, unhurt), ...".
+    let proper = proper_name(content, actor);
+    let ally = if actor.ally { "your ally, " } else { "" };
+    match proper {
+        Some(proper) => format!(
+            "{proper} ({ally}{stance}{health}{effects}){}{gear}",
+            services(content, actor),
+        ),
+        // The player's kept beast by its name: "Snel, your hound (unhurt), ...".
+        None if actor.companion => format!(
+            "{}, your {name}{} ({health}{effects}){gear}",
+            (view.kept())
+                .find(|(a, _)| a.id == actor.id)
+                .map_or("Your companion", |(_, c)| c.name.as_str()),
+            made_of(content, actor).0,
+        ),
+        // Its grade, which anyone sees (spec §8 "Grades"): "A big
+        // kobold"; messages name its type alone.
+        None => {
+            let def = content.creature(actor.creature);
+            let name = match warlock_core::grade::word(def, actor.grade) {
+                Some(word) => format!("{word} {name}"),
+                None => name.clone(),
+            };
+            format!(
+                "{} {name}{} ({stance}{health}{effects}){}{gear}",
+                if actor.ally {
+                    "Your".to_string()
+                } else {
+                    capitalized(article(&name))
+                },
+                made_of(content, actor).0,
+                waits(content, actor),
+            )
+        }
     }
 }
 
